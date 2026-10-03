@@ -58,7 +58,8 @@ describe("decisionBlocker", () => {
 describe("feedbackBlocker", () => {
   it("allows feedback only after a decision that isn't advance", () => {
     expect(feedbackBlocker(null)).not.toBeNull();
-    expect(feedbackBlocker("ADVANCE")).not.toBeNull();
+    expect(feedbackBlocker("ADVANCE")).toBeNull();
+    expect(feedbackBlocker("ADVANCE", true)).not.toBeNull();
     expect(feedbackBlocker("REJECT")).toBeNull();
     expect(feedbackBlocker("HOLD")).toBeNull();
   });

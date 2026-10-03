@@ -8,7 +8,7 @@ import { authorize, ForbiddenError, requireRoleForAction } from "@/lib/permissio
 import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { formatDateTime } from "@/lib/format/date";
-import { canRunInterview, isAdvanced } from "./queries";
+import { blindProjectIds, canRunInterview, isAdvanced } from "./queries";
 import { completionError, interviewerError, isValidTimeZone, scoringError, zonedTimeToUtc } from "./rules";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -71,6 +71,7 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
 
     const scheduledAt = zonedTimeToUtc(v.localTime, v.timeZone);
     if (!scheduledAt) return { ok: false, error: "that time is not valid, choose a date and a time." };
+    if (scheduledAt.getTime() <= Date.now()) return { ok: false, error: "that time has already passed, choose a time in the future." };
 
     const interview = await prisma.$transaction(async (tx) => {
       const created = await tx.interview.create({
@@ -128,6 +129,9 @@ async function loadRunnable(interviewId: string) {
     include: { interviewers: { select: { userId: true } }, scores: { select: { section: true } } },
   });
   if (!interview || !(await canRunInterview(user, interview))) throw new ForbiddenError();
+  if ((await blindProjectIds(user!.id, [interview.projectId])).size > 0) {
+    throw new ForbiddenError("post your review and reveal the builder before you run this defense.");
+  }
   return { user: user!, interview };
 }
 

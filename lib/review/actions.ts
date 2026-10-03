@@ -243,7 +243,8 @@ export async function writeFeedback(input: z.input<typeof zFeedback>): Promise<A
     const project = await loadProject(projectId);
     if (!project || !user) return { ok: false, error: NOT_FOUND };
     const latest = await prisma.decision.findFirst({ where: { projectId }, orderBy: { decidedAt: "desc" }, select: { outcome: true } });
-    const blocker = feedbackBlocker(latest?.outcome ?? null);
+    const hired = !!(await prisma.shortlistEntry.findFirst({ where: { projectId, status: "HIRED" }, select: { id: true } }));
+    const blocker = feedbackBlocker(latest?.outcome ?? null, hired);
     if (blocker) return { ok: false, error: blocker };
 
     const now = new Date();

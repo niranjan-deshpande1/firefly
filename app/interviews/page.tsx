@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { Button, EmptyState, PageHeader, StatusPill, Table, Td, TextLink, Th, Time, Tr } from "@/components/ui";
 import { requireRole } from "@/lib/permissions";
-import { listInterviews } from "@/lib/interviews/queries";
+import { blindProjectIds, listInterviews } from "@/lib/interviews/queries";
 import { MODE_LABELS, MODEL_LABELS, OUTCOME_LABELS, STATUS_LABELS } from "@/lib/interviews/script";
 
 export default async function InterviewsPage() {
   const user = await requireRole("REVIEWER", "COMPANY", "ORGANIZER");
   const interviews = await listInterviews(user);
+  const blind = await blindProjectIds(user.id, interviews.map((i) => i.project.id));
   const canSchedule = user.role === "ORGANIZER" || user.role === "ADMIN";
 
   return (
@@ -43,7 +44,7 @@ export default async function InterviewsPage() {
           <tbody>
             {interviews.map((i) => {
               const onPanel = user.role === "ADMIN" || i.interviewers.some((p) => p.userId === user.id);
-              const name = i.candidate.name ?? "unnamed candidate";
+              const name = blind.has(i.project.id) ? `candidate ${i.candidate.candidateProfile?.blindCode ?? "hidden"}` : (i.candidate.name ?? "unnamed candidate");
               return (
                 <Tr key={i.id}>
                   <Td>

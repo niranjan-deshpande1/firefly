@@ -26,7 +26,7 @@ export default async function HackathonParticipantsPage({ params }: PageProps<"/
 
   const people = registrations
     .map((r) => r.user)
-    .filter((u) => isListedParticipant(u.candidateProfile?.visibility, !!user))
+    .filter((u) => isListedParticipant(u.candidateProfile?.visibility))
     .map((u) => ({ ...u, skills: parseJson<string[]>(u.candidateProfile?.skills, []).slice(0, 4) }))
     .sort((a, b) => (a.name ?? a.username ?? "").localeCompare(b.name ?? b.username ?? ""));
 

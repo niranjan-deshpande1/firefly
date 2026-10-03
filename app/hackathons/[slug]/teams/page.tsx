@@ -10,11 +10,13 @@ import { Avatar, EmptyState, PageHeader, StatusPill, TextLink } from "@/componen
 // Who is in the room (your team, people looking) and what you can do next (invite, join, start).
 export const metadata = { title: "teams" };
 
-type Person = { name: string | null; username: string | null; image?: string | null };
+type Person = { name: string | null; username: string | null; image?: string | null; candidateProfile?: { visibility: string } | null };
 
 function PersonName({ person }: { person: Person }) {
   const label = person.name ?? person.username ?? "a builder";
-  return person.username ? <TextLink href={`/u/${person.username}`}>{label}</TextLink> : <span>{label}</span>;
+  // Only public profiles resolve at /u/<name>.
+  const linked = person.username && person.candidateProfile?.visibility === "PUBLIC";
+  return linked ? <TextLink href={`/u/${person.username}`}>{label}</TextLink> : <span>{label}</span>;
 }
 
 export default async function TeamsPage({ params }: PageProps<"/hackathons/[slug]/teams">) {

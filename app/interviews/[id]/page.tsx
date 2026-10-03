@@ -5,7 +5,7 @@ import { CompleteForm } from "@/components/interviews/complete-form";
 import { IdentityCheck } from "@/components/interviews/identity-check";
 import { SectionCard } from "@/components/interviews/section-card";
 import { requireUser } from "@/lib/auth";
-import { canRunInterview, getInterviewRoom } from "@/lib/interviews/queries";
+import { blindProjectIds, canRunInterview, getInterviewRoom } from "@/lib/interviews/queries";
 import { missingSections } from "@/lib/interviews/rules";
 import { MODE_LABELS, MODEL_LABELS, OUTCOME_LABELS, SCRIPT, STATUS_LABELS } from "@/lib/interviews/script";
 
@@ -15,8 +15,9 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
   const interview = await getInterviewRoom(id);
   if (!interview || !(await canRunInterview(user, interview))) notFound();
 
-  const candidate = interview.candidate.name ?? "the candidate";
-  const identityDone = !!interview.identityCheckedAt;
+  const blind = (await blindProjectIds(user.id, [interview.projectId])).has(interview.projectId);
+  const candidate = blind ? `candidate ${interview.candidate.candidateProfile?.blindCode ?? "hidden"}` : (interview.candidate.name ?? "the candidate");
+  const identityDone = !!interview.identityCheckedAt && !blind;
   const closed = interview.status === "COMPLETED" || interview.status === "CANCELLED";
   const mine = new Map(interview.scores.filter((s) => s.scoredById === user.id).map((s) => [s.section, s]));
   const missing = missingSections(interview.scores).map((s) => SCRIPT.find((x) => x.section === s)!.title);
@@ -68,7 +69,12 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
         <h2 id="identity-heading" className="type-display-4">
           0. identity check
         </h2>
-        {identityDone ? (
+        {blind ? (
+          <p className="type-body measure">
+            you are also reviewing this project blind. post your review and reveal the builder in the{" "}
+            <TextLink href={`/review/${interview.projectId}`}>scoring workspace</TextLink> before you run this defense.
+          </p>
+        ) : identityDone ? (
           <p className="type-body">
             photo ID checked by {interview.identityCheckedBy?.name ?? "an interviewer"} at <Time value={interview.identityCheckedAt!} format="time" timeZone={interview.timeZone} />.
           </p>

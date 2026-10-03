@@ -96,6 +96,7 @@ describe("small helpers", () => {
     expect(dollarsToCents("140,000")).toBe(14_000_000);
     expect(dollarsToCents("")).toBeNull();
     expect(dollarsToCents("1e5")).toBeNaN();
+    expect(dollarsToCents("140,000.50")).toBeNaN();
   });
 
   it("splits lists and slugs names", () => {

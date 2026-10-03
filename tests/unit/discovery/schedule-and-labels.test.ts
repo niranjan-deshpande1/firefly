@@ -70,12 +70,11 @@ describe("labels", () => {
 });
 
 describe("participant visibility", () => {
-  it("lists public profiles to everyone, platform profiles to signed-in viewers, private never", () => {
-    expect(isListedParticipant("PUBLIC", false)).toBe(true);
-    expect(isListedParticipant("PLATFORM", false)).toBe(false);
-    expect(isListedParticipant("PLATFORM", true)).toBe(true);
-    expect(isListedParticipant("PRIVATE", true)).toBe(false);
-    expect(isListedParticipant(undefined, true)).toBe(false);
+  it("lists public profiles only, matching which /u pages resolve", () => {
+    expect(isListedParticipant("PUBLIC")).toBe(true);
+    expect(isListedParticipant("PLATFORM")).toBe(false);
+    expect(isListedParticipant("PRIVATE")).toBe(false);
+    expect(isListedParticipant(undefined)).toBe(false);
   });
 });
 

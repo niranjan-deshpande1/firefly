@@ -23,12 +23,25 @@ export async function listInterviews(user: CurrentUser) {
       scheduledAt: true,
       timeZone: true,
       durationMin: true,
-      candidate: { select: { name: true } },
+      candidate: { select: { name: true, candidateProfile: { select: { blindCode: true } } } },
       project: { select: { id: true, title: true } },
       role: { select: { title: true, company: { select: { name: true } } } },
       interviewers: { select: { userId: true } },
     },
   });
+}
+
+/**
+ * Projects where this user is an assigned reviewer who hasn't revealed the builder yet.
+ * Interview pages show the blind code there, so sitting on a panel can't unblind a review (brief 4.2).
+ */
+export async function blindProjectIds(userId: string, projectIds: string[]): Promise<Set<string>> {
+  const [assigned, revealed] = await Promise.all([
+    prisma.reviewerAssignment.findMany({ where: { reviewerId: userId, projectId: { in: projectIds } }, select: { projectId: true } }),
+    prisma.review.findMany({ where: { reviewerId: userId, kind: "RUBRIC", revealedAt: { not: null }, projectId: { in: projectIds } }, select: { projectId: true } }),
+  ]);
+  const open = new Set(revealed.map((r) => r.projectId));
+  return new Set(assigned.map((a) => a.projectId).filter((id) => !open.has(id)));
 }
 
 export type InterviewListItem = Awaited<ReturnType<typeof listInterviews>>[number];
@@ -44,7 +57,7 @@ export async function getInterviewRoom(id: string) {
   return prisma.interview.findUnique({
     where: { id },
     include: {
-      candidate: { select: { id: true, name: true } },
+      candidate: { select: { id: true, name: true, candidateProfile: { select: { blindCode: true } } } },
       project: { select: { id: true, title: true, tagline: true, verified: true, hackathon: { select: { title: true } } } },
       role: { select: { title: true, company: { select: { name: true } } } },
       interviewers: { select: { userId: true, user: { select: { name: true } } } },

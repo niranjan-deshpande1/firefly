@@ -42,7 +42,7 @@ export function ProfileForm({ values, builder }: { values: ProfileFormValues; bu
       {builder ? (
         <>
           <Field label="username" required hint="your profile lives at /u/ plus this. lowercase letters, digits and dashes.">
-            {(p) => <Input id={p.id} name="username" defaultValue={values.username} required minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9-]{1,28}[a-z0-9]" autoComplete="username" aria-describedby={p.describedBy} />}
+            {(p) => <Input id={p.id} name="username" defaultValue={values.username} required minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]" autoComplete="username" aria-describedby={p.describedBy} />}
           </Field>
           <Field label="headline" hint="one line about what you make.">
             {(p) => <Input id={p.id} name="headline" defaultValue={values.headline} maxLength={120} aria-describedby={p.describedBy} />}

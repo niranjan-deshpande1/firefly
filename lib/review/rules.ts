@@ -45,10 +45,10 @@ export function decisionBlocker(submittedReviews: number, flags: string[], noted
   return null;
 }
 
-/** Written feedback goes to finishers who weren't advanced. */
-export function feedbackBlocker(latestOutcome: string | null): string | null {
+/** Written feedback goes to every finisher who wasn't hired (brief 4.2), advanced or not. */
+export function feedbackBlocker(latestOutcome: string | null, hired = false): string | null {
   if (!latestOutcome) return "record a decision before writing feedback.";
-  if (latestOutcome === "ADVANCE") return "this candidate was advanced, feedback is for finishers who weren't.";
+  if (hired) return "this candidate was hired, feedback is for finishers who weren't.";
   return null;
 }
 

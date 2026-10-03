@@ -176,12 +176,12 @@ export async function getTeamsPage(hackathonId: string, userId: string) {
         name: true,
         description: true,
         members: {
-          select: { userId: true, isLead: true, user: { select: { name: true, username: true, image: true } } },
+          select: { userId: true, isLead: true, user: { select: { name: true, username: true, image: true, candidateProfile: { select: { visibility: true } } } } },
           orderBy: { joinedAt: "asc" },
         },
         invites: {
           where: { status: "PENDING" },
-          select: { id: true, toUser: { select: { name: true, username: true } } },
+          select: { id: true, toUser: { select: { name: true, username: true, candidateProfile: { select: { visibility: true } } } } },
         },
       },
       orderBy: { createdAt: "asc" },
@@ -192,7 +192,7 @@ export async function getTeamsPage(hackathonId: string, userId: string) {
     }),
     prisma.registration.findMany({
       where: { hackathonId, lookingForTeam: true, status: { not: "WITHDRAWN" }, user: { teamMembers: { none: { team: { hackathonId } } } } },
-      select: { lookingForNote: true, user: { select: { id: true, name: true, username: true, image: true } } },
+      select: { lookingForNote: true, user: { select: { id: true, name: true, username: true, image: true, candidateProfile: { select: { visibility: true } } } } },
       orderBy: { createdAt: "asc" },
     }),
   ]);

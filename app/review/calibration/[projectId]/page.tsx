@@ -38,7 +38,8 @@ export default async function CalibrationPage({ params }: PageProps<"/review/cal
   ]);
   const blocker = decisionBlocker(reviews.length, flags, notes.map((n) => n.dimensionKey));
   const latest = decisions[0]?.outcome ?? null;
-  const canWriteFeedback = !feedbackBlocker(latest);
+  const hired = !!(await prisma.shortlistEntry.findFirst({ where: { projectId, status: "HIRED" }, select: { id: true } }));
+  const canWriteFeedback = !feedbackBlocker(latest, hired);
 
   return (
     <div className="flex flex-col gap-12">

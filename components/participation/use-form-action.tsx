@@ -11,16 +11,19 @@ type Action = (prev: ActionState, formData: FormData) => Promise<ActionState>;
  * the builder's draft. On success it clears the form and shows the action's one-line toast.
  */
 export function useFormAction(action: Action) {
-  const [state, run, pending] = useActionState(action, null);
-  const formRef = useRef<HTMLFormElement>(null);
   const toast = useToast();
+  // The toast fires here rather than in an effect: a successful post often re-renders the page
+  // without this form (check-in posted, team created), and an unmounted form's effect never runs.
+  const [state, run, pending] = useActionState(async (prev: ActionState, data: FormData) => {
+    const next = await action(prev, data);
+    if (next?.ok && next.message) toast(next.message);
+    return next;
+  }, null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state?.ok) {
-      formRef.current?.reset();
-      if (state.message) toast(state.message);
-    }
-  }, [state, toast]);
+    if (state?.ok) formRef.current?.reset();
+  }, [state]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

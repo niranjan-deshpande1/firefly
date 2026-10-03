@@ -35,11 +35,9 @@ export const isRegistrationOpen = (status: string) => status === "UPCOMING" || s
 
 /**
  * Participant listing visibility (CandidateProfile.visibility):
- * PUBLIC shows to everyone, PLATFORM to signed-in viewers, PRIVATE to no one.
+ * Only PUBLIC profiles are listed. PLATFORM is treated as hidden everywhere (lib/profiles), so its /u page 404s.
  * A builder without a profile is not listed, since they have not chosen a visibility.
  */
-export function isListedParticipant(visibility: string | null | undefined, viewerSignedIn: boolean): boolean {
-  if (visibility === "PUBLIC") return true;
-  if (visibility === "PLATFORM") return viewerSignedIn;
-  return false;
+export function isListedParticipant(visibility: string | null | undefined): boolean {
+  return visibility === "PUBLIC";
 }

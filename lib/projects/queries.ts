@@ -3,10 +3,12 @@ import { prisma, parseJson, type LinkItem } from "@/lib/db";
 
 export type Person = { id: string; name: string; username: string | null; image: string | null };
 
-const personSelect = { id: true, name: true, username: true, image: true } as const;
+const personSelect = { id: true, name: true, username: true, image: true, candidateProfile: { select: { visibility: true } } } as const;
 
-function person(u: { id: string; name: string | null; username: string | null; image: string | null }): Person {
-  return { ...u, name: u.name ?? u.username ?? "a builder" };
+function person(u: { id: string; name: string | null; username: string | null; image: string | null; candidateProfile?: { visibility: string } | null }): Person {
+  // Only a public profile gets a link; /u/<name> 404s for anything else.
+  const username = !u.candidateProfile || u.candidateProfile.visibility === "PUBLIC" ? u.username : null;
+  return { id: u.id, image: u.image, username, name: u.name ?? u.username ?? "a builder" };
 }
 
 /** Owner first, then the rest of the team, each once. */

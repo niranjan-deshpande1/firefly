@@ -104,7 +104,10 @@ test("4. Priya scores blind, reconciles the flagged gap and advances Maya", asyn
     await group.getByRole("checkbox").first().click();
   }
   await main(page).getByRole("button", { name: "post review" }).click();
-  await expect(main(page).getByRole("button", { name: "reveal identity" })).toBeVisible();
+  // The reveal is audited, and Priya needs it before she can run Maya's defense in step 5.
+  await main(page).getByRole("button", { name: "reveal identity" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "reveal identity" }).click();
+  await expect(main(page).getByText("Maya Chen").first()).toBeVisible();
 
   await main(page).getByRole("link", { name: /calibrat/i }).first().click();
   await expect(page).toHaveURL(/\/review\/calibration\/proj-maya$/);

@@ -51,11 +51,12 @@ const optionalText = (max: number) =>
     .transform((v) => (v ? v : null));
 
 /** Dollars typed by a person ("140,000" or "140000") to integer cents. Empty means not set. */
+/** Salaries are whole dollars; cents ("140,000.50") are refused so fees stay round. */
 export function dollarsToCents(value: string | null | undefined): number | null {
   const cleaned = (value ?? "").replace(/[$,\s]/g, "");
   if (!cleaned) return null;
-  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return Number.NaN;
-  return Math.round(Number(cleaned) * 100);
+  if (!/^\d+$/.test(cleaned)) return Number.NaN;
+  return Number(cleaned) * 100;
 }
 
 export function splitList(value: string | null | undefined): string[] {

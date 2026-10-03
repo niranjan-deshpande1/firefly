@@ -71,7 +71,7 @@ Blind codes are derived from user ids, so they are stable: Maya is **candidate 9
    | F working output | 3 | commit "README: who this is for..." |
    | every Founding Engineer, Backend Engineer and Data Platform Engineer criterion | 3 | any commit |
 
-3. Post the review. Expect the identity to reveal as Maya Chen (written to the audit log).
+3. Post the review, then press **reveal identity**. Expect Maya Chen (written to the audit log). Priya needs this reveal before she can run the defense in step 5.
 4. Open calibration for this project. Expect **one** flagged dimension: D, Priya 4 and Leo 2. Write a reconciliation note, for example "the decision log names the alternative and the downside for the lock; Leo scored before reading it. settled on 3." and save it.
 5. Choose **advance** and write the reason, for example "evidence shows she catches AI errors and tests first; ready for a defense." Expect the decision saved and Maya added to the Founding Engineer shortlist.
 
@@ -80,7 +80,7 @@ Blind codes are derived from user ids, so they are stable: Maya is **candidate 9
 1. Stay as Priya. Open `/interviews`. Expect Maya Chen's defense interview, JOINT, in person at the Firefly studio.
 2. Open the interview room. Confirm the identity check.
 3. Work through the script: walkthrough, what breaks if, live change, planted bug, product questions. Score each section (3 or 4) with notes.
-4. Complete the interview with outcome **pass**. Expect the project marked **verified**.
+4. Complete the interview with outcome **defense passed**. Expect the project marked **verified**.
 
 ## Step 6. Company again: Jordan Reyes
 
