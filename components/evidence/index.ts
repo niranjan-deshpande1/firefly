@@ -5,3 +5,4 @@ export { CheckInHistory } from "./check-in-history";
 export { EvidenceSummaryCard } from "./evidence-summary-card";
 export { EvidenceLink } from "./evidence-link";
 export { evidenceAnchor, type CommitItem, type TranscriptItem, type DecisionItem, type CheckInItem, type SummaryItem } from "./types";
+export { excerptId } from "@/lib/evidence/transcript";
