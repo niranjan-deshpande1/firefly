@@ -124,7 +124,10 @@ export async function check(user: CurrentUser | null, action: Action, ref: Resou
 
 /** For pages: 404 when not allowed (no hint the resource exists). */
 export async function authorizePage(user: CurrentUser | null, action: Action, ref: ResourceRef = {}): Promise<void> {
-  if (!(await check(user, action, ref))) notFound();
+  if (await check(user, action, ref)) return;
+  // Signed out: ask them to sign in (a shared report link should work after sign-in). Signed in: 404.
+  if (!user) redirect("/signin");
+  notFound();
 }
 
 /** For server actions and route handlers: throws ForbiddenError when not allowed. */
