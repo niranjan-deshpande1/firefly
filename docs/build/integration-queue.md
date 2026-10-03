@@ -26,3 +26,6 @@ Shared changes requested by builders, applied at integration (step 4).
 | 7 Evaluation (`nd/evaluation` 64307ea) | Seed should write rubric from `RUBRIC_V0` in `lib/review/rubric.ts`; reconcile with Ops seed dimensions | check at merge |
 | 7 Evaluation | Held feedback (future `resultsAt`) sends no `feedbackReady` email; needs a scheduled sender | note in status.md |
 | 7 Evaluation | Transcript and check-in text is not masked before reveal | note in status.md |
+| 8 Evidence (`build/evidence` 563e4f7) | `evidence.view` allows the hackathon's organizer | apply |
+| 8 Evidence | `AUTH_SECRET ||` fix (same as Profiles) | apply |
+| 8 Evidence | Seed summaries must not name the candidate (blind reviewers see them) | check at merge |
