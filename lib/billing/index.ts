@@ -29,11 +29,11 @@ export async function enrollRoleInCohort(params: { hackathonId: string; roleId: 
       tx.hackathon.findUnique({ where: { id: params.hackathonId } }),
       tx.role.findUnique({ where: { id: params.roleId }, include: { company: true } }),
     ]);
-    if (!hackathon || hackathon.type !== "HIRING_COHORT") throw new BillingError("That cohort doesn't exist.");
-    if (!role) throw new BillingError("That role doesn't exist.");
-    if (hackathon.endsAt < new Date()) throw new BillingError("That cohort has ended.");
+    if (!hackathon || hackathon.type !== "HIRING_COHORT") throw new BillingError("that hiring cohort does not exist, choose one from the list.");
+    if (!role) throw new BillingError("that role does not exist, choose one of your roles.");
+    if (hackathon.endsAt < new Date()) throw new BillingError("that hiring cohort has ended, choose an upcoming one.");
     const existing = await tx.cohortEnrollment.findUnique({ where: { hackathonId_roleId: { hackathonId: hackathon.id, roleId: role.id } } });
-    if (existing) throw new BillingError("This role is already enrolled in that cohort.");
+    if (existing) throw new BillingError("this role is already enrolled in that hiring cohort, open its shortlist instead.");
 
     const invoice = await tx.invoice.create({
       data: {
@@ -41,7 +41,7 @@ export async function enrollRoleInCohort(params: { hackathonId: string; roleId: 
         companyId: role.companyId,
         type: "FLAT_FEE",
         amountCents: settings.flatFeeCents,
-        description: `Hiring cohort fee: ${hackathon.title} (${role.title}). Non-refundable.`,
+        description: `hiring cohort fee: ${hackathon.title} (${role.title}). non-refundable.`,
         status: "SENT",
         nonRefundable: true,
         issuedAt: new Date(),
@@ -64,14 +64,14 @@ export async function reportHire(params: { companyId: string; roleId: string; ca
   const amount = hireFeeCents(params.salaryCents, settings.hireFeeBps);
   const result = await prisma.$transaction(async (tx) => {
     const role = await tx.role.findUnique({ where: { id: params.roleId } });
-    if (!role || role.companyId !== params.companyId) throw new BillingError("That role doesn't belong to this company.");
+    if (!role || role.companyId !== params.companyId) throw new BillingError("that role belongs to another company, choose one of your roles.");
     const invoice = await tx.invoice.create({
       data: {
         number: await nextInvoiceNumber(tx),
         companyId: params.companyId,
         type: "HIRE_FEE",
         amountCents: amount,
-        description: `Hire fee: ${role.title}, ${settings.hireFeeBps / 100}% of ${formatCents(params.salaryCents)} first-year salary.`,
+        description: `hire fee: ${role.title}, ${settings.hireFeeBps / 100}% of ${formatCents(params.salaryCents)} first-year salary.`,
         status: "SENT",
         nonRefundable: false,
         issuedAt: new Date(),
@@ -102,7 +102,7 @@ export async function reportHire(params: { companyId: string; roleId: string; ca
 
 export async function markInvoicePaid(invoiceId: string, actorId: string) {
   const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
-  if (!invoice) throw new BillingError("That invoice doesn't exist.");
+  if (!invoice) throw new BillingError("that invoice does not exist, return to invoices.");
   if (!canTransition(invoice.status, "PAID")) throw new BillingError(`A ${invoice.status.toLowerCase()} invoice can't be marked paid.`);
   const updated = await prisma.invoice.update({ where: { id: invoiceId }, data: { status: "PAID", paidAt: new Date() } });
   await audit({ actorId, action: "INVOICE_PAID", resourceType: "Invoice", resourceId: invoiceId });

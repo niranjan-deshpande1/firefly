@@ -7,7 +7,7 @@ import { can, type Action, type Facts } from "./rules";
 export { can, needsAccessAudit, ACTIONS, type Action, type Facts, type Actor } from "./rules";
 
 export class ForbiddenError extends Error {
-  constructor(message = "You don't have access to this.") {
+  constructor(message = "you don't have access to this, sign in with an account that does.") {
     super(message);
     this.name = "ForbiddenError";
   }
@@ -24,7 +24,7 @@ export async function requireRole(...roles: UserRole[]): Promise<CurrentUser> {
 /** Action guard: throws ForbiddenError instead of redirecting (for server actions and route handlers). */
 export async function requireRoleForAction(...roles: UserRole[]): Promise<CurrentUser> {
   const user = await getCurrentUser();
-  if (!user) throw new ForbiddenError("Sign in first.");
+  if (!user) throw new ForbiddenError("you are signed out, sign in and try again.");
   if (roles.length > 0 && user.role !== "ADMIN" && !roles.includes(user.role)) throw new ForbiddenError();
   return user;
 }
