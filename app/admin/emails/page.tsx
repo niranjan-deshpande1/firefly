@@ -2,6 +2,7 @@
 import { authorizePage, requireRole } from "@/lib/permissions";
 import { emailFilterSchema, parseFilters } from "@/lib/admin/filters";
 import { listEmails } from "@/lib/admin/queries";
+import { templateLabel } from "@/lib/admin/labels";
 import { Button, EmptyState, Field, Input, PageHeader, Select, TextLink, Time } from "@/components/ui";
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Pager } from "@/components/admin/pager";
@@ -30,7 +31,7 @@ export default async function EmailLogPage({ searchParams }: PageProps<"/admin/e
               <option value="">all templates</option>
               {templates.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {templateLabel(t)}
                 </option>
               ))}
             </Select>
@@ -57,7 +58,7 @@ export default async function EmailLogPage({ searchParams }: PageProps<"/admin/e
                   <summary className="flex min-h-11 cursor-pointer flex-col justify-center gap-1">
                     <span className="type-body font-bold">{e.subject}</span>
                     <span className="text-secondary">
-                      to {e.to}, {e.template}, <Time value={e.createdAt} format="datetime" />
+                      to {e.to}, {templateLabel(e.template)}, <Time value={e.createdAt} format="datetime" />
                     </span>
                   </summary>
                   <p className="measure whitespace-pre-line pt-3">{e.body}</p>

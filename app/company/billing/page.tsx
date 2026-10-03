@@ -1,6 +1,7 @@
 // Owner: ops builder. Archetype: collection.
 import { notFound } from "next/navigation";
-import { authorizePage, requireRole } from "@/lib/permissions";
+import { authorizePage } from "@/lib/permissions";
+import { requireCompanyUser } from "@/lib/company/page";
 import { prisma } from "@/lib/db";
 import { listInvoices } from "@/lib/admin/queries";
 import { revenueFrom } from "@/lib/admin/funnel";
@@ -12,7 +13,7 @@ import { InvoiceTable } from "@/components/admin/invoice-table";
 export const metadata = { title: "billing" };
 
 export default async function CompanyBillingPage() {
-  const user = await requireRole("COMPANY");
+  const user = await requireCompanyUser();
   // ponytail: one company per member in v1; the first membership is the billing company.
   const membership = await prisma.companyMember.findFirst({ where: { userId: user.id }, include: { company: { select: { id: true, name: true } } }, orderBy: { createdAt: "asc" } });
   if (!membership) notFound();

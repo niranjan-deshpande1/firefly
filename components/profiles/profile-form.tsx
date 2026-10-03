@@ -26,6 +26,12 @@ export function ProfileForm({ values, builder }: { values: ProfileFormValues; bu
     if (state?.ok) toast(builder ? "profile saved" : "name saved");
   }, [state, toast, builder]);
   const error = state && !state.ok ? state.error : undefined;
+  const badField = state && !state.ok ? state.field : undefined;
+  // Each control points at the shared error line and is marked invalid when it is the field at fault.
+  const a11y = (name: string, describedBy?: string) => {
+    const invalid = badField === name;
+    return { "aria-invalid": invalid || undefined, "aria-describedby": [describedBy, invalid ? "profile-error" : undefined].filter(Boolean).join(" ") || undefined };
+  };
 
   return (
     // onSubmit keeps typed values on an error; a form `action` would reset the fields.
@@ -37,36 +43,36 @@ export function ProfileForm({ values, builder }: { values: ProfileFormValues; bu
       }}
       className="flex flex-col gap-6 measure" aria-describedby={error ? "profile-error" : undefined}>
       <Field label="name" required>
-        {(p) => <Input id={p.id} name="name" defaultValue={values.name} required maxLength={80} autoComplete="name" aria-describedby={p.describedBy} />}
+        {(p) => <Input id={p.id} name="name" defaultValue={values.name} required maxLength={80} autoComplete="name" {...a11y("name", p.describedBy)} />}
       </Field>
       {builder ? (
         <>
           <Field label="username" required hint="your profile lives at /u/ plus this. lowercase letters, digits and dashes.">
-            {(p) => <Input id={p.id} name="username" defaultValue={values.username} required minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]" autoComplete="username" aria-describedby={p.describedBy} />}
+            {(p) => <Input id={p.id} name="username" defaultValue={values.username} required minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]" autoComplete="username" {...a11y("username", p.describedBy)} />}
           </Field>
           <Field label="headline" hint="one line about what you make.">
-            {(p) => <Input id={p.id} name="headline" defaultValue={values.headline} maxLength={120} aria-describedby={p.describedBy} />}
+            {(p) => <Input id={p.id} name="headline" defaultValue={values.headline} maxLength={120} {...a11y("headline", p.describedBy)} />}
           </Field>
           <Field label="bio" hint="Markdown works here.">
-            {(p) => <Textarea id={p.id} name="bio" defaultValue={values.bio} rows={6} maxLength={4000} aria-describedby={p.describedBy} />}
+            {(p) => <Textarea id={p.id} name="bio" defaultValue={values.bio} rows={6} maxLength={4000} {...a11y("bio", p.describedBy)} />}
           </Field>
           <Field label="skills" hint="separate skills with commas, for example: TypeScript, Postgres, product writing.">
-            {(p) => <Input id={p.id} name="skills" defaultValue={values.skills} maxLength={1000} aria-describedby={p.describedBy} />}
+            {(p) => <Input id={p.id} name="skills" defaultValue={values.skills} maxLength={1000} {...a11y("skills", p.describedBy)} />}
           </Field>
           <Field label="links" hint="one per line: a label, then the address. for example: portfolio https://example.com">
-            {(p) => <Textarea id={p.id} name="links" defaultValue={values.links} rows={4} maxLength={2000} aria-describedby={p.describedBy} />}
+            {(p) => <Textarea id={p.id} name="links" defaultValue={values.links} rows={4} maxLength={2000} {...a11y("links", p.describedBy)} />}
           </Field>
           <div className="grid gap-6 tablet:grid-cols-2">
             <Field label="location">
-              {(p) => <Input id={p.id} name="location" defaultValue={values.location} maxLength={80} autoComplete="address-level2" />}
+              {(p) => <Input id={p.id} name="location" defaultValue={values.location} maxLength={80} autoComplete="address-level2" {...a11y("location")} />}
             </Field>
             <Field label="school">
-              {(p) => <Input id={p.id} name="school" defaultValue={values.school} maxLength={80} />}
+              {(p) => <Input id={p.id} name="school" defaultValue={values.school} maxLength={80} {...a11y("school")} />}
             </Field>
           </div>
           <Field label="experience">
             {(p) => (
-              <Select id={p.id} name="experienceLevel" defaultValue={values.experienceLevel}>
+              <Select id={p.id} name="experienceLevel" defaultValue={values.experienceLevel} {...a11y("experienceLevel")}>
                 <option value="">prefer not to say</option>
                 {EXPERIENCE_LEVELS.map((level) => (
                   <option key={level} value={level}>{EXPERIENCE_LABEL[level]}</option>

@@ -89,8 +89,12 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
       </section>
 
       <div>
+        {closed && mine.size === 0 ? (
+          <p className="type-body measure border-t border-line py-6">you did not score any section of this interview.</p>
+        ) : null}
         {SCRIPT.map((script, i) => {
           const saved = mine.get(script.section);
+          if (closed && mine.size === 0) return null;
           return closed ? (
             <section key={script.section} className="flex flex-col gap-2 border-t border-line py-6">
               <h2 className="type-display-4">

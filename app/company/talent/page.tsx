@@ -61,7 +61,7 @@ export default async function CompanyTalentPage({ searchParams }: PageProps<"/co
               <ul className="flex flex-col gap-2">
                 {p.projects.map((proj) => (
                   <li key={proj.id} className="flex flex-wrap items-center gap-2">
-                    <TextLink href={`/projects/${proj.id}`} className="type-body-s">{proj.title}</TextLink>
+                    <TextLink href={`/projects/${proj.id}`} className="min-h-11 inline-flex items-center type-body-s">{proj.title}</TextLink>
                     {proj.verified ? <StatusPill tone="success">verified</StatusPill> : null}
                   </li>
                 ))}

@@ -252,7 +252,7 @@ export async function WinnersSection({ hackathon }: { hackathon: H }) {
                 <ul className="flex flex-col gap-2">
                   {prize.winners.map((w) => (
                     <li key={w.id} className="flex flex-wrap items-center gap-3">
-                      <TextLink href={`/projects/${w.project.id}`}>{w.project.title}</TextLink>
+                      <TextLink href={`/projects/${w.project.id}`} className="min-h-11 inline-flex items-center">{w.project.title}</TextLink>
                       <StatusPill>awarded: {prize.name}</StatusPill>
                       <ConfirmAction
                         action={removeWinner}

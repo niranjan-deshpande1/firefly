@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma, parseJson, type EvidenceRef, type ReviewKind } from "@/lib/db";
 import type { CurrentUser } from "@/lib/auth";
-import { GENERIC_ANCHORS } from "./rubric";
+import { GENERIC_ANCHORS, JUDGING_ANCHORS } from "./rubric";
 import { calibrationFlags, type ScoreDraft, type ScoreItem } from "./rules";
 
 export type RubricItem = ScoreItem & {
@@ -52,7 +52,7 @@ export async function scoreItems(project: ReviewProject, kind: ReviewKind): Prom
       name: c.name,
       group: "judging criteria",
       description: c.description,
-      anchors: GENERIC_ANCHORS,
+      anchors: JUDGING_ANCHORS,
       isGate: false,
       judgingCriterionId: c.id,
     }));

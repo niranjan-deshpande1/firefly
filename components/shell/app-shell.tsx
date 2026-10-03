@@ -59,9 +59,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
         <footer className="mx-auto flex w-full max-w-content flex-wrap gap-x-6 gap-y-2 border-t border-line px-4 py-8 pb-32 type-body-s text-secondary tablet:px-8 desktop:px-6 desktop:pb-8">
-          <span>firefly</span>
-          <NextLink className="link" href="/hackathons">hackathons</NextLink>
-          <NextLink className="link" href="/for-companies">hiring with firefly</NextLink>
+          <span className="inline-flex min-h-11 items-center">firefly</span>
+          <NextLink className="link inline-flex min-h-11 items-center" href="/hackathons">hackathons</NextLink>
+          <NextLink className="link inline-flex min-h-11 items-center" href="/for-companies">hiring with firefly</NextLink>
         </footer>
       </div>
 

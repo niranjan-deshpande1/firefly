@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { deleteStoredFile } from "@/lib/storage";
 import { formatDate } from "@/lib/format/date";
-import { commentSchema, isBeforeDeadline, moveImageSchema, moveItem, postingProblems, projectInputSchema, type ProjectInput } from "./schema";
+import { commentSchema, hasStarted, isBeforeDeadline, moveImageSchema, moveItem, postingProblems, projectInputSchema, type ProjectInput } from "./schema";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
@@ -52,7 +52,7 @@ export async function saveProject(raw: ProjectInput): Promise<ActionResult<{ pro
 
     const hackathon = await prisma.hackathon.findUnique({
       where: { id: input.hackathonId },
-      select: { id: true, slug: true, title: true, submissionDeadline: true, timeZone: true },
+      select: { id: true, slug: true, title: true, startsAt: true, submissionDeadline: true, timeZone: true },
     });
     if (!hackathon) return { ok: false, error: "that hackathon no longer exists, open the hackathon list." };
     if (!isBeforeDeadline(hackathon.submissionDeadline)) return { ok: false, error: deadlineError(hackathon.submissionDeadline, hackathon.timeZone) };
@@ -98,6 +98,9 @@ export async function saveProject(raw: ProjectInput): Promise<ActionResult<{ pro
     if (wantsPost) {
       const problems = postingProblems(input);
       if (problems.length > 0) return { ok: false, error: problems[0] };
+      if (!hasStarted(hackathon.startsAt)) {
+        return { ok: false, error: `the hackathon starts on ${formatDate(hackathon.startsAt, hackathon.timeZone)}, save a draft and post it after that.` };
+      }
     }
     const newlyPosted = wantsPost && existing?.status !== "SUBMITTED";
 

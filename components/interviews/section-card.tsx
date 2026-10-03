@@ -116,10 +116,10 @@ export function SectionCard({ interviewId, index, script, locked, saved }: Secti
           </div>
 
           <div className="flex flex-col gap-4 measure">
-            <ScoreInput name={`score-${script.section}`} label={`${script.title} score`} anchors={script.anchors} value={score} onValueChange={setScore} />
+            <ScoreInput name={`score-${script.section}`} label={`${script.title} score`} anchors={script.anchors} value={score} onValueChange={(v) => { setScore(v); setError(undefined); }} />
             <Field label="notes" required hint="what you saw that supports the score." error={error}>
               {({ id, describedBy, invalid }) => (
-                <Textarea id={id} rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} aria-invalid={invalid} aria-describedby={describedBy} />
+                <Textarea id={id} rows={4} value={notes} onChange={(e) => { setNotes(e.target.value); setError(undefined); }} aria-invalid={invalid} aria-describedby={describedBy} />
               )}
             </Field>
             <div className="flex flex-wrap items-center gap-3">

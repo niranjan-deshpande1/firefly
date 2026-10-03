@@ -7,6 +7,7 @@ import {
   SCHEDULE_KINDS,
   TEAM_POLICIES,
 } from "@/lib/db/enums";
+import { formatDateTime } from "@/lib/format/date";
 import { isValidTimeZone, zonedLocalToUtc } from "./time";
 
 export type ActionResult<T = undefined> =
@@ -146,6 +147,26 @@ export const basicsSchema = z.object({
 export type BasicsInput = z.infer<typeof basicsSchema>;
 
 export const statusSchema = z.object({ status: z.enum(HACKATHON_STATUSES, "choose a status from the list.") });
+
+/**
+ * A status that depends on a date can't be set before that date passes. Moving back (or to draft or upcoming) is
+ * always allowed. Returns one sentence naming the date, or null.
+ */
+export function statusDateBlocker(
+  status: string,
+  h: { registrationOpensAt: Date; submissionDeadline: Date; timeZone: string; cohortConfig?: { defenseWindowStart: Date } | null },
+  now: Date = new Date(),
+): string | null {
+  const rules: Record<string, { at: Date; what: string } | undefined> = {
+    OPEN: { at: h.registrationOpensAt, what: "registration opens" },
+    JUDGING: { at: h.submissionDeadline, what: "the posting deadline passes" },
+    DEFENSE: { at: h.cohortConfig?.defenseWindowStart ?? h.submissionDeadline, what: "the defense window opens" },
+    COMPLETED: { at: h.submissionDeadline, what: "the posting deadline passes" },
+  };
+  const rule = rules[status];
+  if (!rule || now.getTime() >= rule.at.getTime()) return null;
+  return `this status can't be set until ${rule.what} on ${formatDateTime(rule.at, h.timeZone)}, keep the current status until then.`;
+}
 
 export const datesSchema = z
   .object({

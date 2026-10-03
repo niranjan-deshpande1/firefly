@@ -221,7 +221,7 @@ export function PastHackathons({ hackathons }: { hackathons: Dashboard["past"] }
       <ul className="flex flex-col">
         {hackathons.map((h) => (
           <li key={h.id} className="row flex flex-col gap-2 py-4">
-            <TextLink href={`/hackathons/${h.slug}`} className="type-display-4">
+            <TextLink href={`/hackathons/${h.slug}`} className="min-h-11 inline-flex items-center type-display-4">
               {h.title}
             </TextLink>
             {h.projects.length === 0 ? (
@@ -249,7 +249,7 @@ export function OpenHackathons({ hackathons }: { hackathons: Dashboard["openHack
     <ul className="flex flex-col" aria-label="open hackathons">
       {hackathons.map((h) => (
         <li key={h.id} className="row flex flex-col gap-1 py-4">
-          <TextLink href={`/hackathons/${h.slug}`} className="type-display-4">
+          <TextLink href={`/hackathons/${h.slug}`} className="min-h-11 inline-flex items-center type-display-4">
             {h.title}
           </TextLink>
           <p className="type-body-s text-secondary measure">
