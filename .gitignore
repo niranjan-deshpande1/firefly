@@ -14,7 +14,7 @@ Thumbs.db
 .vscode/
 
 # Dependencies and builds (Phase 6)
-node_modules/
+node_modules
 dist/
 /build/
 .next/
