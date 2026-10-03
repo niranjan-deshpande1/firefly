@@ -53,6 +53,26 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 15. Demo mode must be off on any public deploy (README).
 16. Team joins re-check membership and size inside one transaction, which narrows the race but does not close it under every isolation level. A database constraint (one team per person per hackathon) would close it; that needs a hackathon column on team members.
 
+17. Blind codes belong to the person, not the project. A reviewer who revealed someone in one cohort recognizes their code in the next. RECOMMENDATION: per-project codes.
+18. The seed schedules Maya's interview before her review is posted. Interview pages now show the blind code until the reveal, but the seed order is still unrealistic.
+19. Verified badges show on profiles only after the cohort completes, so the demo never shows one on a profile.
+20. The talent pool lists open-hackathon finishers too, and leaves out the current cohort until it completes. The brief says past cohort finishers.
+21. QA polish not done:
+    - $0 and 0% fees are accepted.
+    - More hires than a role's hire count are accepted without a warning.
+    - Demo video links aren't limited to https.
+    - Projects can be posted before a hackathon starts.
+    - Organizer status changes don't check date order.
+    - Two actions fail silently (award with no project picked, empty reconciliation note).
+    - Some stale form errors.
+    - Two copy slips.
+    - Admin can open /company.
+    - Small display issues.
+    - Soft 404s return HTTP 200 while streaming.
+    - Audit rows are noisy (one per transcript per page load).
+    - The project wizard drops unsaved steps.
+    - Completing an interview has no confirmation step.
+
 ## 4. Needs a lawyer
 
 1. Consent text and its versioning (what builders agree to about evidence, transcripts and company access).
