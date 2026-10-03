@@ -5,14 +5,22 @@ import { formatCents } from "@/lib/billing";
 import { requireRolePage } from "@/lib/company/page";
 import { LEVEL_LABEL, REMOTE_LABEL, ROLE_STATUS_LABEL, salaryRangeLabel } from "@/lib/company/labels";
 
-export default async function RolePage({ params }: PageProps<"/company/roles/[id]">) {
+export default async function RolePage({ params, searchParams }: PageProps<"/company/roles/[id]">) {
   const { id } = await params;
+  const { enrolled: enrolledInvoice } = await searchParams;
   const { role } = await requireRolePage(id);
+  const justEnrolled = role.enrollments.find((e) => e.invoice && e.invoice.number === enrolledInvoice);
   const enrolled = role.enrollments.length > 0;
   const place = [REMOTE_LABEL[role.remote] ?? role.remote, role.location].filter(Boolean).join(", ");
 
   return (
     <div className="flex flex-col gap-12">
+      {justEnrolled?.invoice ? (
+        <p role="status" className="card type-body">
+          {role.title} is enrolled in {justEnrolled.hackathon.title}. invoice {justEnrolled.invoice.number} created, {formatCents(justEnrolled.invoice.amountCents)}
+          {justEnrolled.invoice.nonRefundable ? ", non-refundable" : ""}.
+        </p>
+      ) : null}
       <PageHeader
         eyebrow={`${role.company.name} role`}
         title={role.title}
@@ -96,6 +104,9 @@ export default async function RolePage({ params }: PageProps<"/company/roles/[id
                 </span>
               </li>
             ))}
+            <li className="pt-4">
+              <TextLink href={`/company/roles/${role.id}/enroll`}>enroll in another hiring cohort</TextLink>
+            </li>
           </ul>
         ) : (
           <EmptyState action={<TextLink href={`/company/roles/${role.id}/enroll`}>choose a hiring cohort</TextLink>}>

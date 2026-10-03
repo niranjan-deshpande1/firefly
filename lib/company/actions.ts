@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma, toJson } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -180,19 +181,21 @@ export async function enrollAction(_prev: FormState<EnrollResult>, form: FormDat
   });
   if (!parsed.success) return { ok: false, error: "choose a hiring cohort from the list, then confirm.", fields: fieldErrors(parsed.error.issues) };
   const { roleId, hackathonId } = parsed.data;
+  let invoiceNumber: string;
   try {
     const user = await getCurrentUser();
     await authorize(user, "cohort.enroll", { roleId });
-    const { invoice, enrollment } = await enrollRoleInCohort({ hackathonId, roleId, actorId: user!.id });
-    const cohort = await prisma.hackathon.findUnique({ where: { id: enrollment.hackathonId }, select: { title: true } });
+    const { invoice } = await enrollRoleInCohort({ hackathonId, roleId, actorId: user!.id });
+    invoiceNumber = invoice.number;
     revalidatePath("/company");
     revalidatePath(`/company/roles/${roleId}`);
     revalidatePath("/company/billing");
     revalidatePath("/company/talent");
-    return { ok: true, data: { number: invoice.number, amountCents: invoice.amountCents, nonRefundable: invoice.nonRefundable, cohort: cohort?.title ?? "" } };
   } catch (error) {
     return failure(error);
   }
+  // Redirect so the confirmation survives the enroll page re-rendering without the joined cohort.
+  redirect(`/company/roles/${roleId}?enrolled=${encodeURIComponent(invoiceNumber)}`);
 }
 
 // ---------- hire reporting ----------

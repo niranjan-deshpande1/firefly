@@ -45,14 +45,12 @@ test("2. Northwind opens the Founding Engineer intake and enrolls in a cohort", 
   await expect(main(page).getByText(/ships end to end/)).toBeVisible();
   await expect(main(page).getByText(/data correctness/)).toBeVisible();
 
-  await main(page).getByRole("link", { name: /enroll/i }).or(main(page).getByRole("button", { name: /enroll/i })).first().click();
-  const cohort = page.getByLabel(/cohort/i);
-  if (await cohort.count()) await cohort.first().selectOption({ label: "Winter Builders Cohort" }).catch(() => cohort.first().check());
-  else await page.getByText("Winter Builders Cohort").first().click();
-  await page.getByRole("button", { name: /enroll/i }).last().click();
+  await main(page).getByRole("link", { name: "enroll in another hiring cohort" }).click();
+  await page.getByRole("radio", { name: /Winter Builders Cohort/ }).click();
+  await page.getByRole("button", { name: "enroll Founding Engineer" }).click();
+  await page.getByRole("button", { name: /enroll and issue the \$1,000 invoice/ }).click();
 
-  await expect(page.getByText(/\$1,000/).first()).toBeVisible();
-  await expect(page.getByText(/non-refundable/i).first()).toBeVisible();
+  await expect(main(page).getByRole("status")).toContainText(/invoice FF-\d{4}-\d{4} created, \$1,000, non-refundable/);
 
   await page.goto("/company/billing");
   await expect(main(page).getByText(/Winter Builders Cohort/)).toBeVisible();
@@ -82,33 +80,37 @@ test("4. Priya scores blind, reconciles the flagged gap and advances Maya", asyn
   await expect(main(page).getByText("Maya Chen")).toHaveCount(0);
 
   await main(page).getByRole("link", { name: new RegExp(MAYA_CODE) }).first().click();
+  await expect(page).toHaveURL(/\/review\/proj-maya$/);
   await expect(main(page).getByText("Maya Chen")).toHaveCount(0);
 
-  // Every score group: choose a level, write a rationale, attach one evidence link.
-  const groups = main(page).getByRole("group");
+  // Every score group: choose a level, write a rationale, link one piece of evidence.
+  const groups = main(page).getByRole("group").filter({ has: page.getByRole("radiogroup") });
   const count = await groups.count();
   expect(count).toBeGreaterThanOrEqual(6);
   for (let i = 0; i < count; i++) {
     const group = groups.nth(i);
-    const name = (await group.getAttribute("aria-label")) ?? (await group.locator("legend").first().innerText().catch(() => ""));
+    const name = await group.getByRole("heading", { level: 3 }).innerText();
     const level = /technical decisions/i.test(name) ? "4" : "3";
-    await group.getByRole("radio", { name: new RegExp(`^${level}\\b`) }).first().check();
-    await group.getByRole("textbox").first().fill("Evidence linked; see the attached item.");
-    const evidence = group.getByRole("checkbox").or(group.getByRole("button", { name: /link evidence|attach/i }));
-    if (await evidence.count()) await evidence.first().click();
+    await group.getByRole("radio", { name: new RegExp(`^${level} `) }).click();
+    await group.getByRole("textbox", { name: /rationale/ }).fill("Evidence linked; see the attached item.");
+    await group.getByText("link evidence").click();
+    await group.getByRole("checkbox").first().click();
   }
-  await main(page).getByRole("button", { name: /post review/i }).click();
-  await expect(main(page).getByText("Maya Chen").first()).toBeVisible();
+  await main(page).getByRole("button", { name: "post review" }).click();
+  await expect(main(page).getByRole("button", { name: "reveal identity" })).toBeVisible();
 
   await main(page).getByRole("link", { name: /calibrat/i }).first().click();
-  await expect(main(page).getByText(/technical decisions/i).first()).toBeVisible();
-  await main(page).getByRole("textbox").first().fill("The decision log names the alternative and the downside for the lock. Settled on 3.");
-  await main(page).getByRole("button", { name: /save|reconcile/i }).first().click();
+  await expect(page).toHaveURL(/\/review\/calibration\/proj-maya$/);
+  await expect(main(page).getByRole("heading", { level: 3, name: /technical decisions/i })).toBeVisible();
+  await main(page).getByRole("textbox", { name: /reconciliation note/ }).fill("The decision log names the alternative and the downside for the lock. Settled on 3.");
+  await main(page).getByRole("button", { name: /save note|update note/ }).click();
+  await expect(main(page).getByRole("button", { name: "update note" })).toBeVisible();
 
-  await main(page).getByRole("radio", { name: /^advance/i }).or(main(page).getByRole("button", { name: /^advance/i })).first().click();
-  await main(page).getByLabel(/reason/i).fill("Evidence shows she catches AI errors and tests first; ready for a defense.");
-  await main(page).getByRole("button", { name: /advance|save decision/i }).last().click();
-  await expect(main(page).getByText(/advanced/i).first()).toBeVisible();
+  await main(page).getByRole("radio", { name: /^advance / }).click();
+  await main(page).getByRole("textbox", { name: "reason (required)" }).fill("Evidence shows she catches AI errors and tests first; ready for a defense.");
+  await main(page).getByRole("button", { name: "record decision" }).click();
+  await expect(main(page).getByText(/advance/i).first()).toBeVisible();
+  await expect(main(page).getByRole("textbox", { name: "reason (required)" })).toHaveValue("");
 });
 
 test("5. Priya runs the defense interview and the project becomes verified", async ({ page }) => {
@@ -116,15 +118,22 @@ test("5. Priya runs the defense interview and the project becomes verified", asy
   await page.goto("/interviews");
   await main(page).getByRole("link", { name: /Maya Chen/ }).first().click();
 
-  await main(page).getByRole("checkbox", { name: /identity/i }).or(main(page).getByRole("button", { name: /confirm identity/i })).first().click();
-  for (const section of [/walkthrough/i, /what breaks if/i, /live change/i, /planted bug/i, /product/i]) {
-    const group = main(page).getByRole("group", { name: section });
-    await group.getByRole("radio", { name: /^4\b/ }).first().check();
-    await group.getByRole("textbox").first().fill("Explained it clearly and checked the result.");
+  await expect(page).toHaveURL(/\/interviews\/interview-maya$/);
+
+  await main(page).getByRole("checkbox", { name: /the photo ID matches Maya Chen/ }).click();
+  await main(page).getByRole("button", { name: "confirm identity" }).click();
+  for (const section of ["1. walkthrough", "2. what breaks if", "3. live change", "4. planted bug", "5. product questions"]) {
+    const region = main(page).getByRole("region", { name: section });
+    await region.getByRole("radio", { name: /^4 / }).click();
+    await region.getByRole("textbox", { name: "notes (required)" }).fill("Explained it clearly and checked the result.");
+    await region.getByRole("button", { name: "save score" }).click();
+    await expect(region.getByRole("button", { name: /save score|update score/ })).toBeEnabled();
   }
-  await main(page).getByRole("radio", { name: /pass/i }).or(main(page).getByRole("button", { name: /pass/i })).first().click();
-  await main(page).getByRole("button", { name: /complete interview/i }).click();
+  await main(page).getByRole("radio", { name: /^pass/ }).click();
+  await main(page).getByRole("textbox", { name: "outcome notes (required)" }).fill("Walked through the code, fixed the planted bug and explained the tradeoffs.");
+  await main(page).getByRole("button", { name: "complete interview" }).click();
   await expect(main(page).getByText(/verified/i).first()).toBeVisible();
+  await expect(main(page).getByRole("button", { name: "complete interview" })).toHaveCount(0);
 });
 
 test("6. Jordan opens the shortlist and report, then reports a $140,000 hire", async ({ page }) => {
@@ -135,9 +144,11 @@ test("6. Jordan opens the shortlist and report, then reports a $140,000 hire", a
   await expect(main(page).getByText(/comprehension and ownership/i).first()).toBeVisible();
 
   await main(page).getByRole("link", { name: /report a hire/i }).or(main(page).getByRole("button", { name: /report a hire/i })).first().click();
+  await page.getByLabel(/candidate/i).selectOption({ label: "Maya Chen (Reschedule Desk)" });
   await page.getByLabel(/salary/i).fill("140000");
   await page.getByLabel(/start date/i).fill(new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10));
   await page.getByRole("button", { name: /report (the )?hire/i }).last().click();
+  await expect(page.getByRole("heading", { name: /hire reported: Maya Chen/ })).toBeVisible();
   await expect(page.getByText(/\$7,000/).first()).toBeVisible();
 });
 

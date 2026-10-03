@@ -7,7 +7,7 @@ test("demo sign-in lands a builder on their dashboard", async ({ page }) => {
   await page.getByRole("button", { name: "continue as Maya Chen" }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { level: 1, name: "your dashboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "hi Maya" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "primary" }).getByRole("link", { name: "home" }).first()).toHaveAttribute("aria-current", "page");
 });
 

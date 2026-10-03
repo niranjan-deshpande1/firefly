@@ -65,6 +65,8 @@ export async function reportHire(params: { companyId: string; roleId: string; ca
   const result = await prisma.$transaction(async (tx) => {
     const role = await tx.role.findUnique({ where: { id: params.roleId } });
     if (!role || role.companyId !== params.companyId) throw new BillingError("that role belongs to another company, choose one of your roles.");
+    const already = await tx.hire.findFirst({ where: { roleId: params.roleId, candidateId: params.candidateId } });
+    if (already) throw new BillingError("this hire is already reported for this role, open billing to see its invoice.");
     const invoice = await tx.invoice.create({
       data: {
         number: await nextInvoiceNumber(tx),
