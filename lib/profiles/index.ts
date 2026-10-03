@@ -25,7 +25,8 @@ export function safeNext(next: unknown, fallback: string): string {
   try {
     const url = new URL(next, "http://firefly.invalid");
     if (url.origin !== "http://firefly.invalid") return fallback;
-    return `${url.pathname}${url.search}${url.hash}`;
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    return path.startsWith("//") ? fallback : path; // normalization can turn "/.//x" into "//x"
   } catch {
     return fallback;
   }

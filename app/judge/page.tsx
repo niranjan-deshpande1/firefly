@@ -29,7 +29,7 @@ export default async function JudgePage() {
                 <span className="type-display-4">{r.title}</span>
                 <span className="type-body-s text-secondary">{r.hackathon}</span>
                 <span>
-                  <StatusPill tone={r.myStatus === "posted" ? "success" : r.myStatus === "draft" ? "accent" : "neutral"}>your scores: {r.myStatus}</StatusPill>
+                  <StatusPill>your scores: {r.myStatus}</StatusPill>
                 </span>
               </NextLink>
             </li>

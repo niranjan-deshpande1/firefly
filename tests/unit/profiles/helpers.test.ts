@@ -7,7 +7,7 @@ describe("safeNext", () => {
     expect(safeNext("/hackathons/spring/register?x=1#a", "/dashboard")).toBe("/hackathons/spring/register?x=1#a");
   });
   it("rejects absolute, protocol-relative and backslash tricks", () => {
-    for (const bad of ["https://evil.test", "//evil.test", "/\\evil.test", "javascript:alert(1)", "dashboard", "", undefined, ["/a"]]) {
+    for (const bad of ["https://evil.test", "//evil.test", "/\\evil.test", "javascript:alert(1)", "dashboard", "", undefined, ["/a"], "/.//evil.test", "/%2e//evil.test", "/a/..//evil.test", "/./\\evil.test"]) {
       expect(safeNext(bad, "/dashboard")).toBe("/dashboard");
     }
   });

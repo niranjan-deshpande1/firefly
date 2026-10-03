@@ -27,7 +27,7 @@ export default async function TeamsPage({ params }: PageProps<"/hackathons/[slug
   if (!teamsAllowed(h)) {
     return (
       <div className="flex flex-col gap-8">
-        <PageHeader title="teams" />
+        <PageHeader level={2} title="teams" />
         <EmptyState action={<TextLink href={`/hackathons/${h.slug}`}>open the {h.title} overview</TextLink>}>
           {h.type === "HIRING_COHORT"
             ? "hiring cohorts are solo. each builder makes and defends their own project, so there are no teams here."
@@ -44,7 +44,7 @@ export default async function TeamsPage({ params }: PageProps<"/hackathons/[slug
 
   return (
     <div className="flex flex-col gap-16">
-      <PageHeader
+      <PageHeader level={2}
         title={myTeam ? myTeam.name : "teams"}
         description={<p>teams in {h.title} hold up to {h.maxTeamSize} builders. you can also build solo.</p>}
       />

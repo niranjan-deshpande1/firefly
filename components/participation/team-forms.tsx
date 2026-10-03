@@ -89,7 +89,7 @@ export function LeaveTeamButton({ teamId, teamName, isLast }: { teamId: string; 
   return (
     <Dialog
       title={`leave ${teamName}?`}
-      description={isLast ? "you're the last member, so the team closes. your project stays yours." : "your teammates keep the team and its project."}
+      description={isLast ? "you're the last teammate, so the team closes. your project stays yours." : "your teammates keep the team and its project."}
       trigger={<Button variant="ghost">leave team</Button>}
     >
       <form onSubmit={onSubmit} className="flex flex-col items-start gap-3">

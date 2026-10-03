@@ -197,13 +197,16 @@ export async function completeInterview(input: z.input<typeof completeSchema>): 
     if (blocked) return { ok: false, error: blocked };
 
     const now = new Date();
-    await prisma.$transaction([
-      prisma.interview.update({
-        where: { id: interview.id },
+    // Conditional close: if another panelist completed it a moment ago, this one changes nothing.
+    const closed = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.interview.updateMany({
+        where: { id: interview.id, status: { notIn: ["COMPLETED", "CANCELLED"] } },
         data: { status: "COMPLETED", outcome: v.outcome, notes: v.notes, completedAt: now },
-      }),
-      ...(v.outcome === "PASS" ? [prisma.project.update({ where: { id: interview.projectId }, data: { verified: true, verifiedAt: now } })] : []),
-    ]);
+      });
+      if (count === 1 && v.outcome === "PASS") await tx.project.update({ where: { id: interview.projectId }, data: { verified: true, verifiedAt: now } });
+      return count === 1;
+    });
+    if (!closed) return { ok: false, error: "this interview is already closed, reload the room to see its outcome." };
     await audit({
       actorId: user.id,
       action: "INTERVIEW_COMPLETED",

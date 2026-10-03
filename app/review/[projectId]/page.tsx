@@ -33,6 +33,12 @@ export default async function ScoringWorkspacePage({ params }: PageProps<"/revie
     toDrafts(review?.scores ?? []),
     prisma.reviewerAssignment.findMany({ where: { projectId }, include: { reviewer: { select: { id: true, name: true } } } }),
   ]);
+  // The evidence panel renders every transcript, so each one counts as opened (brief 4.4).
+  await Promise.all(
+    evidence.transcripts.map((t) =>
+      auditAccess(user, "TRANSCRIPT_VIEW", project.ownerId, { type: "AITranscript", id: t.id, metadata: { projectId: project.id, surface: "scoring workspace" } }),
+    ),
+  );
   const calibration = posted ? await calibrationState(projectId, items.map((i) => i.key)) : null;
   const openFlags = calibration ? calibration.flags.filter((k) => !calibration.notes.some((n) => n.dimensionKey === k)).length : 0;
   const profile = project.owner.candidateProfile;
@@ -106,6 +112,8 @@ export default async function ScoringWorkspacePage({ params }: PageProps<"/revie
         </aside>
 
         <section aria-label="rubric" className="flex flex-col gap-6 desktop:col-span-6">
+          {/* On phones the evidence stacks below the rubric; this keeps it one tap away. */}
+          <TextLink href="#evidence" className="type-body self-start desktop:hidden">jump to the evidence</TextLink>
           {items.length === 0 ? (
             <p className="type-body text-secondary measure">the rubric hasn&apos;t been loaded yet. ask an operator to run the seed, then reload.</p>
           ) : (
@@ -120,7 +128,7 @@ export default async function ScoringWorkspacePage({ params }: PageProps<"/revie
           )}
         </section>
 
-        <section aria-label="evidence" className="flex flex-col gap-4 desktop:col-span-3 desktop:sticky desktop:top-6 desktop:max-h-dvh desktop:self-start desktop:overflow-y-auto">
+        <section id="evidence" aria-label="evidence" className="flex flex-col gap-4 desktop:col-span-3 desktop:sticky desktop:top-6 desktop:max-h-dvh desktop:self-start desktop:overflow-y-auto">
           <EvidencePanel evidence={evidence} blind={!revealed} />
         </section>
       </div>

@@ -58,7 +58,8 @@ export async function markInvoiceSentAction(invoiceId: string): Promise<ActionRe
     });
     if (!invoice) return { ok: false, error: "that invoice does not exist, return to invoices." };
     if (!canTransition(invoice.status, "SENT")) return { ok: false, error: `a ${invoice.status.toLowerCase()} invoice can't be sent, reload invoices.` };
-    await prisma.invoice.update({ where: { id: invoice.id }, data: { status: "SENT", issuedAt: new Date() } });
+    const { count } = await prisma.invoice.updateMany({ where: { id: invoice.id, status: "DRAFT" }, data: { status: "SENT", issuedAt: new Date() } });
+    if (count === 0) return { ok: false, error: "that invoice was already sent, reload invoices." };
     await audit({ actorId: user.id, action: "INVOICE_SENT", resourceType: "Invoice", resourceId: invoice.id, metadata: { type: invoice.type } });
     const to = invoice.company.members[0]?.user.email;
     if (to) {

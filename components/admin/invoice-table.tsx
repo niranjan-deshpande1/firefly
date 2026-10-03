@@ -17,7 +17,7 @@ export type InvoiceRow = {
   company: { name: string };
 };
 
-const TONE: Record<string, StatusTone> = { DRAFT: "neutral", SENT: "warning", PAID: "success" };
+const TONE: Record<string, StatusTone> = { DRAFT: "neutral", SENT: "neutral", PAID: "success" };
 const TYPE_LABEL: Record<string, string> = { FLAT_FEE: "cohort fee", HIRE_FEE: "hire fee" };
 
 /**

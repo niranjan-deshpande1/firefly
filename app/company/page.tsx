@@ -64,7 +64,7 @@ export default async function CompanyPage({ searchParams }: PageProps<"/company"
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <StatusPill tone={role.status === "OPEN" ? "accent" : "neutral"}>{ROLE_STATUS_LABEL[role.status] ?? role.status}</StatusPill>
+                    <StatusPill>{ROLE_STATUS_LABEL[role.status] ?? role.status}</StatusPill>
                     {enrolled.length ? (
                       <TextLink href={`/company/roles/${role.id}/shortlist`} className="target inline-flex items-center">
                         shortlist{shortlisted ? ` (${shortlisted})` : ""}

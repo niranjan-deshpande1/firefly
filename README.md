@@ -29,7 +29,7 @@ Every variable has a working local fallback. They are mirrored in `.env.example`
 | Variable | Default | Without it |
 |---|---|---|
 | `DATABASE_URL` | `file:./dev.db` | Required. SQLite file under `prisma/`. The schema stays Postgres-compatible. |
-| `DEMO_MODE` | `true` | `false` hides demo sign-in; GitHub sign-in must then be configured. |
+| `DEMO_MODE` | `true` | `false` hides demo sign-in; GitHub sign-in must then be configured. Demo sign-in lets anyone act as any seeded person, admin included, so never leave it on in a public deploy. It switches off by itself when GitHub sign-in is configured. |
 | `AUTH_SECRET` | empty | In demo mode a fixed demo secret is used. Set one (`npx auth secret`) for anything other than a local demo. |
 | `GITHUB_ID`, `GITHUB_SECRET` | empty | GitHub sign-in is hidden; demo sign-in only. |
 | `GITHUB_TOKEN` | empty | Repo reads use GitHub's unauthenticated rate limit; seeded commits show when GitHub can't be reached. |

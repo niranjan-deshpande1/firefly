@@ -178,7 +178,7 @@ export async function ReviewersSection({ hackathon }: { hackathon: H }) {
               </StatusPill>
               {p.decisions[0]?.outcome === "ADVANCE" ? (
                 <>
-                  <StatusPill tone="accent">advanced</StatusPill>
+                  <StatusPill>advanced</StatusPill>
                   <TextLink href={`/interviews/new?projectId=${p.id}`} className="inline-flex min-h-11 items-center type-body-s">
                     schedule an interview
                   </TextLink>
@@ -253,7 +253,7 @@ export async function WinnersSection({ hackathon }: { hackathon: H }) {
                   {prize.winners.map((w) => (
                     <li key={w.id} className="flex flex-wrap items-center gap-3">
                       <TextLink href={`/projects/${w.project.id}`}>{w.project.title}</TextLink>
-                      <StatusPill tone="accent">awarded: {prize.name}</StatusPill>
+                      <StatusPill>awarded: {prize.name}</StatusPill>
                       <ConfirmAction
                         action={removeWinner}
                         hidden={{ hackathonId: hackathon.id, id: w.id }}

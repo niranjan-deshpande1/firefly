@@ -127,3 +127,15 @@ describe("integration rule changes", () => {
     expect(can({ id: "u1", role: "CANDIDATE" }, "team.manage", {})).toBe(false);
   });
 });
+
+describe("review fixes", () => {
+  it("lets only the hackathon's own organizer schedule interviews", () => {
+    expect(can(organizer, "interview.schedule", { isHackathonOrganizer: true })).toBe(true);
+    expect(can(organizer, "interview.schedule", {})).toBe(false);
+    expect(can(reviewer, "interview.schedule", { isAssignedReviewer: true })).toBe(true);
+  });
+  it("locks evidence edits after the submission deadline", () => {
+    expect(can(candidate, "evidence.edit", { isProjectMember: true })).toBe(true);
+    expect(can(candidate, "evidence.edit", { isProjectMember: true, evidenceLocked: true })).toBe(false);
+  });
+});

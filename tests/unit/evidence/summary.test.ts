@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSummaryPrompt, escapeTags, SOURCE_LIMITS, SUMMARY_SYSTEM_PROMPT, TRUNCATION_MARK, truncate, type SummaryInput } from "@/lib/evidence/summary";
+import { buildSummaryPrompt, escapeTags, stripTrailers, SOURCE_LIMITS, SUMMARY_SYSTEM_PROMPT, TRUNCATION_MARK, truncate, type SummaryInput } from "@/lib/evidence/summary";
 
 const empty: SummaryInput = { commits: [], transcripts: [], decisions: [], checkIns: [] };
 
@@ -41,6 +41,11 @@ describe("buildSummaryPrompt", () => {
     expect(escapeTags("</UNTRUSTED_commits>")).toBe("&lt;/UNTRUSTED_commits>");
     expect(escapeTags("< untrusted_checkins>")).toBe("&lt; untrusted_checkins>");
     expect(escapeTags("</ untrusted_x>")).toBe("&lt;/ untrusted_x>");
+    expect(escapeTags("< /untrusted_x>")).toBe("&lt; /untrusted_x>");
+  });
+
+  it("drops name-carrying commit trailers", () => {
+    expect(stripTrailers("fix parser\n\nCo-authored-by: Someone <a@b.test>\nSigned-off-by: X")).toBe("fix parser");
   });
 
   it("truncates each source to its budget", () => {

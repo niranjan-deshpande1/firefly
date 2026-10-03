@@ -89,8 +89,9 @@ describe("isBlindViewer", () => {
   it("is blind for an assigned reviewer before their review is posted", () => {
     expect(isBlindViewer("REVIEWER", { isAssignedReviewer: true })).toBe(true);
   });
-  it("lifts after the review is submitted", () => {
-    expect(isBlindViewer("REVIEWER", { isAssignedReviewer: true, reviewSubmitted: true })).toBe(false);
+  it("stays blind after posting until the reviewer reveals (the reveal is audited)", () => {
+    expect(isBlindViewer("REVIEWER", { isAssignedReviewer: true, reviewSubmitted: true })).toBe(true);
+    expect(isBlindViewer("REVIEWER", { isAssignedReviewer: true, reviewSubmitted: true, identityRevealed: true })).toBe(false);
   });
   it("is never blind for members, companies or admins", () => {
     expect(isBlindViewer("CANDIDATE", { isProjectMember: true })).toBe(false);

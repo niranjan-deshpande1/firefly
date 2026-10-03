@@ -10,7 +10,8 @@ export function ChipButton({ className, ...rest }: React.ButtonHTMLAttributes<HT
   return <button type="button" className={cn("chip", className)} {...rest} />;
 }
 
-export type StatusTone = "neutral" | "success" | "error" | "warning" | "accent";
+// Blue is never a status (links, focus, active, selected only), so there is no accent tone.
+export type StatusTone = "neutral" | "success" | "error" | "warning";
 
 /** Flat pill with a literal label; color never carries meaning alone (manual 13.2). */
 export function StatusPill({ tone = "neutral", className, ...rest }: HTMLAttributes<HTMLSpanElement> & { tone?: StatusTone }) {

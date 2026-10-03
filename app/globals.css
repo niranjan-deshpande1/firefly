@@ -540,6 +540,7 @@
     transition: background-color var(--motion-state), border-color var(--motion-state), transform var(--motion-instant);
     /* 10px invisible hit inset each side keeps the target at 44px. */
     position: relative;
+    flex-shrink: 0;
   }
   .selection::after { content: ""; position: absolute; inset: calc((var(--primitive-target) - var(--primitive-space-24)) / -2); }
   .selection:hover:not(:disabled) { background: var(--semantic-color-surface-raised-2); }
@@ -552,6 +553,7 @@
   .radio-mark { inline-size: var(--primitive-space-8); block-size: var(--primitive-space-8); border: var(--primitive-border-2) solid currentColor; border-radius: var(--primitive-radius-pill); }
   .toggle {
     position: relative;
+    flex-shrink: 0;
     inline-size: var(--primitive-target);
     block-size: var(--primitive-space-24);
     background: var(--component-selection-bg);
@@ -596,6 +598,9 @@
   :is(a, button).chip:hover { background: var(--component-chip-bg-hover); }
   :is(a, button).chip:active { background: var(--semantic-color-surface-raised-2); transform: translate(var(--primitive-offset-chip), var(--primitive-offset-chip)); box-shadow: 0 0 0 0 var(--component-chip-offset); transition-duration: var(--primitive-duration-100); }
   .chip[aria-pressed="true"], .chip[aria-selected="true"] { color: var(--component-chip-text-selected); border-color: var(--semantic-color-border-focus); }
+  /* Evidence surfaces are cartoon-free: flat 1px line, no offset (DESIGN.md). */
+  .chip-flat { border: var(--primitive-border-1) solid var(--semantic-color-border-default); box-shadow: none; }
+  :is(a, button).chip-flat:active { transform: none; }
   .chip[aria-disabled="true"] { color: var(--semantic-color-content-muted); opacity: var(--primitive-opacity-disabled); }
   /* Status pill: flat, pill radius, literal label (manual 4.1 radius assignments). */
   .status {

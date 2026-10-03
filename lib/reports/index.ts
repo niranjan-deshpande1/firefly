@@ -48,7 +48,8 @@ export async function viewCandidateReport(user: CurrentUser, roleId: string, can
     prisma.calibrationNote.findMany({ where: { projectId }, select: { dimensionKey: true, note: true, resolvedScore: true, createdAt: true } }),
     prisma.decision.findMany({ where: { projectId }, select: { outcome: true, reason: true, decidedAt: true } }),
     prisma.interview.findMany({
-      where: { projectId, candidateId },
+      // Only interviews we ran (no role) or ones for this role; never another company's panel.
+      where: { projectId, candidateId, OR: [{ roleId: null }, { roleId }] },
       select: { id: true, status: true, outcome: true, model: true, scheduledAt: true, completedAt: true, scores: { orderBy: { createdAt: "asc" }, select: { id: true, section: true, score: true, notes: true, scoredById: true } } },
     }),
     prisma.evidenceSummary.findFirst({ where: { projectId }, orderBy: { generatedAt: "desc" }, select: { content: true, model: true, seeded: true, generatedAt: true } }),

@@ -12,7 +12,7 @@ async function signInAs(page: Page, name: string) {
 
 async function expectNotFound(page: Page, path: string) {
   await page.goto(path);
-  await expect(page.getByRole("heading", { name: "This page could not be found." }), path).toBeVisible();
+  await expect(page.getByRole("heading", { name: "this page does not exist" }), path).toBeVisible();
 }
 
 test("a company can't open another company's role, shortlist or candidate report", async ({ page }) => {

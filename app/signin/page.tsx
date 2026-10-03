@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getCurrentUser, isDemoMode, isGitHubAuthEnabled, signIn } from "@/lib/auth";
+import { DEMO_USER_WHERE, getCurrentUser, isDemoMode, isGitHubAuthEnabled, signIn } from "@/lib/auth";
 import { prisma, USER_ROLES, type UserRole } from "@/lib/db";
 import { Button, PageHeader } from "@/components/ui";
 import { NAV } from "@/components/shell/nav";
@@ -10,7 +10,7 @@ export const metadata = { title: "sign in" };
 // Archetype: passage.
 const ROLE_LABEL: Record<UserRole, string> = {
   CANDIDATE: "builders",
-  COMPANY: "company members",
+  COMPANY: "company teams",
   ORGANIZER: "organizers",
   REVIEWER: "reviewers and interviewers",
   ADMIN: "operators",
@@ -22,7 +22,7 @@ async function demoSignIn(formData: FormData) {
   "use server";
   if (!isDemoMode()) return;
   const userId = z.string().min(1).max(64).parse(formData.get("userId"));
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  const user = await prisma.user.findFirst({ where: { id: userId, ...DEMO_USER_WHERE }, select: { role: true } });
   if (!user) return;
   await signIn("demo", { userId, redirectTo: homeFor(user.role as UserRole) });
 }
@@ -38,7 +38,7 @@ export default async function SignInPage() {
 
   const demo = isDemoMode();
   const users = demo
-    ? await prisma.user.findMany({ where: { name: { not: "deleted account" } }, orderBy: [{ role: "asc" }, { name: "asc" }], select: { id: true, name: true, role: true } })
+    ? await prisma.user.findMany({ where: { name: { not: "deleted account" }, ...DEMO_USER_WHERE }, orderBy: [{ role: "asc" }, { name: "asc" }], select: { id: true, name: true, role: true } })
     : [];
 
   return (

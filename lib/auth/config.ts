@@ -6,8 +6,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import type { Provider } from "next-auth/providers";
 
-export const isDemoMode = () => process.env.DEMO_MODE === "true";
 export const isGitHubAuthEnabled = () => Boolean(process.env.GITHUB_ID && process.env.GITHUB_SECRET);
+// Demo sign-in lets anyone act as any seeded person, so it switches off whenever real GitHub sign-in is configured.
+export const isDemoMode = () => process.env.DEMO_MODE === "true" && !isGitHubAuthEnabled();
+// Seeded people only: a user with a linked provider account is never offered or accepted by demo sign-in.
+export const DEMO_USER_WHERE = { accounts: { none: {} } } as const;
 
 // ponytail: fixed secret only in demo mode so `npm run dev` works with no setup; production must set AUTH_SECRET.
 const DEMO_SECRET = "firefly-demo-mode-secret-do-not-use-in-production";
@@ -26,7 +29,7 @@ function providers(): Provider[] {
         async authorize(raw) {
           const parsed = z.object({ userId: z.string().min(1).max(64) }).safeParse(raw);
           if (!parsed.success) return null;
-          const user = await prisma.user.findUnique({ where: { id: parsed.data.userId } });
+          const user = await prisma.user.findFirst({ where: { id: parsed.data.userId, ...DEMO_USER_WHERE } });
           return user ? { id: user.id, name: user.name, email: user.email, image: user.image } : null;
         },
       }),

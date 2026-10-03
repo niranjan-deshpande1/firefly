@@ -47,7 +47,7 @@ export default async function HackathonPrizesPage({ params }: PageProps<"/hackat
                       <TextLink href={`/projects/${w.project.id}`} className="type-body">
                         {w.project.title}
                       </TextLink>
-                      <StatusPill tone="success">awarded: {p.name}</StatusPill>
+                      <StatusPill>awarded: {p.name}</StatusPill>
                     </li>
                   ))}
                 </ul>

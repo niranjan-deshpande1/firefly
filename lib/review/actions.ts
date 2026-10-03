@@ -203,13 +203,15 @@ export async function makeDecision(input: z.input<typeof zDecision>): Promise<Ac
         for (const e of project.hackathon.enrollments) {
           const shortlist = await tx.shortlist.upsert({ where: { roleId: e.roleId }, create: { roleId: e.roleId }, update: {} });
           for (const c of candidates) {
-            await tx.shortlistEntry.upsert({
-              where: { shortlistId_candidateId: { shortlistId: shortlist.id, candidateId: c.id } },
-              create: { shortlistId: shortlist.id, candidateId: c.id, projectId, addedById: user.id },
-              update: { projectId, status: "ACTIVE" },
-            });
+            const key = { shortlistId_candidateId: { shortlistId: shortlist.id, candidateId: c.id } };
+            const existing = await tx.shortlistEntry.findUnique({ where: key, select: { status: true } });
+            if (!existing) await tx.shortlistEntry.create({ data: { shortlistId: shortlist.id, candidateId: c.id, projectId, addedById: user.id } });
+            else if (existing.status !== "HIRED") await tx.shortlistEntry.update({ where: key, data: { projectId, status: "ACTIVE" } });
           }
         }
+      } else {
+        // Hold or don't advance after an earlier advance: companies lose shortlist (and report) access.
+        await tx.shortlistEntry.updateMany({ where: { projectId, status: "ACTIVE" }, data: { status: "WITHDRAWN" } });
       }
       return d;
     });

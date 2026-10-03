@@ -18,7 +18,7 @@ export default async function PostProjectPage({ params }: PageProps<"/hackathons
   if (existing) redirect(`/projects/${existing.id}/edit`);
 
   const header = (
-    <PageHeader
+    <PageHeader level={2}
       title="post your project"
       description={
         <p>

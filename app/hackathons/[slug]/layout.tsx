@@ -51,7 +51,7 @@ export default async function HackathonLayout({ children, params }: LayoutProps<
             <p className="text-primary">{h.tagline}</p>
             <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 type-body-s" aria-label="key facts">
               <li>
-                <StatusPill tone={h.status === "OPEN" ? "accent" : "neutral"}>{statusLabel(h.status)}</StatusPill>
+                <StatusPill>{statusLabel(h.status)}</StatusPill>
               </li>
               <li>{dateRange(h.startsAt, h.endsAt, tz)}</li>
               <li>{formatLabel(h.format, h.location)}</li>

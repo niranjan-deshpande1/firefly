@@ -60,6 +60,12 @@ export async function saveDecision(_prev: DecisionFormState, formData: FormData)
   return { ok: true };
 }
 
+// ponytail: per-process lock; move to a DB claim row if we ever run more than one instance.
+const summariesInFlight = new Set<string>();
+/** Spend ceiling across all projects: paid model calls per rolling 24 hours. */
+const DAILY_SUMMARY_CAP = 100;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /** Prepares a new evidence summary when an API key is set. Anyone who can view the evidence may ask; one per 10 minutes. */
 export async function refreshSummary(projectId: string): Promise<ActionResult> {
   if (typeof projectId !== "string" || !projectId) return { ok: false, error: "that project was not found, reload the page." };
@@ -75,14 +81,20 @@ export async function refreshSummary(projectId: string): Promise<ActionResult> {
   if (last && Date.now() - last.generatedAt.getTime() < SUMMARY_COOLDOWN_MS) {
     return { ok: false, error: "a summary was prepared in the last 10 minutes, read that one or try again later." };
   }
-  const locker = await loadLocker(projectId);
-  if (!locker) return { ok: false, error: "that project was not found, reload the page." };
-
+  const today = await prisma.evidenceSummary.count({ where: { seeded: false, generatedAt: { gte: new Date(Date.now() - DAY_MS) } } });
+  if (today >= DAILY_SUMMARY_CAP) return { ok: false, error: "the daily summary limit is reached, read the prepared summary or try again tomorrow." };
+  // Claimed before the model call, which takes up to a minute, so parallel requests can't each pass the cooldown.
+  if (summariesInFlight.has(projectId)) return { ok: false, error: "a summary is being prepared, reload in a minute." };
+  summariesInFlight.add(projectId);
   try {
+    const locker = await loadLocker(projectId);
+    if (!locker) return { ok: false, error: "that project was not found, reload the page." };
     const { content, model } = await requestSummary(locker);
     await prisma.evidenceSummary.create({ data: { projectId, content, model, seeded: false } });
   } catch {
     return { ok: false, error: "the summary could not be prepared, read the evidence below or try again later." };
+  } finally {
+    summariesInFlight.delete(projectId);
   }
   revalidatePath(lockerPath(projectId));
   return { ok: true };

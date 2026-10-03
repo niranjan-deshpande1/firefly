@@ -2,9 +2,9 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import type { Facts } from "@/lib/permissions";
 
-/** A reviewer assigned to the project who has not submitted their review sees no identity (brief 4.2). */
+/** An assigned reviewer sees no identity until they post and then reveal it, which is audited (brief 4.2, 4.4). */
 export function isBlindViewer(role: string, facts: Facts): boolean {
-  return role === "REVIEWER" && !!facts.isAssignedReviewer && !facts.reviewSubmitted && !facts.isProjectMember;
+  return role === "REVIEWER" && !!facts.isAssignedReviewer && !facts.identityRevealed && !facts.isProjectMember;
 }
 
 /** Everything the locker shows for one project. Live GitHub commits replace seeded ones once a fetch has succeeded. */

@@ -103,7 +103,7 @@ export async function getShortlist(roleId: string) {
               tagline: true,
               verified: true,
               hackathon: { select: { title: true } },
-              interviews: { orderBy: { scheduledAt: "desc" }, take: 1, select: { status: true, outcome: true, scheduledAt: true, candidateId: true } },
+              interviews: { where: { OR: [{ roleId: null }, { roleId }] }, orderBy: { scheduledAt: "desc" }, take: 1, select: { status: true, outcome: true, scheduledAt: true, candidateId: true } },
             },
           },
         },

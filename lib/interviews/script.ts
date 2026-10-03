@@ -107,4 +107,4 @@ export const SCRIPT: ScriptSection[] = [
 export const MODEL_LABELS = { WE_RUN: "we run it", JOINT: "joint", COMPANY_RUN: "company runs it" } as const;
 export const MODE_LABELS = { IN_PERSON: "in person", VIDEO: "video" } as const;
 export const STATUS_LABELS = { SCHEDULED: "scheduled", IN_PROGRESS: "in progress", COMPLETED: "completed", CANCELLED: "cancelled" } as const;
-export const OUTCOME_LABELS = { PASS: "pass", FAIL: "fail" } as const;
+export const OUTCOME_LABELS = { PASS: "defense passed", FAIL: "defense not passed" } as const;

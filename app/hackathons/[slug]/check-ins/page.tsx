@@ -23,7 +23,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
   if (h.type !== "HIRING_COHORT") {
     return (
       <div className="flex flex-col gap-8 measure-stream">
-        <PageHeader title="check-ins" />
+        <PageHeader level={2} title="check-ins" />
         <EmptyState action={<TextLink href={`/hackathons/${h.slug}`}>open the {h.title} overview</TextLink>}>
           weekly check-ins are part of hiring cohorts. {h.title} doesn&apos;t use them.
         </EmptyState>
@@ -41,7 +41,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
 
   return (
     <div className="flex flex-col gap-12 measure-stream">
-      <PageHeader
+      <PageHeader level={2}
         title="weekly check-ins"
         description={
           <>
@@ -82,7 +82,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
               return (
                 <li key={s.week} className="row flex flex-wrap items-center gap-x-4 gap-y-1 py-2 type-body-s">
                   <span className="type-body w-16">week {s.week}</span>
-                  {state === "posted" ? <StatusPill tone="success">posted</StatusPill> : state === "open" ? <StatusPill tone="accent">open</StatusPill> : null}
+                  {state === "posted" ? <StatusPill tone="success">posted</StatusPill> : state === "open" ? <StatusPill>open</StatusPill> : null}
                   <span className="text-secondary">
                     {state === "not posted" ? "not posted, " : ""}due <Time value={s.dueAt} format="datetime" />
                   </span>

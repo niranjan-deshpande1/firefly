@@ -35,7 +35,7 @@ export default async function ShortlistPage({ params }: PageProps<"/company/role
                   <div className="flex flex-wrap gap-2">
                     <StatusPill tone={e.project.verified ? "success" : "neutral"}>{e.project.verified ? "verified" : "not verified yet"}</StatusPill>
                     <StatusPill>{interviewStatusLabel(interview)}</StatusPill>
-                    {e.status === "HIRED" ? <StatusPill tone="accent">hired</StatusPill> : null}
+                    {e.status === "HIRED" ? <StatusPill>hired</StatusPill> : null}
                   </div>
                 </div>
                 <TextLink href={`/company/reports/${role.id}/${e.candidate.id}`} className="target inline-flex items-center">

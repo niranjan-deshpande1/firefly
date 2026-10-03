@@ -81,7 +81,7 @@ export default async function RegisterPage({ params }: PageProps<"/hackathons/[s
 function Passage({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-8 desktop:ms-[calc(100%/12)] desktop:w-5/12">
-      <PageHeader title={title} description={description ? <p>{description}</p> : undefined} />
+      <PageHeader level={2} title={title} description={description ? <p>{description}</p> : undefined} />
       {children}
     </div>
   );

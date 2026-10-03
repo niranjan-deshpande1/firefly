@@ -59,6 +59,17 @@ export async function saveBasics(_prev: ActionResult, form: FormData): Promise<A
     const input = parsed.data;
     const clash = await prisma.hackathon.findUnique({ where: { slug: input.slug }, select: { id: true } });
     if (clash && clash.id !== hackathon.id) return SLUG_TAKEN;
+    if (input.type !== hackathon.type) {
+      // Paid enrollments, reviews and decisions hang off the type; it can't change once people are in.
+      const [registrations, enrollments] = await Promise.all([
+        prisma.registration.count({ where: { hackathonId: hackathon.id } }),
+        prisma.cohortEnrollment.count({ where: { hackathonId: hackathon.id } }),
+      ]);
+      if (registrations + enrollments > 0) {
+        const msg = "the type can't change once people have registered or companies have enrolled.";
+        return { ok: false as const, error: msg, fieldErrors: { type: msg } };
+      }
+    }
     const becomesCohort = input.type === "HIRING_COHORT";
     try {
       await prisma.hackathon.update({

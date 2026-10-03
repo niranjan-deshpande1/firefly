@@ -4,7 +4,7 @@ import { cn } from "./cn";
 /** Dense data table. Scrolls inside its own box at narrow widths. */
 export function Table({ className, caption, children, ...rest }: TableHTMLAttributes<HTMLTableElement> & { caption: string }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className={cn("w-full border-collapse type-body-s", className)} {...rest}>
         <caption className="sr-only">{caption}</caption>
         {children}

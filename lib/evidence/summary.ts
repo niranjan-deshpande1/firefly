@@ -34,7 +34,7 @@ export type SummaryInput = {
 
 /** Neutralises any opening or closing untrusted_* tag inside content so it cannot break out of its block. */
 export function escapeTags(text: string): string {
-  return text.replace(/<(\/?)(\s*untrusted_)/gi, "&lt;$1$2");
+  return text.replace(/<(\s*\/?\s*untrusted_)/gi, "&lt;$1");
 }
 
 export function truncate(text: string, limit: number): string {
@@ -46,10 +46,13 @@ function block(tag: string, body: string, limit: number): string {
   return `<${tag}>\n${content}\n</${tag}>`;
 }
 
+/** Drops "Co-authored-by:" style trailer lines, which carry names a blind reviewer must not see. */
+export const stripTrailers = (message: string) => message.replace(/^[\w-]+-by:.*$/gim, "").trim();
+
 /** Builds the user message. Commit author names are left out on purpose so the summary stays blind-safe. */
 export function buildSummaryPrompt(input: SummaryInput): string {
   const commits = input.commits
-    .map((c) => `${c.committedAt.toISOString()} ${c.sha.slice(0, 7)} (+${c.additions} −${c.deletions}) ${c.message}`)
+    .map((c) => `${c.committedAt.toISOString()} ${c.sha.slice(0, 7)} (+${c.additions} −${c.deletions}) ${stripTrailers(c.message)}`)
     .join("\n");
   const transcripts = input.transcripts.map((t) => `## ${t.title}${t.tool ? ` (${t.tool})` : ""}\n${t.content}`).join("\n\n");
   const decisions = input.decisions

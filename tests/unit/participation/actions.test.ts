@@ -15,10 +15,11 @@ const db = vi.hoisted(() => ({
   checkIn: { findMany: vi.fn(), create: vi.fn() },
   project: { findFirst: vi.fn() },
   team: { findUnique: vi.fn(), create: vi.fn() },
-  teamMember: { findFirst: vi.fn(), create: vi.fn() },
-  teamInvite: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  teamMember: { findFirst: vi.fn(), create: vi.fn(), count: vi.fn(async () => 1) },
+  teamInvite: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(async () => ({ count: 1 })) },
   user: { findUnique: vi.fn() },
-  $transaction: vi.fn(async (ops: unknown[]) => ops),
+  // Batch form returns the ops; interactive form runs the callback against the same mocks.
+  $transaction: vi.fn(async (ops: unknown): Promise<unknown> => (typeof ops === "function" ? ops(db) : ops)),
 }));
 const auth = vi.hoisted(() => ({ user: null as null | { id: string; role: string; name: string; email: string } }));
 const sendEmail = vi.hoisted(() => vi.fn());
@@ -175,14 +176,14 @@ describe("team invites", () => {
   });
 
   it("only the invitee can answer an invite", async () => {
-    db.teamInvite.findUnique.mockResolvedValue({ id: "i1", status: "PENDING", toUserId: "u2", team: { id: "t1", name: "night owls", hackathonId: "h2", _count: { members: 1 } } });
+    db.teamInvite.findUnique.mockResolvedValue({ id: "i1", status: "PENDING", toUserId: "u2", team: { id: "t1", name: "night owls", hackathonId: "h2" } });
     const r = await respondToInvite(null, form({ inviteId: "i1", response: "ACCEPTED" }));
     expect(r).toMatchObject({ ok: false });
     expect(db.teamMember.create).not.toHaveBeenCalled();
   });
 
   it("joins the team when the invitee accepts", async () => {
-    db.teamInvite.findUnique.mockResolvedValue({ id: "i1", status: "PENDING", toUserId: "u1", team: { id: "t1", name: "night owls", hackathonId: "h2", _count: { members: 1 } } });
+    db.teamInvite.findUnique.mockResolvedValue({ id: "i1", status: "PENDING", toUserId: "u1", team: { id: "t1", name: "night owls", hackathonId: "h2" } });
     const r = await respondToInvite(null, form({ inviteId: "i1", response: "ACCEPTED" }));
     expect(r).toEqual({ ok: true, message: "you joined night owls" });
     expect(db.teamMember.create).toHaveBeenCalledWith({ data: { teamId: "t1", userId: "u1" } });

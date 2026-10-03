@@ -15,20 +15,17 @@ export function ProjectCard({ project, showNames }: { project: GalleryItem; show
         className="flex flex-col gap-3 rounded-card outline-offset-2 transition-state"
         aria-describedby={`card-${project.id}-meta`}
       >
-        <div className="aspect-[4/3] w-full overflow-hidden bg-raised">
-          {project.cover ? (
-            // eslint-disable-next-line @next/next/no-img-element
+        {/* No cover means a text card: an empty media box would be a placeholder (manual 1.1). */}
+        {project.cover ? (
+          <div className="aspect-[4/3] w-full overflow-hidden bg-raised">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={project.cover.url} alt={project.cover.alt} loading="lazy" className="size-full object-cover" />
-          ) : (
-            <div className="flex size-full items-end p-4">
-              <p className="type-body-s text-secondary measure line-clamp-4">{project.tagline}</p>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : null}
         <h2 className="type-display-4 text-primary group-hover:underline">{project.title}</h2>
       </NextLink>
       <div id={`card-${project.id}-meta`} className="flex flex-col gap-2">
-        {project.cover ? <p className="type-body-s text-secondary line-clamp-2">{project.tagline}</p> : null}
+        <p className={project.cover ? "type-body-s text-secondary line-clamp-2" : "type-body text-secondary measure line-clamp-4"}>{project.tagline}</p>
         {byline ? <p className="type-body-s text-secondary">by {byline}</p> : null}
         {project.awards.length > 0 || project.verified ? (
           <ul className="flex flex-wrap gap-2" aria-label="labels">
@@ -39,7 +36,7 @@ export function ProjectCard({ project, showNames }: { project: GalleryItem; show
             ) : null}
             {project.awards.map((name) => (
               <li key={name}>
-                <StatusPill tone="accent">awarded: {name}</StatusPill>
+                <StatusPill>awarded: {name}</StatusPill>
               </li>
             ))}
           </ul>

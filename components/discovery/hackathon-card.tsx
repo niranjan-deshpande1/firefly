@@ -10,7 +10,7 @@ export function HackathonCard({ hackathon: h, headingLevel = 2 }: { hackathon: C
   return (
     <article className="card flex h-full flex-col gap-4">
       <div className="flex flex-wrap gap-2">
-        <StatusPill tone={h.type === "HIRING_COHORT" ? "accent" : "neutral"}>{typeLabel(h.type)}</StatusPill>
+        <StatusPill>{typeLabel(h.type)}</StatusPill>
         <StatusPill>{statusLabel(h.status)}</StatusPill>
       </div>
       <div className="flex flex-col gap-2">

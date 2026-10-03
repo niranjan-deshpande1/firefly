@@ -775,6 +775,8 @@ model Hire {
   role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   candidate    User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   invoice      Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@unique([roleId, candidateId])
 }
 
 // ---------- Billing ----------

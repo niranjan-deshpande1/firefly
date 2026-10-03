@@ -42,7 +42,7 @@ export default async function RolePage({ params, searchParams }: PageProps<"/com
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <StatusPill tone={role.status === "OPEN" ? "accent" : "neutral"}>{ROLE_STATUS_LABEL[role.status] ?? role.status}</StatusPill>
+        <StatusPill>{ROLE_STATUS_LABEL[role.status] ?? role.status}</StatusPill>
         <TextLink href="/company" className="target inline-flex items-center">back to the company workspace</TextLink>
       </div>
 

@@ -54,7 +54,7 @@ export default async function ReviewQueuePage({ searchParams }: PageProps<"/revi
                 <span className="type-display-4">{r.label}</span>
                 <span className="type-body-s text-secondary">{r.hackathon}</span>
                 <span className="flex flex-wrap gap-2">
-                  <StatusPill tone={r.myStatus === "posted" ? "success" : r.myStatus === "draft" ? "accent" : "neutral"}>your review: {r.myStatus}</StatusPill>
+                  <StatusPill>your review: {r.myStatus}</StatusPill>
                   <StatusPill>{r.submittedCount} of 2 posted</StatusPill>
                   {r.needsCalibration ? <StatusPill tone="warning">calibration needed</StatusPill> : null}
                   {r.decision ? <StatusPill>decided: {OUTCOME_LABEL[r.decision] ?? r.decision}</StatusPill> : null}

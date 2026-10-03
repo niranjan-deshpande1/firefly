@@ -26,6 +26,8 @@ export async function getProfileByUsername(username: string) {
         status: "SUBMITTED",
         hackathon: { status: { not: "DRAFT" } },
         OR: [{ ownerId: user.id }, { team: { members: { some: { userId: user.id } } } }],
+        // Blind review: a hiring-cohort project only appears on the profile once the cohort is completed.
+        AND: [{ OR: [{ hackathon: { type: { not: "HIRING_COHORT" } } }, { hackathon: { status: "COMPLETED" } }] }],
       },
       orderBy: { submittedAt: "desc" },
       select: {

@@ -11,7 +11,10 @@ export const DELETED_NAME = "deleted account";
  */
 export async function anonymizeUser(userId: string): Promise<{ filesDeleted: number }> {
   const files = await prisma.storedFile.findMany({ where: { ownerId: userId }, select: { id: true } });
+  const { email } = (await prisma.user.findUnique({ where: { id: userId }, select: { email: true } })) ?? { email: null };
   await prisma.$transaction([
+    // Emails to the person carry their name and address in the log.
+    ...(email ? [prisma.emailLog.deleteMany({ where: { to: email } })] : []),
     prisma.project.deleteMany({ where: { ownerId: userId } }),
     prisma.checkIn.deleteMany({ where: { userId } }),
     prisma.registration.deleteMany({ where: { userId } }),
@@ -25,9 +28,10 @@ export async function anonymizeUser(userId: string): Promise<{ filesDeleted: num
     prisma.candidateReport.deleteMany({ where: { candidateId: userId } }),
     prisma.interviewRequest.deleteMany({ where: { candidateId: userId } }),
     prisma.candidateProfile.deleteMany({ where: { userId } }),
+    prisma.companyMember.deleteMany({ where: { userId } }),
     prisma.account.deleteMany({ where: { userId } }),
     prisma.session.deleteMany({ where: { userId } }),
-    prisma.user.update({ where: { id: userId }, data: { name: DELETED_NAME, email: null, emailVerified: null, username: null, image: null } }),
+    prisma.user.update({ where: { id: userId }, data: { name: DELETED_NAME, role: "CANDIDATE", email: null, emailVerified: null, username: null, image: null } }),
   ]);
   for (const f of files) await deleteStoredFile(f.id);
   return { filesDeleted: files.length };

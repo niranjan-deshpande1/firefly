@@ -5,7 +5,7 @@ const tx = {
   reviewScore: { deleteMany: vi.fn(), createMany: vi.fn() },
   decision: { create: vi.fn(async () => ({ id: "dec1" })) },
   shortlist: { upsert: vi.fn(async ({ where }: { where: { roleId: string } }) => ({ id: `sl-${where.roleId}` })) },
-  shortlistEntry: { upsert: vi.fn() },
+  shortlistEntry: { findUnique: vi.fn(async () => null), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
 };
 const prisma = {
   review: { findUnique: vi.fn(async () => null) },
@@ -110,7 +110,7 @@ describe("makeDecision", () => {
     const result = await makeDecision({ projectId: "p1", outcome: "ADVANCE", reason: "clear verification habit" });
     expect(result.ok).toBe(true);
     expect(tx.shortlist.upsert).toHaveBeenCalledTimes(2);
-    expect(tx.shortlistEntry.upsert).toHaveBeenCalledTimes(2);
+    expect(tx.shortlistEntry.create).toHaveBeenCalledTimes(2);
     expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "DECISION_MADE" }));
     expect(sendEmail).toHaveBeenCalledWith("builder@example.test", "decisionMade", expect.objectContaining({ outcome: "advance" }), expect.anything());
   });
@@ -119,5 +119,7 @@ describe("makeDecision", () => {
     const result = await makeDecision({ projectId: "p1", outcome: "REJECT", reason: "core flow did not run" });
     expect(result.ok).toBe(true);
     expect(tx.shortlist.upsert).not.toHaveBeenCalled();
+    // An earlier advance is undone: companies lose access to the report.
+    expect(tx.shortlistEntry.updateMany).toHaveBeenCalledWith({ where: { projectId: "p1", status: "ACTIVE" }, data: { status: "WITHDRAWN" } });
   });
 });

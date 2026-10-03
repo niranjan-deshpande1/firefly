@@ -31,8 +31,8 @@ export function CompleteForm({ interviewId, missing }: { interviewId: string; mi
         <legend className="type-label pb-2">outcome (required)</legend>
         <RadioGroup value={outcome} onValueChange={setOutcome} className="flex flex-col gap-2" aria-label="outcome">
           {[
-            ["PASS", "pass: the candidate built and understands this project"],
-            ["FAIL", "fail: the defense did not show that"],
+            ["PASS", "defense passed: the candidate built and understands this project"],
+            ["FAIL", "defense not passed: the defense did not show that"],
           ].map(([value, label]) => (
             <label key={value} className="flex min-h-11 items-center gap-3 type-body">
               <Radio value={value} />

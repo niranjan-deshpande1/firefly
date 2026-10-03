@@ -161,8 +161,8 @@ async function teamHackathon(hackathonId: string) {
   return h && teamsAllowed(h) && h.status !== "COMPLETED" ? h : null;
 }
 
-const onTeamIn = (hackathonId: string, userId: string) =>
-  prisma.teamMember.findFirst({ where: { userId, team: { hackathonId } }, select: { teamId: true } });
+const onTeamIn = (hackathonId: string, userId: string, db: Pick<typeof prisma, "teamMember"> = prisma) =>
+  db.teamMember.findFirst({ where: { userId, team: { hackathonId } }, select: { teamId: true } });
 
 export async function createTeam(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = zTeamCreate.safeParse(Object.fromEntries(formData));
@@ -180,14 +180,16 @@ export async function createTeam(_prev: ActionState, formData: FormData): Promis
     const registration = await prisma.registration.findUnique({ where: { hackathonId_userId: { hackathonId, userId: user.id } } });
     // The creator becomes the team's first member, so registration stands in for membership here.
     authorizeTeam(user, !!registration && registration.status !== "WITHDRAWN");
-    if (await onTeamIn(hackathonId, user.id)) return fail("you're already on a team here, leave it first to start another.");
-
-    await prisma.$transaction([
-      prisma.team.create({
+    const created = await prisma.$transaction(async (tx) => {
+      // Checked inside the transaction so two quick submits can't put one person on two teams.
+      if (await onTeamIn(hackathonId, user.id, tx)) return false;
+      await tx.team.create({
         data: { hackathonId, name, description: description ?? null, members: { create: { userId: user.id, isLead: true } } },
-      }),
-      prisma.registration.update({ where: { id: registration!.id }, data: { lookingForTeam: false } }),
-    ]);
+      });
+      await tx.registration.update({ where: { id: registration!.id }, data: { lookingForTeam: false } });
+      return true;
+    });
+    if (!created) return fail("you're already on a team here, leave it first to start another.");
     revalidateHackathon(h.slug);
     return { ok: true, message: "team created" };
   });
@@ -241,7 +243,7 @@ export async function respondToInvite(_prev: ActionState, formData: FormData): P
     const user = await getCurrentUser();
     const invite = await prisma.teamInvite.findUnique({
       where: { id: inviteId },
-      select: { id: true, status: true, toUserId: true, team: { select: { id: true, name: true, hackathonId: true, _count: { select: { members: true } } } } },
+      select: { id: true, status: true, toUserId: true, team: { select: { id: true, name: true, hackathonId: true } } },
     });
     if (!invite || invite.status !== "PENDING") return fail("that invite is no longer open, reload the page.");
     authorizeTeam(user, invite.toUserId === user?.id);
@@ -253,13 +255,18 @@ export async function respondToInvite(_prev: ActionState, formData: FormData): P
       return { ok: true, message: "invite closed" };
     }
 
-    if (await onTeamIn(invite.team.hackathonId, user.id)) return fail("you're already on a team here, leave it first to join this one.");
-    if (h && invite.team._count.members >= h.maxTeamSize) return fail(`${invite.team.name} is full, start your own team instead.`);
-    await prisma.$transaction([
-      prisma.teamInvite.update({ where: { id: invite.id }, data: { status: "ACCEPTED" } }),
-      prisma.teamMember.create({ data: { teamId: invite.team.id, userId: user.id } }),
-      prisma.registration.updateMany({ where: { hackathonId: invite.team.hackathonId, userId: user.id }, data: { lookingForTeam: false } }),
-    ]);
+    const problem = await prisma.$transaction(async (tx) => {
+      // Membership, team size and the invite are re-checked inside the transaction so parallel accepts can't overfill a team.
+      if (await onTeamIn(invite.team.hackathonId, user.id, tx)) return "you're already on a team here, leave it first to join this one.";
+      const members = await tx.teamMember.count({ where: { teamId: invite.team.id } });
+      if (h && members >= h.maxTeamSize) return `${invite.team.name} is full, start your own team instead.`;
+      const claimed = await tx.teamInvite.updateMany({ where: { id: invite.id, status: "PENDING" }, data: { status: "ACCEPTED" } });
+      if (claimed.count === 0) return "that invite is no longer open, reload the page.";
+      await tx.teamMember.create({ data: { teamId: invite.team.id, userId: user.id } });
+      await tx.registration.updateMany({ where: { hackathonId: invite.team.hackathonId, userId: user.id }, data: { lookingForTeam: false } });
+      return null;
+    });
+    if (problem) return fail(problem);
     if (h) revalidateHackathon(h.slug);
     return { ok: true, message: `you joined ${invite.team.name}` };
   });

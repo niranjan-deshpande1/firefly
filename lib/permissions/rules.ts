@@ -13,9 +13,11 @@ export type Facts = {
   isCompanyMember?: boolean; // member of the company that owns the role/report/invoice
   isOnCompanyShortlist?: boolean; // candidate is on a shortlist of a role owned by the actor's company
   hasActiveEnrollment?: boolean; // actor's company has an enrollment in a cohort that has not ended
+  evidenceLocked?: boolean; // the hackathon's posting deadline has passed, so evidence is frozen for review
   isTeamMember?: boolean; // member of the team being managed, or a registrant acting on their own membership
   isHackathonOrganizer?: boolean; // organizer of the resource's hackathon
   reviewSubmitted?: boolean; // the actor's own review of this project is submitted
+  identityRevealed?: boolean; // the actor pressed "reveal identity" on their submitted review (audited)
   resultsPublished?: boolean; // hackathon results are out
   isPublic?: boolean; // resource is publicly visible (submitted project, non-draft hackathon, public profile)
 };
@@ -84,7 +86,7 @@ const RULES: Record<Action, Rule> = {
     !!f.isProjectMember ||
     (is(a, "REVIEWER") && (!!f.isAssignedReviewer || !!f.isAssignedInterviewer)) ||
     (is(a, "COMPANY") && (!!f.isOnCompanyShortlist || !!f.isAssignedInterviewer)),
-  "evidence.edit": (a, f) => is(a, "CANDIDATE") && !!f.isProjectMember,
+  "evidence.edit": (a, f) => is(a, "CANDIDATE") && !!f.isProjectMember && !f.evidenceLocked,
   "review.score": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
   "review.calibrate": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
   "review.decide": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
@@ -93,7 +95,7 @@ const RULES: Record<Action, Rule> = {
   "winner.pick": (a, f) => is(a, "ORGANIZER") && !!f.isHackathonOrganizer,
   "feedback.write": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
   "feedback.read": (a, f) => !!f.isSelf && !!f.resultsPublished,
-  "interview.schedule": (a, f) => is(a, "ORGANIZER") || (is(a, "REVIEWER") && !!f.isAssignedReviewer),
+  "interview.schedule": (a, f) => (is(a, "ORGANIZER") && !!f.isHackathonOrganizer) || (is(a, "REVIEWER") && !!f.isAssignedReviewer),
   // Company members sit on joint and company-run panels.
   "interview.run": (a, f) => !!f.isAssignedInterviewer,
   "company.manage": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,

@@ -32,7 +32,7 @@ function CheckInsPanel({ hackathon: h, now, primary }: { hackathon: HackathonVie
               </span>
             ) : s.state === "open" ? (
               <span className="type-body-s text-secondary">
-                <StatusPill tone="accent">open</StatusPill> due <Time value={s.dueAt} format="datetime" />
+                <StatusPill>open</StatusPill> due <Time value={s.dueAt} format="datetime" />
               </span>
             ) : s.state === "upcoming" ? (
               <span className="type-body-s text-secondary">due <Time value={s.dueAt} format="datetime" /></span>
@@ -58,7 +58,7 @@ function ResultPills({ results }: { results: string[] }) {
   return results.length > 0 ? (
     <p className="flex flex-wrap gap-2">
       {results.map((r) => (
-        <StatusPill key={r} tone={r === "verified" || r.startsWith("awarded") ? "accent" : "neutral"}>
+        <StatusPill key={r}>
           {r}
         </StatusPill>
       ))}
@@ -70,7 +70,7 @@ function ProjectsPanel({ hackathon: h }: { hackathon: HackathonView }) {
   return (
     <Panel id={`projects-${h.id}`} title={h.projects.length > 1 ? "your projects" : "your project"}>
       {h.projects.length === 0 ? (
-        <EmptyState action={<TextLink href={`/hackathons/${h.slug}/submit`}>start your project</TextLink>}>
+        <EmptyState action={<Button asChild variant="primary"><Link href={`/hackathons/${h.slug}/submit`}>start your project</Link></Button>}>
           no project here yet. start a draft now and post it before the deadline.
         </EmptyState>
       ) : (

@@ -28,7 +28,7 @@ export default async function HackathonProjectsPage({ params, searchParams }: Pa
   if (!isOrganizer && !galleryIsOpen({ hackathonType: hackathon.type, submissionDeadline: hackathon.submissionDeadline })) {
     return (
       <section aria-labelledby="page-title" className="flex flex-col gap-8">
-        <PageHeader title="projects" />
+        <PageHeader level={2} title="projects" />
         <EmptyState action={<TextLink href={`/hackathons/${slug}/schedule`}>see the schedule</TextLink>}>
           projects in this cohort appear after the posting deadline on <Time value={hackathon.submissionDeadline} format="datetime" />.
         </EmptyState>
@@ -44,7 +44,7 @@ export default async function HackathonProjectsPage({ params, searchParams }: Pa
 
   return (
     <section aria-labelledby="page-title" className="flex flex-col gap-8">
-      <PageHeader
+      <PageHeader level={2}
         title="projects"
         description={<p>everything posted to {hackathon.title}, in alphabetical order.</p>}
       />

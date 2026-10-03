@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { readStoredFile } from "@/lib/storage";
+import { auditAccess } from "@/lib/audit";
 
 // Images are public (they illustrate submitted projects). Transcript files are only for their owner and admins;
 // everyone else reads transcripts through the evidence locker, which checks permissions and writes the audit log.
@@ -12,6 +13,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (file.kind !== "IMAGE") {
     const user = await getCurrentUser();
     if (!user || (user.id !== file.ownerId && user.role !== "ADMIN")) return new NextResponse("Not found", { status: 404 });
+    if (user.id !== file.ownerId) await auditAccess(user, "TRANSCRIPT_VIEW", file.ownerId, { type: "StoredFile", id: file.id });
   }
   const bytes = await readStoredFile(file.path);
   return new NextResponse(new Uint8Array(bytes), {

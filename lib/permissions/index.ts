@@ -52,13 +52,13 @@ export async function loadFacts(user: CurrentUser | null, ref: ResourceRef): Pro
           status: true,
           hackathonId: true,
           team: { select: { members: { select: { userId: true } } } },
-          hackathon: { select: { organizerId: true, status: true, cohortConfig: { select: { resultsAt: true } } } },
+          hackathon: { select: { organizerId: true, status: true, submissionDeadline: true, cohortConfig: { select: { resultsAt: true } } } },
         },
       })
     : null;
   const hackathonId = ref.hackathonId ?? project?.hackathonId;
   const hackathon = hackathonId
-    ? await prisma.hackathon.findUnique({ where: { id: hackathonId }, select: { organizerId: true, status: true, cohortConfig: { select: { resultsAt: true } } } })
+    ? await prisma.hackathon.findUnique({ where: { id: hackathonId }, select: { organizerId: true, status: true, submissionDeadline: true, cohortConfig: { select: { resultsAt: true } } } })
     : null;
 
   const candidateId = ref.candidateId ?? project?.ownerId;
@@ -67,6 +67,7 @@ export async function loadFacts(user: CurrentUser | null, ref: ResourceRef): Pro
   if (hackathon) {
     const resultsAt = hackathon.cohortConfig?.resultsAt;
     facts.resultsPublished = hackathon.status === "COMPLETED" || (!!resultsAt && resultsAt <= new Date());
+    facts.evidenceLocked = hackathon.submissionDeadline < new Date();
   }
 
   if (!user) return facts;
@@ -88,6 +89,7 @@ export async function loadFacts(user: CurrentUser | null, ref: ResourceRef): Pro
     facts.isAssignedJudge = !!judge;
     facts.isAssignedInterviewer = !!interviewer;
     facts.reviewSubmitted = !!review;
+    facts.identityRevealed = !!review?.revealedAt;
   }
 
   if (user.role === "COMPANY") {
@@ -103,6 +105,8 @@ export async function loadFacts(user: CurrentUser | null, ref: ResourceRef): Pro
         where: {
           candidateId,
           status: { not: "WITHDRAWN" },
+          // A shortlist entry opens that one project's evidence, never the candidate's other projects.
+          ...(project ? { projectId: project.id } : {}),
           shortlist: { role: { companyId: { in: companyIds }, ...(ref.roleId ? { id: ref.roleId } : {}) } },
         },
       });

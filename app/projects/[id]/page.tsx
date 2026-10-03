@@ -80,7 +80,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[id]"
               <LikeButton projectId={project.id} initialLiked={project.likedByViewer} />
             </div>
           ) : null}
-          <ProjectLinks project={project} />
+          <ProjectLinks project={project} showRepo={names} />
           <Members project={project} showNames={names} />
           <div className="flex flex-col gap-2">
             <h2 className="type-label text-secondary">hackathon</h2>
@@ -154,15 +154,16 @@ function StatusRow({ project }: { project: ProjectView }) {
       ) : null}
       {project.awards.map((name) => (
         <li key={name}>
-          <StatusPill tone="accent">awarded: {name}</StatusPill>
+          <StatusPill>awarded: {name}</StatusPill>
         </li>
       ))}
     </ul>
   );
 }
 
-function ProjectLinks({ project }: { project: ProjectView }) {
-  const links = [...(project.repoUrl ? [{ label: "source code", url: project.repoUrl }] : []), ...project.links];
+function ProjectLinks({ project, showRepo }: { project: ProjectView; showRepo: boolean }) {
+  // The repo URL names the GitHub account, so it follows the same rule as builder names.
+  const links = [...(project.repoUrl && showRepo ? [{ label: "source code", url: project.repoUrl }] : []), ...project.links];
   if (links.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">

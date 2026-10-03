@@ -13,7 +13,7 @@ export const STATUS_LABEL: Record<string, string> = {
   COMPLETED: "completed",
 };
 
-const STATUS_TONE: Record<string, StatusTone> = { DRAFT: "neutral", OPEN: "success", JUDGING: "warning", DEFENSE: "warning", COMPLETED: "neutral", UPCOMING: "accent" };
+const STATUS_TONE: Record<string, StatusTone> = { DRAFT: "neutral", OPEN: "success", JUDGING: "neutral", DEFENSE: "neutral", COMPLETED: "neutral", UPCOMING: "neutral" };
 
 export function HackathonStatus({ status }: { status: string }) {
   return <StatusPill tone={STATUS_TONE[status] ?? "neutral"}>{STATUS_LABEL[status] ?? status.toLowerCase()}</StatusPill>;
