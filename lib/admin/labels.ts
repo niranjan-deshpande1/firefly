@@ -18,6 +18,9 @@ const ACTION_LABELS: Record<string, string> = {
   DATA_REQUEST_RESOLVED: "data request resolved",
   SETTINGS_CHANGED: "settings changed",
   COMMENT_HIDDEN: "comment hidden",
+  INTERVIEW_CANCELLED: "interview cancelled",
+  INTERVIEW_RESCHEDULED: "interview rescheduled",
+  INTERVIEW_REQUEST_DECLINED: "interview request declined",
 };
 
 export function actionLabel(action: string): string {

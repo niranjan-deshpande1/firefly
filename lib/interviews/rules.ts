@@ -48,6 +48,21 @@ export function scoringError(interview: { status: string; identityCheckedAt: Dat
   return null;
 }
 
+export type TimerState = { elapsed: number; runningSince: number | null };
+
+/** A section timer saved as JSON in localStorage. Anything missing or malformed reads as a fresh timer. */
+export function parseTimer(raw: string | null): TimerState {
+  const fresh = { elapsed: 0, runningSince: null };
+  if (!raw) return fresh;
+  try {
+    const v = JSON.parse(raw) as Partial<TimerState> | null;
+    if (!v || typeof v.elapsed !== "number" || !Number.isFinite(v.elapsed)) return fresh;
+    return { elapsed: Math.max(0, v.elapsed), runningSince: typeof v.runningSince === "number" ? v.runningSince : null };
+  } catch {
+    return fresh;
+  }
+}
+
 /** Elapsed time as mm:ss text (minutes keep counting past 59). */
 export function formatElapsed(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -94,4 +109,27 @@ export function zonedTimeToUtc(local: string, timeZone: string): Date | null {
   const first = wall - zoneOffsetMs(wall, timeZone);
   const second = wall - zoneOffsetMs(first, timeZone); // corrects across a DST change
   return new Date(second);
+}
+
+/** UTC instant to "2026-10-14T10:00" wall time in an IANA zone (the inverse of zonedTimeToUtc). */
+export function utcToZonedLocal(date: Date, timeZone: string): string {
+  return new Date(Math.floor(date.getTime() / 1000) * 1000 + zoneOffsetMs(date.getTime(), timeZone)).toISOString().slice(0, 16);
+}
+
+/** Where the interview happens must match the mode. Returns the bad field and an error sentence, or null. */
+export function placeError(v: { mode: string; location?: string; videoLink?: string }): { path: "location" | "videoLink"; message: string } | null {
+  if (v.mode === "IN_PERSON" && !v.location) return { path: "location", message: "the location is empty, add the address of the room." };
+  if (v.mode === "VIDEO" && !/^https:\/\/\S+$/.test(v.videoLink ?? "")) return { path: "videoLink", message: "that video link is not an https link, paste the full meeting link." };
+  return null;
+}
+
+/** Statuses a cancel or reschedule may still change. The conditional `updateMany` filters on these. */
+export const OPEN_STATUSES = ["SCHEDULED", "IN_PROGRESS"];
+
+/** Cancel and reschedule are refused once the interview is closed. Returns an error sentence or null. */
+export function manageError(status: string, change: "cancel" | "reschedule"): string | null {
+  if (status === "COMPLETED") return `this interview is completed, a completed interview can't be ${change === "cancel" ? "cancelled" : "rescheduled"}.`;
+  if (status === "CANCELLED")
+    return change === "cancel" ? "this interview is already cancelled, return to your interviews." : "this interview is cancelled, schedule a new interview instead.";
+  return null;
 }

@@ -134,6 +134,14 @@ describe("review fixes", () => {
     expect(can(organizer, "interview.schedule", {})).toBe(false);
     expect(can(reviewer, "interview.schedule", { isAssignedReviewer: true })).toBe(true);
   });
+  it("lets only the hackathon's own organizer cancel, reschedule and handle interview requests", () => {
+    expect(can(organizer, "interview.manage", { isHackathonOrganizer: true })).toBe(true);
+    expect(can(organizer, "interview.manage", {})).toBe(false);
+    expect(can(admin, "interview.manage")).toBe(true);
+    for (const actor of [candidate, company, reviewer]) {
+      expect(can(actor, "interview.manage", { isHackathonOrganizer: true, isAssignedReviewer: true, isAssignedInterviewer: true, isCompanyMember: true })).toBe(false);
+    }
+  });
   it("locks evidence edits after the submission deadline", () => {
     expect(can(candidate, "evidence.edit", { isProjectMember: true })).toBe(true);
     expect(can(candidate, "evidence.edit", { isProjectMember: true, evidenceLocked: true })).toBe(false);

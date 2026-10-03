@@ -10,10 +10,10 @@ import { MODE_LABELS, MODEL_LABELS } from "@/lib/interviews/script";
 type Model = keyof typeof MODEL_LABELS;
 type Mode = keyof typeof MODE_LABELS;
 
-type ScheduleFormProps = SchedulingOptions & { zones: string[]; defaultZone: string; defaultProjectId?: string };
+type ScheduleFormProps = SchedulingOptions & { zones: string[]; defaultZone: string; defaultProjectId?: string; defaultRoleId?: string; requestId?: string };
 
 /** Passage: one decision (when and who), one primary action. */
-export function ScheduleForm({ projects, reviewers, zones, defaultZone, defaultProjectId }: ScheduleFormProps) {
+export function ScheduleForm({ projects, reviewers, zones, defaultZone, defaultProjectId, defaultRoleId, requestId }: ScheduleFormProps) {
   const router = useRouter();
   const toast = useToast();
   const [pending, startTransition] = useTransition();
@@ -21,7 +21,7 @@ export function ScheduleForm({ projects, reviewers, zones, defaultZone, defaultP
   const [projectId, setProjectId] = useState(defaultProjectId && projects.some((p) => p.id === defaultProjectId) ? defaultProjectId : projects[0]?.id ?? "");
   const [model, setModel] = useState<Model>("JOINT");
   const [mode, setMode] = useState<Mode>("IN_PERSON");
-  const [roleId, setRoleId] = useState("");
+  const [roleId, setRoleId] = useState(projects.find((p) => p.id === projectId)?.roles.some((r) => r.id === defaultRoleId) ? defaultRoleId! : "");
   const [location, setLocation] = useState("");
   const [videoLink, setVideoLink] = useState("");
   const [localTime, setLocalTime] = useState("");
@@ -49,6 +49,7 @@ export function ScheduleForm({ projects, reviewers, zones, defaultZone, defaultP
         location: mode === "IN_PERSON" ? location : undefined,
         videoLink: mode === "VIDEO" ? videoLink : undefined,
         interviewerIds: chosen,
+        requestId,
       });
       if (!result.ok) return setError(result.error);
       toast("interview scheduled");

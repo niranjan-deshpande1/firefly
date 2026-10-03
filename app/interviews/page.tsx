@@ -19,9 +19,14 @@ export default async function InterviewsPage() {
         description={<p>{canSchedule ? "every interview in your cohorts." : "interviews where you sit on the panel."} times show their zone.</p>}
         actions={
           canSchedule ? (
-            <Button variant="primary" asChild>
-              <Link href="/interviews/new">schedule an interview</Link>
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="primary" asChild>
+                <Link href="/interviews/new">schedule an interview</Link>
+              </Button>
+              <Button variant="secondary" asChild>
+                <Link href="/interviews/requests">open interview requests</Link>
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -44,6 +49,8 @@ export default async function InterviewsPage() {
           <tbody>
             {interviews.map((i) => {
               const onPanel = user.role === "ADMIN" || i.interviewers.some((p) => p.userId === user.id);
+              // interview.manage: the hackathon's own organizer or an admin; the manage page re-checks.
+              const canManage = user.role === "ADMIN" || i.project.hackathon.organizerId === user.id;
               const name = blind.has(i.project.id) ? `candidate ${i.candidate.candidateProfile?.blindCode ?? "hidden"}` : (i.candidate.name ?? "unnamed candidate");
               return (
                 <Tr key={i.id}>
@@ -66,6 +73,11 @@ export default async function InterviewsPage() {
                     <StatusPill tone={i.outcome === "PASS" ? "success" : i.outcome === "FAIL" ? "error" : "neutral"}>
                       {i.outcome ? OUTCOME_LABELS[i.outcome as keyof typeof OUTCOME_LABELS] : STATUS_LABELS[i.status as keyof typeof STATUS_LABELS]}
                     </StatusPill>
+                    {canManage && (i.status === "SCHEDULED" || i.status === "IN_PROGRESS") ? (
+                      <TextLink href={`/interviews/${i.id}/manage`} className="mt-2 block">
+                        reschedule or cancel
+                      </TextLink>
+                    ) : null}
                   </Td>
                 </Tr>
               );

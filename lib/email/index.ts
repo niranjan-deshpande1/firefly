@@ -45,6 +45,18 @@ export const EMAIL_TEMPLATES = {
     subject: `${p.company} requested an interview`,
     body: `${p.company} asked to interview candidate ${p.candidateCode}. schedule it from the interviews page.`,
   }),
+  interviewCancelled: (p: { name: string; when: string; reason: string }) => ({
+    subject: `a defense interview was cancelled`,
+    body: `hi ${p.name},\n\nthe defense interview on ${p.when} is cancelled. reason: ${p.reason}\n\nthe organizer will email you if it is set up again.`,
+  }),
+  interviewRescheduled: (p: { name: string; when: string; where: string; minutes: number }) => ({
+    subject: `a defense interview has a new time`,
+    body: `hi ${p.name},\n\nthe defense interview is now on ${p.when} at ${p.where}. it runs ${p.minutes} minutes. the old time no longer applies.`,
+  }),
+  interviewRequestDeclined: (p: { name: string; company: string; role: string; candidateCode: string; reason: string }) => ({
+    subject: `your interview request for candidate ${p.candidateCode} was declined`,
+    body: `hi ${p.name},\n\nthe request from ${p.company} to interview candidate ${p.candidateCode} for ${p.role} was declined. reason: ${p.reason}\n\nyou can send a new request from the candidate report.`,
+  }),
 } as const;
 
 export type EmailTemplate = keyof typeof EMAIL_TEMPLATES;

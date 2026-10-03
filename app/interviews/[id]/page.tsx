@@ -5,6 +5,7 @@ import { CompleteForm } from "@/components/interviews/complete-form";
 import { IdentityCheck } from "@/components/interviews/identity-check";
 import { SectionCard } from "@/components/interviews/section-card";
 import { requireUser } from "@/lib/auth";
+import { check } from "@/lib/permissions";
 import { blindProjectIds, canRunInterview, getInterviewRoom } from "@/lib/interviews/queries";
 import { missingSections } from "@/lib/interviews/rules";
 import { MODE_LABELS, MODEL_LABELS, OUTCOME_LABELS, SCRIPT, STATUS_LABELS } from "@/lib/interviews/script";
@@ -21,6 +22,7 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
   const closed = interview.status === "COMPLETED" || interview.status === "CANCELLED";
   const mine = new Map(interview.scores.filter((s) => s.scoredById === user.id).map((s) => [s.section, s]));
   const missing = missingSections(interview.scores).map((s) => SCRIPT.find((x) => x.section === s)!.title);
+  const canManage = !closed && (await check(user, "interview.manage", { projectId: interview.projectId }));
 
   return (
     <div className="flex flex-col gap-12">
@@ -62,6 +64,7 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
           {interview.project.verified ? <StatusPill tone="success">verified</StatusPill> : null}
           <TextLink href={`/projects/${interview.projectId}`}>open the project</TextLink>
           <TextLink href={`/projects/${interview.projectId}/evidence`}>open the evidence locker</TextLink>
+          {canManage ? <TextLink href={`/interviews/${interview.id}/manage`}>reschedule or cancel</TextLink> : null}
         </p>
       </section>
 

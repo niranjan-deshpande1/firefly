@@ -14,10 +14,11 @@ export default async function AdminPage() {
   const user = await requireRole("ADMIN");
   await authorizePage(user, "admin.access");
 
-  const [{ counts, revenue }, unpaid, openRequests] = await Promise.all([
+  const [{ counts, revenue }, unpaid, openRequests, interviewRequests] = await Promise.all([
     getFunnel(),
     prisma.invoice.count({ where: { status: { in: ["DRAFT", "SENT"] } } }),
     prisma.dataRequest.count({ where: { status: "OPEN" } }),
+    prisma.interviewRequest.count({ where: { status: "PENDING" } }),
   ]);
   const rows = funnelRows(counts);
 
@@ -58,6 +59,12 @@ export default async function AdminPage() {
           <li>
             {openRequests === 0 ? "no data requests are open. " : `${openRequests} data ${openRequests === 1 ? "request is" : "requests are"} open. `}
             <TextLink href="/admin/data-requests">open data requests</TextLink>
+          </li>
+          <li>
+            {interviewRequests === 0
+              ? "no company interview requests are waiting. "
+              : `${interviewRequests} company interview ${interviewRequests === 1 ? "request is" : "requests are"} waiting. `}
+            <TextLink href="/interviews/requests">open interview requests</TextLink>
           </li>
           <li>
             who saw which candidate report is in the <TextLink href="/admin/audit?action=REPORT_VIEW">audit log of report views</TextLink>

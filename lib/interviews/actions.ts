@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { formatDateTime } from "@/lib/format/date";
 import { blindProjectIds, canRunInterview, isAdvanced } from "./queries";
-import { completionError, interviewerError, isValidTimeZone, scoringError, zonedTimeToUtc } from "./rules";
+import { completionError, interviewerError, isValidTimeZone, placeError, scoringError, zonedTimeToUtc } from "./rules";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -30,11 +30,11 @@ const scheduleSchema = z
     location: z.string().trim().max(300).optional(),
     videoLink: z.string().trim().max(500).optional(),
     interviewerIds: z.array(z.string().min(1)).max(10),
+    requestId: z.string().optional(), // set when scheduling from a company interview request
   })
   .superRefine((v, ctx) => {
-    if (v.mode === "IN_PERSON" && !v.location) ctx.addIssue({ code: "custom", path: ["location"], message: "the location is empty, add the address of the room." });
-    if (v.mode === "VIDEO" && !/^https:\/\/\S+$/.test(v.videoLink ?? ""))
-      ctx.addIssue({ code: "custom", path: ["videoLink"], message: "that video link is not an https link, paste the full meeting link." });
+    const place = placeError(v);
+    if (place) ctx.addIssue({ code: "custom", path: [place.path], message: place.message });
     if (v.model !== "WE_RUN" && !v.roleId) ctx.addIssue({ code: "custom", path: ["roleId"], message: "no role is chosen, pick the role this interview is for." });
   });
 
@@ -90,9 +90,11 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
         },
         select: { id: true },
       });
-      if (role) {
+      // Closes the request it came from and any other pending request for this role and candidate.
+      const matches = [...(v.requestId ? [{ id: v.requestId }] : []), ...(role ? [{ roleId: role.id }] : [])];
+      if (matches.length > 0) {
         await tx.interviewRequest.updateMany({
-          where: { roleId: role.id, candidateId: project.ownerId, status: "PENDING" },
+          where: { candidateId: project.ownerId, status: "PENDING", OR: matches },
           data: { status: "SCHEDULED" },
         });
       }
@@ -113,7 +115,7 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
       );
     }
 
-    revalidatePath("/interviews");
+    revalidatePath("/interviews", "layout");
     revalidatePath("/company", "layout");
     return { ok: true, data: { id: interview.id } };
   } catch (e) {
