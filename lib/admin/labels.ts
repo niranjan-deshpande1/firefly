@@ -1,0 +1,41 @@
+// Readable lowercase labels for log rows. Pure, unit tested.
+
+const ACTION_LABELS: Record<string, string> = {
+  REPORT_VIEW: "candidate report viewed",
+  EVIDENCE_VIEW: "evidence locker viewed",
+  TRANSCRIPT_VIEW: "transcript viewed",
+  IDENTITY_REVEAL: "blind identity revealed",
+  DECISION_MADE: "decision made",
+  REVIEW_SUBMITTED: "review posted",
+  INTERVIEW_COMPLETED: "interview completed",
+  HIRE_REPORTED: "hire reported",
+  INVOICE_CREATED: "invoice created",
+  INVOICE_PAID: "invoice paid",
+  ENROLLMENT_CREATED: "cohort enrollment",
+  DATA_EXPORT: "data exported",
+  DATA_REQUEST_CREATED: "data request opened",
+  DATA_REQUEST_RESOLVED: "data request resolved",
+  SETTINGS_CHANGED: "settings changed",
+  COMMENT_HIDDEN: "comment hidden",
+};
+
+export function actionLabel(action: string): string {
+  return ACTION_LABELS[action] ?? action.toLowerCase().replace(/_/g, " ");
+}
+
+function valueText(v: unknown): string {
+  if (v === null || v === undefined) return "none";
+  if (typeof v === "object") {
+    return Object.entries(v as Record<string, unknown>)
+      .map(([k, inner]) => `${k} ${typeof inner === "object" ? "…" : String(inner)}`)
+      .join(", ");
+  }
+  return String(v);
+}
+
+/** One line from an audit row's metadata, for example "kind DELETE, status COMPLETED". */
+export function describeMetadata(meta: Record<string, unknown>): string {
+  return Object.entries(meta)
+    .map(([k, v]) => (typeof v === "object" && v !== null ? `${k}: ${valueText(v)}` : `${k} ${valueText(v)}`))
+    .join("; ");
+}
