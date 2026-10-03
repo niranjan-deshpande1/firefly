@@ -22,7 +22,7 @@ export default async function PostProjectPage({ params }: PageProps<"/hackathons
       title="post your project"
       description={
         <p>
-          for {hackathon.title}. posting closes <Time value={hackathon.submissionDeadline} format="datetime" />.
+          for {hackathon.title}. posting closes <Time value={hackathon.submissionDeadline} format="datetime" timeZone={hackathon.timeZone} />.
         </p>
       }
     />
@@ -33,7 +33,7 @@ export default async function PostProjectPage({ params }: PageProps<"/hackathons
       <section aria-labelledby="page-title" className="flex flex-col gap-8">
         {header}
         <EmptyState action={<TextLink href={`/hackathons/${slug}/projects`}>see the posted projects</TextLink>}>
-          posting closed on <Time value={hackathon.submissionDeadline} format="datetime" />.
+          posting closed on <Time value={hackathon.submissionDeadline} format="datetime" timeZone={hackathon.timeZone} />.
         </EmptyState>
       </section>
     );

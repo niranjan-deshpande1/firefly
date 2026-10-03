@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isValidTimeZone, timeZoneList, utcToZonedLocal, zonedLocalToUtc } from "@/lib/organize/time";
+import { isValidTimeZone, utcToZonedLocal, zonedLocalToUtc, zoneOptions } from "@/lib/organize/time";
+import { basicsSchema, changedFields, datesSchema } from "@/lib/organize/schemas";
 import { milestones, nextMilestone } from "@/lib/organize/milestones";
 import { defaultCohortConfig, defaultDates } from "@/lib/organize/defaults";
 
@@ -22,10 +23,39 @@ describe("zoned time", () => {
     expect(isValidTimeZone("Nowhere/Land")).toBe(false);
   });
 
-  it("lists IANA zones including UTC", () => {
-    const zones = timeZoneList();
-    expect(zones).toContain("UTC");
-    expect(zones).toContain("America/Los_Angeles");
+  it("offers the curated zones plus a valid current zone outside them", () => {
+    expect(zoneOptions()).toContain("UTC");
+    expect(zoneOptions("America/Los_Angeles")).toEqual(zoneOptions());
+    expect(zoneOptions("Pacific/Auckland")[0]).toBe("Pacific/Auckland");
+    expect(zoneOptions("Nowhere/Land")).toEqual(zoneOptions());
+  });
+});
+
+describe("hackathon time zone", () => {
+  const basics = { title: "Spring Build", slug: "spring-build", type: "OPEN", tagline: "build things", description: "" };
+
+  it("accepts an IANA zone in basics and rejects anything else beside the field", () => {
+    expect(basicsSchema.safeParse({ ...basics, timeZone: "Asia/Kolkata" }).success).toBe(true);
+    const bad = basicsSchema.safeParse({ ...basics, timeZone: "PST" });
+    expect(bad.success).toBe(false);
+    if (!bad.success) expect(bad.error.issues[0].path).toEqual(["timeZone"]);
+    expect(basicsSchema.safeParse(basics).success).toBe(false);
+  });
+
+  it("reads organizer dates in the hackathon's zone", () => {
+    const local = { registrationOpensAt: "2026-07-01T09:00", startsAt: "2026-07-10T09:00", submissionDeadline: "2026-07-24T17:00", endsAt: "2026-07-25T17:00" };
+    const la = datesSchema.parse({ ...local, timeZone: "America/Los_Angeles" });
+    const berlin = datesSchema.parse({ ...local, timeZone: "Europe/Berlin" });
+    expect(la.startsAt.toISOString()).toBe("2026-07-10T16:00:00.000Z");
+    expect(berlin.startsAt.toISOString()).toBe("2026-07-10T07:00:00.000Z");
+  });
+});
+
+describe("changedFields", () => {
+  it("names only changed keys and compares dates by instant", () => {
+    const prev = { title: "a", startsAt: new Date("2026-07-10T00:00:00Z"), timeZone: "UTC" };
+    expect(changedFields(prev, { title: "a", startsAt: new Date("2026-07-10T00:00:00Z"), timeZone: "Asia/Tokyo" })).toEqual(["timeZone"]);
+    expect(changedFields(prev, { title: "b" })).toEqual(["title"]);
   });
 });
 

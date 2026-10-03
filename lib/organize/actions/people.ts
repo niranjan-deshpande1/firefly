@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { guarded, managedForAction, revalidateHackathon } from "../guard";
+import { auditHackathon, guarded, managedForAction, revalidateHackathon } from "../guard";
 import {
   formObject,
   invalid,
@@ -43,6 +43,7 @@ export async function postUpdate(_prev: ActionResult, form: FormData): Promise<A
         userId: r.id,
       });
     }
+    await auditHackathon(user.id, "UPDATE_POSTED", hackathon.id, { updateId: update.id, emails: registrants.length });
     revalidateHackathon(hackathon.slug);
     const n = registrants.length;
     return { ok: true, message: `update posted, ${n} ${n === 1 ? "email" : "emails"} logged` };
@@ -55,7 +56,7 @@ export async function assignReviewer(_prev: ActionResult, form: FormData): Promi
   const parsed = reviewerAssignmentSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     if (hackathon.type !== "HIRING_COHORT") return { ok: false, error: "reviewers are assigned in hiring cohorts, assign judges here instead." };
     const { projectId, reviewerId } = parsed.data;
     const [project, reviewer] = await Promise.all([
@@ -73,7 +74,8 @@ export async function assignReviewer(_prev: ActionResult, form: FormData): Promi
       assignedIds: project.reviewerAssignments.map((a) => a.reviewerId),
     });
     if (blocker) return { ok: false, error: blocker, fieldErrors: { reviewerId: blocker } };
-    await prisma.reviewerAssignment.create({ data: { projectId, reviewerId } });
+    const assignment = await prisma.reviewerAssignment.create({ data: { projectId, reviewerId }, select: { id: true } });
+    await auditHackathon(user.id, "REVIEWER_ASSIGNED", hackathon.id, { assignmentId: assignment.id, projectId, reviewerId });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "reviewer assigned" };
   });
@@ -83,9 +85,10 @@ export async function unassignReviewer(_prev: ActionResult, form: FormData): Pro
   const id = zId.safeParse(form.get("id"));
   if (!id.success) return NOT_FOUND;
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     const { count } = await prisma.reviewerAssignment.deleteMany({ where: { id: id.data, project: { hackathonId: hackathon.id } } });
     if (count === 0) return NOT_FOUND;
+    await auditHackathon(user.id, "REVIEWER_REMOVED", hackathon.id, { assignmentId: id.data });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "reviewer removed" };
   });
@@ -97,7 +100,7 @@ export async function assignJudge(_prev: ActionResult, form: FormData): Promise<
   const parsed = judgeAssignmentSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     if (hackathon.type !== "OPEN") return { ok: false, error: "judges are assigned in open hackathons, assign reviewers here instead." };
     const { judgeId, projectId } = parsed.data;
     const judge = await prisma.user.findUnique({ where: { id: judgeId }, select: { role: true } });
@@ -113,7 +116,8 @@ export async function assignJudge(_prev: ActionResult, form: FormData): Promise<
       const error = "that judge already has this assignment, choose another project or judge.";
       return { ok: false, error, fieldErrors: { judgeId: error } };
     }
-    await prisma.judgeAssignment.create({ data: { hackathonId: hackathon.id, judgeId, projectId } });
+    const assignment = await prisma.judgeAssignment.create({ data: { hackathonId: hackathon.id, judgeId, projectId }, select: { id: true } });
+    await auditHackathon(user.id, "JUDGE_ASSIGNED", hackathon.id, { assignmentId: assignment.id, judgeId, projectId });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "judge assigned" };
   });
@@ -123,9 +127,10 @@ export async function unassignJudge(_prev: ActionResult, form: FormData): Promis
   const id = zId.safeParse(form.get("id"));
   if (!id.success) return NOT_FOUND;
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     const { count } = await prisma.judgeAssignment.deleteMany({ where: { id: id.data, hackathonId: hackathon.id } });
     if (count === 0) return NOT_FOUND;
+    await auditHackathon(user.id, "JUDGE_REMOVED", hackathon.id, { assignmentId: id.data });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "judge removed" };
   });
@@ -137,7 +142,7 @@ export async function pickWinner(_prev: ActionResult, form: FormData): Promise<A
   const parsed = winnerSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form, "winner.pick");
+    const { user, hackathon } = await managedForAction(form, "winner.pick");
     const { prizeId, projectId } = parsed.data;
     const [prize, project] = await Promise.all([
       prisma.prize.findFirst({ where: { id: prizeId, hackathonId: hackathon.id }, include: { winners: { select: { projectId: true } } } }),
@@ -155,7 +160,8 @@ export async function pickWinner(_prev: ActionResult, form: FormData): Promise<A
       alreadyWon: prize.winners.some((w) => w.projectId === projectId),
     });
     if (blocker) return { ok: false, error: blocker, fieldErrors: { projectId: blocker } };
-    await prisma.winner.create({ data: { hackathonId: hackathon.id, prizeId, projectId } });
+    const winner = await prisma.winner.create({ data: { hackathonId: hackathon.id, prizeId, projectId }, select: { id: true } });
+    await auditHackathon(user.id, "WINNER_AWARDED", hackathon.id, { winnerId: winner.id, prizeId, projectId });
     revalidateHackathon(hackathon.slug);
     revalidatePath(`/projects/${projectId}`);
     return { ok: true, message: `${project?.title} awarded ${prize.name}` };
@@ -166,9 +172,10 @@ export async function removeWinner(_prev: ActionResult, form: FormData): Promise
   const id = zId.safeParse(form.get("id"));
   if (!id.success) return NOT_FOUND;
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form, "winner.pick");
+    const { user, hackathon } = await managedForAction(form, "winner.pick");
     const { count } = await prisma.winner.deleteMany({ where: { id: id.data, hackathonId: hackathon.id } });
     if (count === 0) return NOT_FOUND;
+    await auditHackathon(user.id, "WINNER_REMOVED", hackathon.id, { winnerId: id.data });
     revalidateHackathon(hackathon.slug);
     revalidatePath("/projects/[id]", "page");
     return { ok: true, message: "award removed" };

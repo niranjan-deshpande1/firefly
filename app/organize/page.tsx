@@ -56,7 +56,7 @@ export default async function OrganizePage() {
                   <p className="type-body-s text-secondary tablet:text-end">
                     {next ? (
                       <>
-                        {next.label} <Time value={next.at} format="datetime" className="text-primary" />
+                        {next.label} <Time value={next.at} format="datetime" timeZone={h.timeZone} className="text-primary" />
                       </>
                     ) : (
                       "every date has passed"

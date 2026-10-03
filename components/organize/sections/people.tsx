@@ -6,7 +6,7 @@ import { REVIEWERS_PER_PROJECT, WINNER_STATUSES } from "@/lib/organize/schemas";
 import { EmptyState, Markdown, StatusPill, Table, Td, TextLink, Th, Time, Tr } from "@/components/ui";
 import { ConfirmAction, FormShell, SelectField, TextField } from "../form";
 
-type H = { id: string; slug: string; type: string; status: string };
+type H = { id: string; slug: string; type: string; status: string; timeZone: string };
 
 const REGISTRATION_LABEL: Record<string, string> = { REGISTERED: "registered", WITHDRAWN: "withdrawn", SUBMITTED: "posted a project", FINISHED: "finished" };
 
@@ -52,7 +52,7 @@ export async function ParticipantsSection({ hackathon }: { hackathon: H }) {
             <Td>{r.user.teamMembers[0]?.team.name ?? (r.lookingForTeam ? "looking for a team" : "solo")}</Td>
             <Td>{r.eligibilityConfirmed ? "confirmed" : "not confirmed"}</Td>
             <Td>
-              <Time value={r.createdAt} />
+              <Time value={r.createdAt} timeZone={hackathon.timeZone} />
             </Td>
           </Tr>
         ))}
@@ -87,7 +87,7 @@ export async function UpdatesSection({ hackathon }: { hackathon: H }) {
             {updates.map((u) => (
               <li key={u.id} className="flex flex-col gap-2 border-b border-line py-4">
                 <p className="type-display-4">{u.title}</p>
-                <Time value={u.publishedAt} format="datetime" className="type-body-s text-secondary" />
+                <Time value={u.publishedAt} format="datetime" timeZone={hackathon.timeZone} className="type-body-s text-secondary" />
                 <Markdown>{u.body}</Markdown>
               </li>
             ))}

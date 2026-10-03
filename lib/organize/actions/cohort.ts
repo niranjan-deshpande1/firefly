@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { parseJson, prisma, toJson } from "@/lib/db";
-import { guarded, managedForAction, revalidateHackathon } from "../guard";
+import { auditHackathon, guarded, managedForAction, revalidateHackathon } from "../guard";
 import { defaultCohortConfig } from "../defaults";
 import {
   addOfficeHour,
@@ -23,12 +23,17 @@ const NOT_COHORT: ActionResult = { ok: false, error: "cohort settings apply to h
 
 /** Loads (or creates with defaults) the cohort config of a managed hiring cohort. */
 async function cohortFor(form: FormData) {
-  const { hackathon } = await managedForAction(form);
+  const { user, hackathon } = await managedForAction(form);
   if (hackathon.type !== "HIRING_COHORT") return null;
   const config =
     hackathon.cohortConfig ??
     (await prisma.cohortConfig.create({ data: { hackathonId: hackathon.id, ...defaultCohortConfig(hackathon.submissionDeadline) } }));
-  return { hackathon, config };
+  return { user, hackathon, config };
+}
+
+/** Audits a cohort settings change, naming the section (brief, dates, checkIns, officeHours). */
+function auditCohort(found: { user: { id: string }; hackathon: { id: string } }, section: string) {
+  return auditHackathon(found.user.id, "COHORT_CONFIG_CHANGED", found.hackathon.id, { section });
 }
 
 export async function saveCohortBrief(_prev: ActionResult, form: FormData): Promise<ActionResult> {
@@ -38,6 +43,7 @@ export async function saveCohortBrief(_prev: ActionResult, form: FormData): Prom
     const found = await cohortFor(form);
     if (!found) return NOT_COHORT;
     await prisma.cohortConfig.update({ where: { id: found.config.id }, data: parsed.data });
+    await auditCohort(found, "brief");
     revalidateHackathon(found.hackathon.slug);
     return { ok: true, message: "cohort brief saved" };
   });
@@ -50,6 +56,7 @@ export async function saveCohortDates(_prev: ActionResult, form: FormData): Prom
     const found = await cohortFor(form);
     if (!found) return NOT_COHORT;
     await prisma.cohortConfig.update({ where: { id: found.config.id }, data: parsed.data });
+    await auditCohort(found, "dates");
     revalidateHackathon(found.hackathon.slug);
     return { ok: true, message: "defense and results saved" };
   });
@@ -63,6 +70,7 @@ export async function saveCheckIn(_prev: ActionResult, form: FormData): Promise<
     if (!found) return NOT_COHORT;
     const list = upsertCheckIn(parseJson<CheckInSlot[]>(found.config.checkInSchedule, []), parsed.data);
     await prisma.cohortConfig.update({ where: { id: found.config.id }, data: { checkInSchedule: toJson(list) } });
+    await auditCohort(found, "checkIns");
     revalidateHackathon(found.hackathon.slug);
     return { ok: true, message: `week ${parsed.data.week} check-in saved` };
   });
@@ -76,6 +84,7 @@ export async function addOfficeHours(_prev: ActionResult, form: FormData): Promi
     if (!found) return NOT_COHORT;
     const list = addOfficeHour(parseJson<OfficeHour[]>(found.config.officeHours, []), parsed.data);
     await prisma.cohortConfig.update({ where: { id: found.config.id }, data: { officeHours: toJson(list) } });
+    await auditCohort(found, "officeHours");
     revalidateHackathon(found.hackathon.slug);
     return { ok: true, message: "office hours added" };
   });
@@ -91,6 +100,7 @@ async function removeFromList(form: FormData, column: "checkInSchedule" | "offic
     if (!found) return NOT_COHORT;
     const list = removeAt(parseJson<unknown[]>(found.config[column], []), index.data);
     await prisma.cohortConfig.update({ where: { id: found.config.id }, data: { [column]: toJson(list) } });
+    await auditCohort(found, column === "checkInSchedule" ? "checkIns" : "officeHours");
     revalidateHackathon(found.hackathon.slug);
     return { ok: true, message };
   });

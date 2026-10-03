@@ -2,14 +2,12 @@
 import type { ReactNode } from "react";
 import { prisma } from "@/lib/db";
 import { formatCents } from "@/lib/billing/math";
-import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import { removeItem, saveCriterion, savePrize, saveResource, saveScheduleItem } from "@/lib/organize/actions/items";
-import { timeZoneList } from "@/lib/organize/time";
 import { SCHEDULE_KINDS } from "@/lib/db/enums";
 import { EmptyState, TextLink, Time } from "@/components/ui";
 import { ConfirmAction, FormShell, SelectField, TextField, ZonedDateFields } from "../form";
 
-type Ctx = { hackathonId: string; slug: string; editId?: string };
+type Ctx = { hackathonId: string; slug: string; timeZone: string; editId?: string };
 type Kind = "prize" | "schedule" | "criterion" | "resource";
 
 const SCHEDULE_LABEL: Record<string, string> = {
@@ -106,10 +104,10 @@ export async function ScheduleSection({ ctx }: { ctx: Ctx }) {
           {items.map((i) => (
             <Row key={i.id} ctx={ctx} kind="schedule" id={i.id} name={i.title} removeNote="it disappears from the public schedule.">
               <p className="type-body-s text-secondary">
-                {SCHEDULE_LABEL[i.kind] ?? i.kind}, <Time value={i.startsAt} format="datetime" />
+                {SCHEDULE_LABEL[i.kind] ?? i.kind}, <Time value={i.startsAt} format="datetime" timeZone={ctx.timeZone} />
                 {i.endsAt ? (
                   <>
-                    {" "}to <Time value={i.endsAt} format="time" />
+                    {" "}to <Time value={i.endsAt} format="time" timeZone={ctx.timeZone} />
                   </>
                 ) : null}
               </p>
@@ -130,8 +128,7 @@ export async function ScheduleSection({ ctx }: { ctx: Ctx }) {
           />
           <TextField name="title" label="title" required defaultValue={editing?.title} />
           <ZonedDateFields
-            zones={timeZoneList()}
-            defaultZone={DEFAULT_TIME_ZONE}
+            zone={ctx.timeZone}
             fields={[
               { name: "startsAt", label: "starts", value: editing?.startsAt.toISOString(), required: true },
               { name: "endsAt", label: "ends", value: editing?.endsAt?.toISOString(), hint: "optional." },

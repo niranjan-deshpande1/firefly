@@ -63,7 +63,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
         <p className="type-body">
           {next ? (
             <>
-              your week {next.week} check-in opens on <Time value={slotOpensAt(next)} />. read your earlier ones below.
+              your week {next.week} check-in opens on <Time value={slotOpensAt(next)} timeZone={h.timeZone} />. read your earlier ones below.
             </>
           ) : (
             "every check-in week for this cohort has closed. your check-ins stay with your project as evidence."
@@ -84,7 +84,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
                   <span className="type-body w-16">week {s.week}</span>
                   {state === "posted" ? <StatusPill tone="success">posted</StatusPill> : state === "open" ? <StatusPill>open</StatusPill> : null}
                   <span className="text-secondary">
-                    {state === "not posted" ? "not posted, " : ""}due <Time value={s.dueAt} format="datetime" />
+                    {state === "not posted" ? "not posted, " : ""}due <Time value={s.dueAt} format="datetime" timeZone={h.timeZone} />
                   </span>
                 </li>
               );

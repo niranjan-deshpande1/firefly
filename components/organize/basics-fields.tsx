@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Field, Input } from "@/components/ui";
+import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import { slugify } from "@/lib/organize/schemas";
+import { zoneOptions } from "@/lib/organize/time";
 import { SelectField, TextField, useFieldError } from "./form";
 
 type Props = {
-  defaults?: { title: string; slug: string; type: string; tagline: string; description: string };
+  defaults?: { title: string; slug: string; type: string; tagline: string; description: string; timeZone: string };
 };
 
-/** Title, slug (suggested from the title until edited), type, tagline and description. */
+/** Title, slug (suggested from the title until edited), type, time zone, tagline and description. */
 export function BasicsFields({ defaults }: Props) {
   const [title, setTitle] = useState(defaults?.title ?? "");
   const [slug, setSlug] = useState(defaults?.slug ?? "");
@@ -61,6 +63,14 @@ export function BasicsFields({ defaults }: Props) {
           { value: "OPEN", label: "open hackathon" },
           { value: "HIRING_COHORT", label: "hiring cohort" },
         ]}
+      />
+      <SelectField
+        name="timeZone"
+        label="time zone"
+        hint="every date and time for this hackathon is entered and shown in this zone."
+        required
+        defaultValue={defaults?.timeZone ?? DEFAULT_TIME_ZONE}
+        options={zoneOptions(defaults?.timeZone).map((z) => ({ value: z, label: z }))}
       />
       <TextField name="tagline" label="tagline" hint="one line shown on the hackathon card." required defaultValue={defaults?.tagline} />
       <TextField name="description" label="description" hint="Markdown." rows={8} defaultValue={defaults?.description} />

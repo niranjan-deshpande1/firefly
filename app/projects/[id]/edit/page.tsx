@@ -22,7 +22,7 @@ export default async function EditProjectPage({ params, searchParams }: PageProp
       description={
         <p>
           {posted ? "it is posted. changes show right away." : "it is a draft, visible to your team and the organizers."} posting for {hackathon.title} closes{" "}
-          <Time value={hackathon.submissionDeadline} format="datetime" />.
+          <Time value={hackathon.submissionDeadline} format="datetime" timeZone={hackathon.timeZone} />.
         </p>
       }
     />

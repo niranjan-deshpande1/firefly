@@ -1,6 +1,6 @@
 import NextLink from "next/link";
 import { StatusPill } from "@/components/ui";
-import { DEFAULT_TIME_ZONE, formatDateTime } from "@/lib/format/date";
+import { formatDateTime } from "@/lib/format/date";
 import { dateRange, formatLabel, statusLabel, typeLabel } from "@/lib/discovery/labels";
 import type { HackathonCard as Card } from "@/lib/discovery/queries";
 
@@ -24,11 +24,11 @@ export function HackathonCard({ hackathon: h, headingLevel = 2 }: { hackathon: C
       <dl className="mt-auto grid gap-1 type-body-s">
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-secondary">dates</dt>
-          <dd>{dateRange(h.startsAt, h.endsAt, DEFAULT_TIME_ZONE)}</dd>
+          <dd>{dateRange(h.startsAt, h.endsAt, h.timeZone)}</dd>
         </div>
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-secondary">posting closes</dt>
-          <dd>{formatDateTime(h.submissionDeadline, DEFAULT_TIME_ZONE)}</dd>
+          <dd>{formatDateTime(h.submissionDeadline, h.timeZone)}</dd>
         </div>
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-secondary">where</dt>

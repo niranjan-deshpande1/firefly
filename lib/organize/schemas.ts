@@ -120,6 +120,12 @@ function order(ctx: z.RefinementCtx, earlier: Date | null, later: Date | null, p
   if (strict ? later <= earlier : later < earlier) ctx.addIssue({ code: "custom", path: [path], message });
 }
 
+/** Names of the keys in `next` whose value differs from `prev` (dates compared by instant). For audit metadata. */
+export function changedFields(prev: Record<string, unknown>, next: Record<string, unknown>): string[] {
+  const same = (a: unknown, b: unknown) => (a instanceof Date && b instanceof Date ? a.getTime() === b.getTime() : a === b);
+  return Object.keys(next).filter((k) => !same(prev[k], next[k]));
+}
+
 // ---------- hackathon ----------
 
 export const zSlug = z
@@ -135,6 +141,7 @@ export const basicsSchema = z.object({
   type: z.enum(HACKATHON_TYPES, "choose open hackathon or hiring cohort."),
   tagline: text(200, "tagline"),
   description: markdown("description"),
+  timeZone: zTimeZone,
 });
 export type BasicsInput = z.infer<typeof basicsSchema>;
 

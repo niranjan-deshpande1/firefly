@@ -3,7 +3,7 @@
 import { createContext, startTransition, useActionState, useContext, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Button, Dialog, DialogClose, Field, Input, Select, Textarea, useToast } from "@/components/ui";
 import type { ActionResult } from "@/lib/organize/schemas";
-import { utcToZonedLocal, zonedLocalToUtc } from "@/lib/organize/time";
+import { utcToZonedLocal } from "@/lib/organize/time";
 
 export type FormAction = (prev: ActionResult, form: FormData) => Promise<ActionResult>;
 
@@ -156,52 +156,20 @@ export function FileField({ name, label, hint }: { name: string; label: string; 
 
 type ZonedField = { name: string; label: string; value?: string | null; required?: boolean; hint?: string };
 
-/**
- * IANA zone picker plus datetime-local inputs read in that zone. Changing the zone keeps the same
- * instants and rewrites the wall times, so switching zones never moves an event.
- */
-export function ZonedDateFields({ fields, zones, defaultZone }: { fields: ZonedField[]; zones: string[]; defaultZone: string }) {
-  const [zone, setZone] = useState(defaultZone);
-  const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(fields.map((f) => [f.name, f.value ? utcToZonedLocal(new Date(f.value), defaultZone) : ""])),
-  );
-  const zoneError = useFieldError("timeZone");
+/** datetime-local inputs read in the hackathon's time zone (set in basics) and stored in UTC. */
+export function ZonedDateFields({ fields, zone }: { fields: ZonedField[]; zone: string }) {
   const errors = useContext(ErrorsContext);
-
-  function changeZone(next: string) {
-    setValues((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).map(([name, local]) => {
-          const instant = local ? zonedLocalToUtc(local, zone) : null;
-          return [name, instant ? utcToZonedLocal(instant, next) : local];
-        }),
-      ),
-    );
-    setZone(next);
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <Field label="timezone" hint="every time below is read in this zone and stored in UTC." error={zoneError} required>
-        {({ id, describedBy, invalid }) => (
-          <Select id={id} name="timeZone" value={zone} onChange={(e) => changeZone(e.target.value)} aria-invalid={invalid} aria-describedby={describedBy}>
-            {zones.map((z) => (
-              <option key={z} value={z}>
-                {z}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
+      <input type="hidden" name="timeZone" value={zone} />
       {fields.map((f) => (
-        <Field key={f.name} label={f.label} hint={f.hint ?? `in ${zone}`} error={errors[f.name]} required={f.required}>
+        <Field key={f.name} label={f.label} hint={f.hint ?? `in ${zone}, the hackathon's time zone.`} error={errors[f.name]} required={f.required}>
           {({ id, describedBy, invalid }) => (
             <Input
               id={id}
               name={f.name}
               type="datetime-local"
-              value={values[f.name] ?? ""}
-              onChange={(e) => setValues((prev) => ({ ...prev, [f.name]: e.target.value }))}
+              defaultValue={f.value ? utcToZonedLocal(new Date(f.value), zone) : ""}
               aria-invalid={invalid}
               aria-describedby={describedBy}
             />

@@ -12,6 +12,8 @@ type Timeline = {
   startsAt: Date;
   submissionDeadline: Date;
   endsAt: Date;
+  /** The hackathon's IANA zone; dates in sentences render in it. */
+  timeZone?: string;
 };
 
 type CohortDates = { defenseWindowStart: Date; defenseWindowEnd: Date; resultsAt: Date } | null;
@@ -34,12 +36,12 @@ export function resultsOut(h: Pick<Timeline, "status">, cohort: CohortDates, now
 /** The name of the beat the hackathon is on, as plain text. */
 export function currentBeat(h: Timeline, cohort: CohortDates, now: Date): string {
   if (resultsOut(h, cohort, now)) return "results are out";
-  if (now < h.startsAt) return `kickoff on ${formatDate(h.startsAt)}`;
+  if (now < h.startsAt) return `kickoff on ${formatDate(h.startsAt, h.timeZone)}`;
   if (now <= h.submissionDeadline) return "building";
   if (!cohort) return h.status === "JUDGING" || now <= h.endsAt ? "judging" : "wrapping up";
   if (now < cohort.defenseWindowStart) return "reviews";
   if (now <= cohort.defenseWindowEnd) return "defense interviews";
-  return `results on ${formatDate(cohort.resultsAt)}`;
+  return `results on ${formatDate(cohort.resultsAt, h.timeZone)}`;
 }
 
 /** One line for the dashboard: "day 9 of 14, building" or just the beat. */
@@ -101,9 +103,9 @@ export function registrationBlock(h: Timeline, now: Date): string | null {
   if (h.status === "COMPLETED") return "this hackathon has ended, browse the open hackathons instead.";
   if (h.status === "DRAFT") return "this hackathon isn't published yet, browse the open hackathons instead.";
   if (h.status === "JUDGING" || h.status === "DEFENSE" || now > h.submissionDeadline) {
-    return `registration closed on ${formatDate(h.submissionDeadline)}, browse the open hackathons instead.`;
+    return `registration closed on ${formatDate(h.submissionDeadline, h.timeZone)}, browse the open hackathons instead.`;
   }
-  if (now < h.registrationOpensAt) return `registration opens on ${formatDate(h.registrationOpensAt)}, come back then.`;
+  if (now < h.registrationOpensAt) return `registration opens on ${formatDate(h.registrationOpensAt, h.timeZone)}, come back then.`;
   return null;
 }
 

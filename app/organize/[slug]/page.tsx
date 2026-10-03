@@ -108,7 +108,7 @@ export default async function HackathonConsolePage({ params }: PageProps<"/organ
             {milestones(hackathon).map((m) => (
               <li key={m.label} className="flex flex-col gap-1 border-b border-line py-3">
                 <span className={m.at < now ? "type-body-s text-secondary" : "type-body-s text-primary"}>{m.label}</span>
-                <Time value={m.at} format="datetime" className="type-body-s text-secondary" />
+                <Time value={m.at} format="datetime" timeZone={hackathon.timeZone} className="type-body-s text-secondary" />
               </li>
             ))}
           </ul>

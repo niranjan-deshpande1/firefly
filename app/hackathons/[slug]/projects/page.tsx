@@ -30,7 +30,7 @@ export default async function HackathonProjectsPage({ params, searchParams }: Pa
       <section aria-labelledby="page-title" className="flex flex-col gap-8">
         <PageHeader level={2} title="projects" />
         <EmptyState action={<TextLink href={`/hackathons/${slug}/schedule`}>see the schedule</TextLink>}>
-          projects in this cohort appear after the posting deadline on <Time value={hackathon.submissionDeadline} format="datetime" />.
+          projects in this cohort appear after the posting deadline on <Time value={hackathon.submissionDeadline} format="datetime" timeZone={hackathon.timeZone} />.
         </EmptyState>
       </section>
     );
@@ -82,7 +82,7 @@ export default async function HackathonProjectsPage({ params, searchParams }: Pa
       {all.length === 0 ? (
         isBeforeDeadline(hackathon.submissionDeadline) ? (
           <EmptyState action={<TextLink href={`/hackathons/${slug}/submit`}>post your project</TextLink>}>
-            no projects are posted yet. registered builders can post theirs until <Time value={hackathon.submissionDeadline} format="datetime" />.
+            no projects are posted yet. registered builders can post theirs until <Time value={hackathon.submissionDeadline} format="datetime" timeZone={hackathon.timeZone} />.
           </EmptyState>
         ) : (
           <EmptyState action={<TextLink href="/hackathons">browse other hackathons</TextLink>}>

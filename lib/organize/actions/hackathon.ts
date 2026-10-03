@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { prisma, toJson } from "@/lib/db";
 import { authorize, requireRoleForAction } from "@/lib/permissions";
 import { deleteStoredFile, fileUrl, saveFile, UploadError } from "@/lib/storage";
-import { guarded, isUniqueViolation, managedForAction, revalidateHackathon } from "../guard";
+import { auditHackathon, guarded, isUniqueViolation, managedForAction, revalidateHackathon } from "../guard";
 import {
   applyTeamPolicy,
   basicsSchema,
+  changedFields,
   datesSchema,
   formatSchema,
   formObject,
@@ -29,8 +30,9 @@ export async function createHackathon(_prev: ActionResult, form: FormData): Prom
     const input = parsed.data;
     if (await prisma.hackathon.findUnique({ where: { slug: input.slug }, select: { id: true } })) return SLUG_TAKEN;
     const dates = defaultDates(new Date());
+    let created;
     try {
-      await prisma.hackathon.create({
+      created = await prisma.hackathon.create({
         data: {
           ...input,
           ...dates,
@@ -41,11 +43,13 @@ export async function createHackathon(_prev: ActionResult, form: FormData): Prom
           organizerId: user.id,
           cohortConfig: input.type === "HIRING_COHORT" ? { create: defaultCohortConfig(dates.submissionDeadline) } : undefined,
         },
+        select: { id: true },
       });
     } catch (e) {
       if (isUniqueViolation(e)) return SLUG_TAKEN;
       throw e;
     }
+    await auditHackathon(user.id, "HACKATHON_CREATED", created.id, { type: input.type });
     revalidateHackathon(input.slug);
     redirect(`/organize/${input.slug}/edit/dates`);
   });
@@ -55,7 +59,7 @@ export async function saveBasics(_prev: ActionResult, form: FormData): Promise<A
   const parsed = basicsSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     const input = parsed.data;
     const clash = await prisma.hackathon.findUnique({ where: { slug: input.slug }, select: { id: true } });
     if (clash && clash.id !== hackathon.id) return SLUG_TAKEN;
@@ -85,6 +89,8 @@ export async function saveBasics(_prev: ActionResult, form: FormData): Promise<A
       if (isUniqueViolation(e)) return SLUG_TAKEN;
       throw e;
     }
+    const fields = changedFields(hackathon, input);
+    if (fields.length > 0) await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "basics", fields });
     revalidateHackathon(hackathon.slug);
     if (input.slug !== hackathon.slug) {
       revalidateHackathon(input.slug);
@@ -98,8 +104,11 @@ export async function saveStatus(_prev: ActionResult, form: FormData): Promise<A
   const parsed = statusSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: { status: parsed.data.status } });
+    if (hackathon.status !== parsed.data.status) {
+      await auditHackathon(user.id, "HACKATHON_STATUS_CHANGED", hackathon.id, { from: hackathon.status, to: parsed.data.status });
+    }
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "status saved" };
   });
@@ -109,8 +118,10 @@ export async function saveDates(_prev: ActionResult, form: FormData): Promise<Ac
   const parsed = datesSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: parsed.data });
+    const fields = changedFields(hackathon, parsed.data);
+    if (fields.length > 0) await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "dates", fields });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "dates saved" };
   });
@@ -120,8 +131,10 @@ export async function saveRules(_prev: ActionResult, form: FormData): Promise<Ac
   const parsed = rulesSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: parsed.data });
+    const fields = changedFields(hackathon, parsed.data);
+    if (fields.length > 0) await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "rules", fields });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "rules saved" };
   });
@@ -131,17 +144,17 @@ export async function saveFormat(_prev: ActionResult, form: FormData): Promise<A
   const parsed = formatSchema.safeParse(formObject(form));
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     const { format, location, themes } = parsed.data;
-    await prisma.hackathon.update({
-      where: { id: hackathon.id },
-      data: {
-        format,
-        location: format === "ONLINE" ? null : location,
-        themes: toJson(themes),
-        ...applyTeamPolicy(hackathon.type, parsed.data),
-      },
-    });
+    const data = {
+      format,
+      location: format === "ONLINE" ? null : location,
+      themes: toJson(themes),
+      ...applyTeamPolicy(hackathon.type, parsed.data),
+    };
+    await prisma.hackathon.update({ where: { id: hackathon.id }, data });
+    const fields = changedFields(hackathon, data);
+    if (fields.length > 0) await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "format", fields });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "format saved" };
   });
@@ -165,6 +178,7 @@ export async function saveCover(_prev: ActionResult, form: FormData): Promise<Ac
     }
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: { coverImage: fileUrl(stored.id) } });
     await removeOldCover(hackathon.coverImage);
+    await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "cover", fields: ["coverImage"] });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "cover image saved" };
   });
@@ -172,9 +186,10 @@ export async function saveCover(_prev: ActionResult, form: FormData): Promise<Ac
 
 export async function removeCover(_prev: ActionResult, form: FormData): Promise<ActionResult> {
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
+    const { user, hackathon } = await managedForAction(form);
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: { coverImage: null } });
     await removeOldCover(hackathon.coverImage);
+    await auditHackathon(user.id, "HACKATHON_UPDATED", hackathon.id, { section: "cover", fields: ["coverImage"] });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message: "cover image removed" };
   });

@@ -28,14 +28,14 @@ function CheckInsPanel({ hackathon: h, now, primary }: { hackathon: HackathonVie
             <span className="type-body w-16">week {s.week}</span>
             {s.state === "posted" ? (
               <span className="type-body-s text-secondary">
-                <StatusPill tone="success">posted</StatusPill> <Time value={postedAt.get(s.week) ?? now} />
+                <StatusPill tone="success">posted</StatusPill> <Time value={postedAt.get(s.week) ?? now} timeZone={h.timeZone} />
               </span>
             ) : s.state === "open" ? (
               <span className="type-body-s text-secondary">
-                <StatusPill>open</StatusPill> due <Time value={s.dueAt} format="datetime" />
+                <StatusPill>open</StatusPill> due <Time value={s.dueAt} format="datetime" timeZone={h.timeZone} />
               </span>
             ) : s.state === "upcoming" ? (
-              <span className="type-body-s text-secondary">due <Time value={s.dueAt} format="datetime" /></span>
+              <span className="type-body-s text-secondary">due <Time value={s.dueAt} format="datetime" timeZone={h.timeZone} /></span>
             ) : (
               <span className="type-body-s text-secondary">not posted</span>
             )}
@@ -105,7 +105,7 @@ function DeadlinesPanel({ hackathon: h }: { hackathon: HackathonView }) {
           {h.deadlines.map((d) => (
             <li key={d.label} className="row flex flex-col gap-1 py-3">
               <span className="type-label text-secondary">{d.label}</span>
-              <Time value={d.at} format="datetime" className="type-body-s" />
+              <Time value={d.at} format="datetime" timeZone={h.timeZone} className="type-body-s" />
             </li>
           ))}
         </ul>
@@ -253,7 +253,7 @@ export function OpenHackathons({ hackathons }: { hackathons: Dashboard["openHack
             {h.title}
           </TextLink>
           <p className="type-body-s text-secondary measure">
-            {h.tagline} · starts <Time value={h.startsAt} />
+            {h.tagline} · starts <Time value={h.startsAt} timeZone={h.timeZone} />
           </p>
         </li>
       ))}

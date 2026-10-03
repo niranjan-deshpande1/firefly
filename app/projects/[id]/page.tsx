@@ -240,9 +240,9 @@ function Comments({
                     {c.hidden ? " (hidden from others)" : ""}
                   </p>
                   <p className="type-body whitespace-pre-wrap break-words">{c.body}</p>
-                  {may.moderate && !c.hidden ? (
+                  {may.moderate ? (
                     <div>
-                      <HideCommentButton commentId={c.id} />
+                      <HideCommentButton commentId={c.id} hidden={c.hidden} />
                     </div>
                   ) : null}
                 </>

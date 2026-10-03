@@ -96,7 +96,7 @@ export async function getDashboard(userId: string, now: Date) {
     prisma.checkIn.findMany({ where: { userId }, select: { ...CHECKIN_FIELDS, hackathonId: true }, orderBy: { week: "desc" } }),
     prisma.hackathon.findMany({
       where: { status: { in: ["UPCOMING", "OPEN"] }, registrations: { none: { userId } } },
-      select: { id: true, slug: true, title: true, tagline: true, startsAt: true },
+      select: { id: true, slug: true, title: true, tagline: true, startsAt: true, timeZone: true },
       orderBy: { startsAt: "asc" },
       take: 3,
     }),
@@ -134,6 +134,7 @@ export async function getDashboard(userId: string, now: Date) {
       id: h.id,
       slug: h.slug,
       title: h.title,
+      timeZone: h.timeZone,
       isCohort,
       registrationStatus: status,
       stateLine: cohortStateLine(h, dates, now),

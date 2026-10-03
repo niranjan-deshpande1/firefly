@@ -1,7 +1,6 @@
 // Server-rendered forms for each details step. Each step is one decision with one save button naming it.
 import type { CohortConfig, Hackathon } from "@prisma/client";
 import { parseJson } from "@/lib/db";
-import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import { removeCover, saveBasics, saveCover, saveDates, saveFormat, saveRules, saveStatus } from "@/lib/organize/actions/hackathon";
 import {
   addOfficeHours,
@@ -13,7 +12,6 @@ import {
 } from "@/lib/organize/actions/cohort";
 import type { CheckInSlot, OfficeHour } from "@/lib/organize/schemas";
 import { MAX_TEAM_SIZE } from "@/lib/organize/schemas";
-import { timeZoneList } from "@/lib/organize/time";
 import { TextLink, Time } from "@/components/ui";
 import { BasicsFields } from "./basics-fields";
 import { ConfirmAction, FileField, FormShell, SelectField, TextField, ZonedDateFields } from "./form";
@@ -26,7 +24,7 @@ const iso = (d: Date | undefined | null) => d?.toISOString() ?? null;
 
 export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H }) {
   const hidden = { hackathonId: hackathon.id };
-  const zones = timeZoneList();
+  const tz = hackathon.timeZone;
   const cohort = hackathon.cohortConfig;
 
   switch (step) {
@@ -40,6 +38,7 @@ export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H })
               type: hackathon.type,
               tagline: hackathon.tagline,
               description: hackathon.description,
+              timeZone: hackathon.timeZone,
             }}
           />
         </FormShell>
@@ -49,8 +48,7 @@ export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H })
       return (
         <FormShell action={saveDates} hidden={hidden} submitLabel="save dates" loadingLabel="saving dates">
           <ZonedDateFields
-            zones={zones}
-            defaultZone={DEFAULT_TIME_ZONE}
+            zone={tz}
             fields={[
               { name: "registrationOpensAt", label: "registration opens", value: iso(hackathon.registrationOpensAt), required: true },
               { name: "startsAt", label: "starts", value: iso(hackathon.startsAt), required: true },
@@ -148,8 +146,7 @@ export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H })
       return (
         <FormShell action={saveCohortDates} hidden={hidden} submitLabel="save defense and results" loadingLabel="saving defense and results">
           <ZonedDateFields
-            zones={zones}
-            defaultZone={DEFAULT_TIME_ZONE}
+            zone={tz}
             fields={[
               { name: "defenseWindowStart", label: "defense window opens", value: iso(cohort?.defenseWindowStart), required: true },
               { name: "defenseWindowEnd", label: "defense window closes", value: iso(cohort?.defenseWindowEnd), required: true },
@@ -160,10 +157,10 @@ export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H })
       );
 
     case "check-ins":
-      return <CheckInsStep hackathon={hackathon} zones={zones} />;
+      return <CheckInsStep hackathon={hackathon} />;
 
     case "office-hours":
-      return <OfficeHoursStep hackathon={hackathon} zones={zones} />;
+      return <OfficeHoursStep hackathon={hackathon} />;
 
     case "status":
       return (
@@ -181,7 +178,8 @@ export function DetailStep({ step, hackathon }: { step: StepKey; hackathon: H })
   }
 }
 
-function CheckInsStep({ hackathon, zones }: { hackathon: H; zones: string[] }) {
+function CheckInsStep({ hackathon }: { hackathon: H }) {
+  const tz = hackathon.timeZone;
   const list = parseJson<CheckInSlot[]>(hackathon.cohortConfig?.checkInSchedule, []);
   const hidden = { hackathonId: hackathon.id };
   return (
@@ -192,7 +190,7 @@ function CheckInsStep({ hackathon, zones }: { hackathon: H; zones: string[] }) {
             <li key={c.week} className="flex flex-col gap-2 border-b border-line py-4">
               <p className="type-display-4">week {c.week}</p>
               <p className="type-body-s text-secondary">
-                due <Time value={new Date(c.dueAt)} format="datetime" />
+                due <Time value={new Date(c.dueAt)} format="datetime" timeZone={tz} />
               </p>
               <p className="type-body measure">{c.prompt}</p>
               <ConfirmAction
@@ -212,7 +210,7 @@ function CheckInsStep({ hackathon, zones }: { hackathon: H; zones: string[] }) {
         <h2 id="add-check-in" className="type-display-3">add or replace a week</h2>
         <FormShell action={saveCheckIn} hidden={hidden} submitLabel="save check-in" loadingLabel="saving check-in" resetOnSuccess>
           <TextField name="week" label="week" hint="saving a week that exists replaces it." type="number" inputMode="numeric" required defaultValue={list.length + 1} />
-          <ZonedDateFields zones={zones} defaultZone={DEFAULT_TIME_ZONE} fields={[{ name: "dueAt", label: "due", required: true }]} />
+          <ZonedDateFields zone={tz} fields={[{ name: "dueAt", label: "due", required: true }]} />
           <TextField name="prompt" label="prompt" hint="what builders answer that week." rows={3} required />
         </FormShell>
       </section>
@@ -220,7 +218,8 @@ function CheckInsStep({ hackathon, zones }: { hackathon: H; zones: string[] }) {
   );
 }
 
-function OfficeHoursStep({ hackathon, zones }: { hackathon: H; zones: string[] }) {
+function OfficeHoursStep({ hackathon }: { hackathon: H }) {
+  const tz = hackathon.timeZone;
   const list = parseJson<OfficeHour[]>(hackathon.cohortConfig?.officeHours, []);
   const hidden = { hackathonId: hackathon.id };
   return (
@@ -230,7 +229,7 @@ function OfficeHoursStep({ hackathon, zones }: { hackathon: H; zones: string[] }
           {list.map((o, i) => (
             <li key={`${o.startsAt}-${i}`} className="flex flex-col gap-2 border-b border-line py-4">
               <p className="type-body">
-                <Time value={new Date(o.startsAt)} format="datetime" /> to <Time value={new Date(o.endsAt)} format="time" />
+                <Time value={new Date(o.startsAt)} format="datetime" timeZone={tz} /> to <Time value={new Date(o.endsAt)} format="time" timeZone={tz} />
               </p>
               {o.link ? (
                 <TextLink href={o.link} className="type-body-s">
@@ -254,8 +253,7 @@ function OfficeHoursStep({ hackathon, zones }: { hackathon: H; zones: string[] }
         <h2 id="add-office-hours" className="type-display-3">add a slot</h2>
         <FormShell action={addOfficeHours} hidden={hidden} submitLabel="add office hours" loadingLabel="adding office hours" resetOnSuccess>
           <ZonedDateFields
-            zones={zones}
-            defaultZone={DEFAULT_TIME_ZONE}
+            zone={tz}
             fields={[
               { name: "startsAt", label: "starts", required: true },
               { name: "endsAt", label: "ends", required: true },

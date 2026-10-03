@@ -2,21 +2,29 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { guarded, managedForAction, revalidateHackathon } from "../guard";
+import { auditHackathon, guarded, managedForAction, revalidateHackathon } from "../guard";
 import { criterionSchema, formObject, invalid, prizeSchema, resourceSchema, scheduleItemSchema, type ActionResult } from "../schemas";
 
 const NOT_FOUND: ActionResult = { ok: false, error: "that row was not found, reload the page and try again." };
 
-/** Create when there is no id; otherwise update only a row that belongs to this hackathon. */
+type ItemKind = "prize" | "schedule" | "criterion" | "resource";
+
+/**
+ * Create when there is no id; otherwise update only a row that belongs to this hackathon.
+ * `write` returns the touched row id, or null when no row of this hackathon matched.
+ */
 async function upsert(
   form: FormData,
-  write: (hackathonId: string) => Promise<number>,
+  kind: ItemKind,
+  write: (hackathonId: string) => Promise<string | null>,
   message: string,
+  removed = false,
 ): Promise<ActionResult> {
   return guarded(async () => {
-    const { hackathon } = await managedForAction(form);
-    const count = await write(hackathon.id);
-    if (count === 0) return NOT_FOUND;
+    const { user, hackathon } = await managedForAction(form);
+    const itemId = await write(hackathon.id);
+    if (!itemId) return NOT_FOUND;
+    await auditHackathon(user.id, removed ? "HACKATHON_ITEM_REMOVED" : "HACKATHON_ITEM_SAVED", hackathon.id, { kind, itemId });
     revalidateHackathon(hackathon.slug);
     return { ok: true, message };
   });
@@ -29,10 +37,11 @@ export async function savePrize(_prev: ActionResult, form: FormData): Promise<Ac
   const data = { ...rest, valueCents: value };
   return upsert(
     form,
+    "prize",
     async (hackathonId) =>
       id
-        ? (await prisma.prize.updateMany({ where: { id, hackathonId }, data })).count
-        : (await prisma.prize.create({ data: { ...data, hackathonId } }), 1),
+        ? (await prisma.prize.updateMany({ where: { id, hackathonId }, data })).count > 0 ? id : null
+        : (await prisma.prize.create({ data: { ...data, hackathonId }, select: { id: true } })).id,
     "prize saved",
   );
 }
@@ -43,10 +52,11 @@ export async function saveScheduleItem(_prev: ActionResult, form: FormData): Pro
   const { id, ...data } = parsed.data;
   return upsert(
     form,
+    "schedule",
     async (hackathonId) =>
       id
-        ? (await prisma.scheduleItem.updateMany({ where: { id, hackathonId }, data })).count
-        : (await prisma.scheduleItem.create({ data: { ...data, hackathonId } }), 1),
+        ? (await prisma.scheduleItem.updateMany({ where: { id, hackathonId }, data })).count > 0 ? id : null
+        : (await prisma.scheduleItem.create({ data: { ...data, hackathonId }, select: { id: true } })).id,
     "schedule saved",
   );
 }
@@ -57,10 +67,11 @@ export async function saveCriterion(_prev: ActionResult, form: FormData): Promis
   const { id, ...data } = parsed.data;
   return upsert(
     form,
+    "criterion",
     async (hackathonId) =>
       id
-        ? (await prisma.judgingCriterion.updateMany({ where: { id, hackathonId }, data })).count
-        : (await prisma.judgingCriterion.create({ data: { ...data, hackathonId } }), 1),
+        ? (await prisma.judgingCriterion.updateMany({ where: { id, hackathonId }, data })).count > 0 ? id : null
+        : (await prisma.judgingCriterion.create({ data: { ...data, hackathonId }, select: { id: true } })).id,
     "criterion saved",
   );
 }
@@ -71,10 +82,11 @@ export async function saveResource(_prev: ActionResult, form: FormData): Promise
   const { id, ...data } = parsed.data;
   return upsert(
     form,
+    "resource",
     async (hackathonId) =>
       id
-        ? (await prisma.resource.updateMany({ where: { id, hackathonId }, data })).count
-        : (await prisma.resource.create({ data: { ...data, hackathonId } }), 1),
+        ? (await prisma.resource.updateMany({ where: { id, hackathonId }, data })).count > 0 ? id : null
+        : (await prisma.resource.create({ data: { ...data, hackathonId }, select: { id: true } })).id,
     "resource saved",
   );
 }
@@ -91,13 +103,20 @@ export async function removeItem(_prev: ActionResult, form: FormData): Promise<A
   const { id, kind } = parsed.data;
   return upsert(
     form,
+    kind,
     async (hackathonId) => {
       const where = { id, hackathonId };
-      if (kind === "prize") return (await prisma.prize.deleteMany({ where })).count;
-      if (kind === "schedule") return (await prisma.scheduleItem.deleteMany({ where })).count;
-      if (kind === "criterion") return (await prisma.judgingCriterion.deleteMany({ where })).count;
-      return (await prisma.resource.deleteMany({ where })).count;
+      const del =
+        kind === "prize"
+          ? prisma.prize.deleteMany({ where })
+          : kind === "schedule"
+            ? prisma.scheduleItem.deleteMany({ where })
+            : kind === "criterion"
+              ? prisma.judgingCriterion.deleteMany({ where })
+              : prisma.resource.deleteMany({ where });
+      return (await del).count > 0 ? id : null;
     },
     `${kind === "schedule" ? "schedule item" : kind} removed`,
+    true,
   );
 }
