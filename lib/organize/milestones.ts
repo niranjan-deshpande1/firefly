@@ -27,6 +27,11 @@ export function milestones(h: MilestoneSource): Milestone[] {
   return list.sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
+/** "1 project", "2 projects". */
+export function count(n: number, singular: string, plural = `${singular}s`): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
 /** First milestone at or after `now`, or null when everything has passed. */
 export function nextMilestone(h: MilestoneSource, now: Date): Milestone | null {
   return milestones(h).find((m) => m.at >= now) ?? null;

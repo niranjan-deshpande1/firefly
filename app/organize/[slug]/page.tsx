@@ -1,7 +1,7 @@
 // Archetype: workspace. One hackathon's console: where setup stands, who is in it, and the next dated thing.
 import { prisma } from "@/lib/db";
 import { managedHackathon } from "@/lib/organize/guard";
-import { milestones } from "@/lib/organize/milestones";
+import { count, milestones } from "@/lib/organize/milestones";
 import { REVIEWERS_PER_PROJECT } from "@/lib/organize/schemas";
 import { Button, StatusPill, TextLink, Time } from "@/components/ui";
 import { ConsoleFrame } from "@/components/organize/console-frame";
@@ -49,14 +49,16 @@ export default async function HackathonConsolePage({ params }: PageProps<"/organ
 
   const counts: { href: string; label: string }[] = [
     { href: `${base}/participants`, label: `${registrations} registered` },
-    { href: `${base}/participants`, label: `${projects} posted projects` },
-    { href: `${base}/prizes`, label: `${prizes} prizes` },
-    { href: `${base}/schedule`, label: `${schedule} schedule items` },
-    { href: `${base}/criteria`, label: `${criteria} judging criteria` },
-    { href: `${base}/resources`, label: `${resources} resources` },
-    { href: `${base}/updates`, label: `${updates} updates posted` },
-    isCohort ? { href: `${base}/reviewers`, label: `${short} projects need reviewers` } : { href: `${base}/judges`, label: `${judges} judge assignments` },
-    ...(isCohort ? [] : [{ href: `${base}/winners`, label: `${winners} awards picked` }]),
+    { href: `${base}/participants`, label: count(projects, "posted project") },
+    { href: `${base}/prizes`, label: count(prizes, "prize") },
+    { href: `${base}/schedule`, label: count(schedule, "schedule item") },
+    { href: `${base}/criteria`, label: count(criteria, "judging criterion", "judging criteria") },
+    { href: `${base}/resources`, label: count(resources, "resource") },
+    { href: `${base}/updates`, label: `${count(updates, "update")} posted` },
+    isCohort
+      ? { href: `${base}/reviewers`, label: `${count(short, "project")} short of reviewers` }
+      : { href: `${base}/judges`, label: count(judges, "judge assignment") },
+    ...(isCohort ? [] : [{ href: `${base}/winners`, label: `${count(winners, "award")} picked` }]),
   ];
 
   return (

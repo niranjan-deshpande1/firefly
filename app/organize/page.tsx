@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { check, requireRole } from "@/lib/permissions";
 import { listConsoleHackathons } from "@/lib/organize/queries";
-import { nextMilestone } from "@/lib/organize/milestones";
+import { count, nextMilestone } from "@/lib/organize/milestones";
 import { Button, EmptyState, PageHeader, TextLink, Time } from "@/components/ui";
 import { HackathonStatus, TYPE_LABEL } from "@/components/organize/console-frame";
 
@@ -48,7 +48,7 @@ export default async function OrganizePage() {
                       <span>{TYPE_LABEL[h.type]}</span>
                       <HackathonStatus status={h.status} />
                       <span>
-                        {h._count.registrations} registered, {h._count.projects} projects
+                        {h._count.registrations} registered, {count(h._count.projects, "project")}
                       </span>
                       {user.role === "ADMIN" && h.organizer.name ? <span>run by {h.organizer.name}</span> : null}
                     </p>
