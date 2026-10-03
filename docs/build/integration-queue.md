@@ -20,3 +20,6 @@ Shared changes requested by builders, applied at integration (step 4).
 | 2 Participation | Discovery overview links to register and check-ins | check at merge |
 | 6 Companies (`build/companies` 338866d) | none required. Amounts render "$1,000"; brief examples say "$1,000.00": switch `formatCents` to 2 decimals | apply (matches brief) |
 | 6 Companies | No admin handling of interview requests yet; Interviews marks matching requests SCHEDULED | note in status.md |
+| 3 Projects (`build/projects` cb4f391) | optional `project.create` permission action | apply |
+| 3 Projects | Hackathon tabs: current tab from pathname (Discovery says it already uses usePathname; verify) | check at merge |
+| 3 Projects | `.gitignore` `/node_modules/` doesn't match a symlink; use `/node_modules` | apply |
