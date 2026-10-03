@@ -152,7 +152,23 @@ Each item renders `id={evidenceAnchor({ kind, id })}` so links resolve.
 
 `AppShell` (root layout), `NAV` (role destinations), `SignOutButton` (the settings page should render it so mobile users can sign out), `StubPage`.
 
-## 7. Demo users (seed)
+## 7. Cross-area hand-offs
+
+| Event | Writer | Reader |
+|---|---|---|
+| Reviewer assignment (2 per hiring-cohort project) and judge assignment | Organizer (`ReviewerAssignment`, `JudgeAssignment`) | Evaluation queue, permissions |
+| Review submitted, calibration note, decision | Evaluation (`Review`, `ReviewScore`, `CalibrationNote`, `Decision`) | Companies report, Participation results |
+| ADVANCE decision | Evaluation also upserts a `Shortlist` for every role enrolled in the project's cohort (`CohortEnrollment`) and adds a `ShortlistEntry` (candidate, project) to each | Companies shortlist, Interviews scheduling |
+| Interview scheduled for an advanced candidate | Interviews (`Interview`, `InterviewInterviewer`); interviewers are reviewers for WE_RUN, reviewers plus company members for JOINT, company members for COMPANY_RUN | Interviews room |
+| Interview passed | Interviews sets `Interview.outcome = PASS`, `status = COMPLETED`, and `Project.verified = true` | Projects, Profiles (verified label), Companies report |
+| Candidate report | Companies builds the snapshot from live rows in `lib/reports` on each view, upserts `CandidateReport`, and audits `REPORT_VIEW` | Companies |
+| Written feedback | Evaluation (`Feedback`, `visibleAt` = results time) | Participation dashboard shows rows where `visibleAt <= now` |
+| Talent pool opt-in | Profiles (`CandidateProfile.talentPoolOptIn`, settings page anchor `#talent-pool`) | Companies talent pool; Participation dashboard links to `/settings#talent-pool` |
+| Consent | Profiles (`consentVersion`, `consentAt` at onboarding) | Participation registration requires it and links to `/onboarding` when missing |
+| Hackathon update posted | Organizer (`Update` + `hackathonUpdate` email per registrant) | Discovery updates tab |
+| Winner picked | Organizer (`Winner`) | Discovery prizes tab, Projects gallery and page ("awarded: prize name"), Profiles wins |
+
+## 8. Demo users (seed)
 
 | id | Name | Role |
 |---|---|---|
@@ -164,6 +180,6 @@ Each item renders `id={evidenceAnchor({ kind, id })}` so links resolve.
 
 The ops builder keeps these ids and adds the full data set. All people and companies are fictional.
 
-## 8. Commands
+## 9. Commands
 
 `npm run dev` · `npm run build` · `npm run start` · `npm run typecheck` · `npm run lint` · `npm run lint:design` · `npm test` · `npm run e2e` (builds must exist; uses port 3100) · `npm run db:migrate` · `npm run db:seed` · `npm run demo:reset`
