@@ -42,7 +42,7 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
         </p>
         <p>
           <span className="text-secondary">when </span>
-          <Time value={interview.scheduledAt} format="datetime" />, {interview.durationMin} min
+          <Time value={interview.scheduledAt} format="datetime" timeZone={interview.timeZone} />, {interview.durationMin} min
         </p>
         <p>
           <span className="text-secondary">{MODE_LABELS[interview.mode as keyof typeof MODE_LABELS]} </span>
@@ -70,7 +70,7 @@ export default async function InterviewRoomPage({ params }: PageProps<"/intervie
         </h2>
         {identityDone ? (
           <p className="type-body">
-            photo ID checked by {interview.identityCheckedBy?.name ?? "an interviewer"} at <Time value={interview.identityCheckedAt!} format="time" />.
+            photo ID checked by {interview.identityCheckedBy?.name ?? "an interviewer"} at <Time value={interview.identityCheckedAt!} format="time" timeZone={interview.timeZone} />.
           </p>
         ) : closed ? (
           <p className="type-body text-secondary">this interview closed without an identity check.</p>

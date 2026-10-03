@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, type CurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { hasCurrentConsent } from "@/lib/profiles";
 import { sendEmail } from "@/lib/email";
 import { authorize, can, ForbiddenError } from "@/lib/permissions";
 import {
@@ -39,7 +40,7 @@ async function guarded(fn: () => Promise<ActionState>): Promise<ActionState> {
 
 /** team.manage checks project membership; for teams the fact is team membership (see report). */
 function authorizeTeam(user: CurrentUser | null, isMember: boolean): asserts user is CurrentUser {
-  if (!can(user, "team.manage", { isProjectMember: isMember })) throw new ForbiddenError();
+  if (!can(user, "team.manage", { isTeamMember: isMember })) throw new ForbiddenError();
 }
 
 const isUniqueViolation = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -73,9 +74,8 @@ export async function registerForHackathon(_prev: ActionState, formData: FormDat
       return fail("confirm each eligibility statement, then register.", "eligibility");
     }
 
-    const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { consentAt: true } });
-    // TODO(integration): also require consentVersion === CONSENT_VERSION from @/lib/profiles once Profiles merges.
-    if (!profile?.consentAt) return fail("you haven't agreed to the consent terms yet, review them on the onboarding page first.");
+    const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { consentAt: true, consentVersion: true } });
+    if (!hasCurrentConsent(profile)) return fail("you haven't agreed to the consent terms yet, review them on the onboarding page first.");
 
     const lookingForTeam = teamsAllowed(h) && formData.get("lookingForTeam") === "on";
     const existing = await prisma.registration.findUnique({ where: { hackathonId_userId: { hackathonId, userId: user.id } } });

@@ -21,6 +21,7 @@ export async function listInterviews(user: CurrentUser) {
       status: true,
       outcome: true,
       scheduledAt: true,
+      timeZone: true,
       durationMin: true,
       candidate: { select: { name: true } },
       project: { select: { id: true, title: true } },

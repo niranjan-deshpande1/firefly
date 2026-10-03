@@ -661,6 +661,7 @@ model Interview {
   model               String // InterviewModel: WE_RUN | JOINT | COMPANY_RUN
   mode                String // InterviewMode: IN_PERSON | VIDEO
   scheduledAt         DateTime
+  timeZone            String                 @default("America/Los_Angeles") // IANA zone chosen at scheduling
   durationMin         Int                    @default(75)
   location            String?
   videoLink           String?

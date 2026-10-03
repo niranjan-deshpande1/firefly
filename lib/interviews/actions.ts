@@ -72,7 +72,6 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
     const scheduledAt = zonedTimeToUtc(v.localTime, v.timeZone);
     if (!scheduledAt) return { ok: false, error: "that time is not valid, choose a date and a time." };
 
-    // ponytail: schema has no timeZone column yet (see report); the zone drives the UTC instant and the email.
     const interview = await prisma.$transaction(async (tx) => {
       const created = await tx.interview.create({
         data: {
@@ -82,6 +81,7 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
           model: v.model,
           mode: v.mode,
           scheduledAt,
+          timeZone: v.timeZone,
           durationMin: v.durationMin,
           location: v.mode === "IN_PERSON" ? v.location : null,
           videoLink: v.mode === "VIDEO" ? v.videoLink : null,
@@ -106,6 +106,7 @@ export async function scheduleInterview(input: ScheduleInput): Promise<ActionRes
           name: project.owner.name ?? "there",
           when: formatDateTime(scheduledAt, v.timeZone),
           where: v.mode === "IN_PERSON" ? v.location! : `this video link: ${v.videoLink}`,
+          minutes: v.durationMin,
         },
         { interviewId: interview.id, projectId: project.id },
       );

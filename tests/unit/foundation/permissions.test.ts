@@ -115,3 +115,15 @@ describe("needsAccessAudit", () => {
     expect(needsAccessAudit(null, "c1")).toBe(false);
   });
 });
+
+describe("integration rule changes", () => {
+  const companyMember = { id: "c1", role: "COMPANY" as const };
+  it("lets an assigned company panelist run the interview, and no one else", () => {
+    expect(can(companyMember, "interview.run", { isAssignedInterviewer: true })).toBe(true);
+    expect(can(companyMember, "interview.run", {})).toBe(false);
+  });
+  it("lets team members manage their team", () => {
+    expect(can({ id: "u1", role: "CANDIDATE" }, "team.manage", { isTeamMember: true })).toBe(true);
+    expect(can({ id: "u1", role: "CANDIDATE" }, "team.manage", {})).toBe(false);
+  });
+});

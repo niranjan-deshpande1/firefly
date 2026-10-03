@@ -56,7 +56,7 @@ export default async function InterviewsPage() {
                     </div>
                   </Td>
                   <Td>
-                    <Time value={i.scheduledAt} format="datetime" />
+                    <Time value={i.scheduledAt} format="datetime" timeZone={i.timeZone} />
                     <span className="block text-secondary">{i.durationMin} min</span>
                   </Td>
                   <Td>{MODE_LABELS[i.mode as keyof typeof MODE_LABELS]}</Td>

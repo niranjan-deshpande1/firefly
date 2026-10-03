@@ -7,6 +7,11 @@ import type { LinkItem } from "@/lib/db/json";
 /** Bump when the consent copy changes; builders whose stored version differs see the screen again. */
 export const CONSENT_VERSION = "2026-10-03";
 
+/** True when the builder agreed to the current consent text. */
+export function hasCurrentConsent(profile: { consentAt: Date | null; consentVersion: string | null } | null | undefined): boolean {
+  return !!profile?.consentAt && profile.consentVersion === CONSENT_VERSION;
+}
+
 /** Roles a person may pick at onboarding. Organizer, reviewer and admin are assigned by an admin. */
 export const SELF_SERVE_ROLES = ["CANDIDATE", "COMPANY"] as const;
 export type SelfServeRole = (typeof SELF_SERVE_ROLES)[number];

@@ -1,6 +1,7 @@
 // Orchestration tests for participation actions: permission, closed states, duplicates, email.
 // Prisma, auth, email and Next are mocked; the permission rules are the real ones.
 import { Prisma } from "@prisma/client";
+import { CONSENT_VERSION } from "@/lib/profiles";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const DAY = 86_400_000;
@@ -69,7 +70,7 @@ beforeEach(() => {
   auth.user = maya;
   db.hackathon.findUnique.mockResolvedValue(cohort);
   db.registration.findUnique.mockResolvedValue({ id: "r1", status: "REGISTERED" });
-  db.candidateProfile.findUnique.mockResolvedValue({ consentAt: d(-30) });
+  db.candidateProfile.findUnique.mockResolvedValue({ consentAt: d(-30), consentVersion: CONSENT_VERSION });
   db.checkIn.findMany.mockResolvedValue([]);
   db.project.findFirst.mockResolvedValue({ id: "p1" });
 });

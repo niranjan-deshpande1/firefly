@@ -13,6 +13,7 @@ export type Facts = {
   isCompanyMember?: boolean; // member of the company that owns the role/report/invoice
   isOnCompanyShortlist?: boolean; // candidate is on a shortlist of a role owned by the actor's company
   hasActiveEnrollment?: boolean; // actor's company has an enrollment in a cohort that has not ended
+  isTeamMember?: boolean; // member of the team being managed, or a registrant acting on their own membership
   isHackathonOrganizer?: boolean; // organizer of the resource's hackathon
   reviewSubmitted?: boolean; // the actor's own review of this project is submitted
   resultsPublished?: boolean; // hackathon results are out
@@ -24,6 +25,7 @@ export const ACTIONS = [
   "hackathon.create",
   "hackathon.manage",
   "registration.create",
+  "project.create",
   "team.manage",
   "checkin.create",
   "checkin.view",
@@ -69,7 +71,8 @@ const RULES: Record<Action, Rule> = {
   "hackathon.create": (a) => is(a, "ORGANIZER"),
   "hackathon.manage": (a, f) => is(a, "ORGANIZER") && !!f.isHackathonOrganizer,
   "registration.create": (a) => is(a, "CANDIDATE"),
-  "team.manage": (a, f) => is(a, "CANDIDATE") && !!f.isProjectMember,
+  "project.create": (a) => is(a, "CANDIDATE"),
+  "team.manage": (a, f) => is(a, "CANDIDATE") && (!!f.isTeamMember || !!f.isProjectMember),
   "checkin.create": (a, f) => is(a, "CANDIDATE") && !!f.isSelf,
   "checkin.view": (a, f) => !!f.isSelf || (is(a, "REVIEWER") && !!f.isAssignedReviewer),
   "project.view": (a, f) => !!f.isPublic || !!f.isProjectMember || !!f.isAssignedReviewer || !!f.isAssignedJudge || !!f.isHackathonOrganizer,
@@ -80,7 +83,7 @@ const RULES: Record<Action, Rule> = {
   "evidence.view": (a, f) =>
     !!f.isProjectMember ||
     (is(a, "REVIEWER") && (!!f.isAssignedReviewer || !!f.isAssignedInterviewer)) ||
-    (is(a, "COMPANY") && !!f.isOnCompanyShortlist),
+    (is(a, "COMPANY") && (!!f.isOnCompanyShortlist || !!f.isAssignedInterviewer)),
   "evidence.edit": (a, f) => is(a, "CANDIDATE") && !!f.isProjectMember,
   "review.score": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
   "review.calibrate": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
@@ -91,7 +94,8 @@ const RULES: Record<Action, Rule> = {
   "feedback.write": (a, f) => is(a, "REVIEWER") && !!f.isAssignedReviewer,
   "feedback.read": (a, f) => !!f.isSelf && !!f.resultsPublished,
   "interview.schedule": (a, f) => is(a, "ORGANIZER") || (is(a, "REVIEWER") && !!f.isAssignedReviewer),
-  "interview.run": (a, f) => is(a, "REVIEWER") && !!f.isAssignedInterviewer,
+  // Company members sit on joint and company-run panels.
+  "interview.run": (a, f) => !!f.isAssignedInterviewer,
   "company.manage": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,
   "role.manage": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,
   "cohort.enroll": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,

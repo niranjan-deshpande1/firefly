@@ -1,3 +1,5 @@
+import { prisma } from "@/lib/db";
+import { hasCurrentConsent } from "@/lib/profiles";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
@@ -13,6 +15,9 @@ export const metadata = { title: "your dashboard" };
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const user = await requireUser();
   if (user.role !== "CANDIDATE") redirect(NAV[user.role][0].href);
+  // First sign-in (for example through GitHub): agree to the consent terms before anything else.
+  const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { consentAt: true, consentVersion: true } });
+  if (!hasCurrentConsent(profile)) redirect("/onboarding?next=/dashboard");
 
   const now = new Date();
   const data = await getDashboard(user.id, now);

@@ -52,19 +52,22 @@ export async function loadFacts(user: CurrentUser | null, ref: ResourceRef): Pro
           status: true,
           hackathonId: true,
           team: { select: { members: { select: { userId: true } } } },
-          hackathon: { select: { organizerId: true, status: true } },
+          hackathon: { select: { organizerId: true, status: true, cohortConfig: { select: { resultsAt: true } } } },
         },
       })
     : null;
   const hackathonId = ref.hackathonId ?? project?.hackathonId;
   const hackathon = hackathonId
-    ? await prisma.hackathon.findUnique({ where: { id: hackathonId }, select: { organizerId: true, status: true } })
+    ? await prisma.hackathon.findUnique({ where: { id: hackathonId }, select: { organizerId: true, status: true, cohortConfig: { select: { resultsAt: true } } } })
     : null;
 
   const candidateId = ref.candidateId ?? project?.ownerId;
   if (project) facts.isPublic = project.status === "SUBMITTED";
   else if (hackathon && !ref.subjectUserId) facts.isPublic = hackathon.status !== "DRAFT";
-  if (hackathon) facts.resultsPublished = hackathon.status === "COMPLETED";
+  if (hackathon) {
+    const resultsAt = hackathon.cohortConfig?.resultsAt;
+    facts.resultsPublished = hackathon.status === "COMPLETED" || (!!resultsAt && resultsAt <= new Date());
+  }
 
   if (!user) return facts;
 

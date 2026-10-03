@@ -29,9 +29,9 @@ export const EMAIL_TEMPLATES = {
     subject: `an update on your project`,
     body: `hi ${p.name},\n\nyour review is complete. status: ${p.outcome}. open your dashboard for next steps.`,
   }),
-  interviewScheduled: (p: { name: string; when: string; where: string }) => ({
+  interviewScheduled: (p: { name: string; when: string; where: string; minutes: number }) => ({
     subject: `your defense interview is scheduled`,
-    body: `hi ${p.name},\n\nyour defense interview is on ${p.when} at ${p.where}. it runs 75 minutes. bring a photo ID.`,
+    body: `hi ${p.name},\n\nyour defense interview is on ${p.when} at ${p.where}. it runs ${p.minutes} minutes. bring a photo ID.`,
   }),
   feedbackReady: (p: { name: string }) => ({
     subject: `your written feedback is ready`,

@@ -1,3 +1,4 @@
+import { hasCurrentConsent } from "@/lib/profiles";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
@@ -44,8 +45,8 @@ export default async function RegisterPage({ params }: PageProps<"/hackathons/[s
     );
   }
 
-  const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { consentAt: true } });
-  if (!profile?.consentAt) {
+  const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { consentAt: true, consentVersion: true } });
+  if (!hasCurrentConsent(profile)) {
     const next = `/hackathons/${h.slug}/register`;
     return (
       <Passage title={title}>
