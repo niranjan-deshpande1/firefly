@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canRefresh, parseRepoUrl, REFRESH_COOLDOWN_MS } from "@/lib/evidence/github";
+import { canRefresh, listCommitPages, parseRepoUrl, REFRESH_COOLDOWN_MS } from "@/lib/evidence/github";
 import { commitsPerDay, dayKey, dayLabel } from "@/lib/evidence/timeline";
 import { excerptId, highlightSegments, matchesQuery, splitExcerpts } from "@/lib/evidence/transcript";
 import { isBlindViewer } from "@/lib/evidence/queries";
@@ -97,5 +97,33 @@ describe("isBlindViewer", () => {
     expect(isBlindViewer("CANDIDATE", { isProjectMember: true })).toBe(false);
     expect(isBlindViewer("COMPANY", { isOnCompanyShortlist: true })).toBe(false);
     expect(isBlindViewer("ADMIN", {})).toBe(false);
+  });
+});
+
+describe("listCommitPages", () => {
+  const pageOf = (n: number) => Array.from({ length: n }, (_, i) => i);
+
+  it("stops at the first short page", async () => {
+    const calls: number[] = [];
+    const all = await listCommitPages(async (page) => {
+      calls.push(page);
+      return page === 1 ? pageOf(100) : pageOf(7);
+    });
+    expect(calls).toEqual([1, 2]);
+    expect(all).toHaveLength(107);
+  });
+
+  it("reads at most 5 pages, 500 commits", async () => {
+    const calls: number[] = [];
+    const all = await listCommitPages(async (page) => {
+      calls.push(page);
+      return pageOf(100);
+    });
+    expect(calls).toEqual([1, 2, 3, 4, 5]);
+    expect(all).toHaveLength(500);
+  });
+
+  it("passes a failed page through so the caller keeps existing data", async () => {
+    await expect(listCommitPages(async (page) => (page === 2 ? Promise.reject(new Error("rate limited")) : pageOf(100)))).rejects.toThrow("rate limited");
   });
 });

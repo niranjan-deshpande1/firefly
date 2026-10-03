@@ -1,20 +1,18 @@
 import "server-only";
 import { prisma, parseJson } from "@/lib/db";
+import { FINISHED_COHORT_PROJECT } from "@/lib/profiles/queries";
 import { talentReasons } from "./talent-reasons";
 
 /**
- * Opted-in past finishers (brief 4.2). Listed alphabetically by name: no score, no match, no ranking.
- * A finisher has a FINISHED registration or a posted project in a completed hackathon.
+ * Opted-in past cohort finishers (brief 4.2). Listed alphabetically by name: no score, no match, no ranking.
+ * A past cohort finisher posted a project in a hiring cohort that has ended; open hackathons don't count.
  */
 export async function getTalentPool() {
   const users = await prisma.user.findMany({
     where: {
       role: "CANDIDATE",
       candidateProfile: { talentPoolOptIn: true },
-      OR: [
-        { registrations: { some: { status: "FINISHED" } } },
-        { projects: { some: { status: "SUBMITTED", hackathon: { status: "COMPLETED" } } } },
-      ],
+      projects: { some: FINISHED_COHORT_PROJECT },
     },
     orderBy: { name: "asc" },
     select: {
@@ -23,7 +21,7 @@ export async function getTalentPool() {
       username: true,
       candidateProfile: { select: { headline: true, skills: true, experienceLevel: true, location: true, visibility: true, blindCode: true } },
       projects: {
-        where: { status: "SUBMITTED", hackathon: { status: "COMPLETED" } },
+        where: FINISHED_COHORT_PROJECT,
         select: { id: true, title: true, verified: true, builtWith: true, hackathon: { select: { title: true } } },
       },
     },

@@ -19,6 +19,7 @@ Open http://localhost:3000. Switch people at `/signin` ("continue as <name>"). S
 | Fall Builders Cohort (`/hackathons/fall-builders-cohort`) is a HIRING_COHORT at DEFENSE: build ended 6 days ago, defense window open now, results in 6 days | `hackathons.ts` | step 1 and the cohort timeline |
 | Open Build Weekend (`/hackathons/open-build-weekend`) is COMPLETED with 3 prizes and 3 winners: best tool (Patchwork), best use of open data (Transit Gaps), best first hackathon project (Alt Text Check) | `hackathons.ts`, `review.ts` | step 1 |
 | Tools for Makers Jam is the UPCOMING OPEN hackathon | `hackathons.ts` | brief section 8 |
+| DECISION: a fifth hackathon, **Summer Builders Cohort** (`/hackathons/summer-builders-cohort`, COMPLETED HIRING_COHORT), is the past cohort. Theo (Shift Board, `proj-theo-summer`), Lina (Pantry Planner, `proj-lina-summer`) and Nadia (Block Map, `proj-nadia-summer`) finished it. Lina passed her defense (`interview-lina-summer`), so her project is verified and `/u/linahaddad` shows the verified badge. Lina and Nadia opted in, so Northwind's talent pool lists them. | `hackathons.ts`, `projects.ts`, `hiring.ts` | talent pool, verified badge |
 | DECISION: a fourth hackathon, **Winter Builders Cohort** (UPCOMING HIRING_COHORT), exists so step 2 has a cohort to enroll in. Founding Engineer is already enrolled in Fall Builders Cohort and `enrollRoleInCohort` refuses OPEN hackathons. | `hackathons.ts` | step 2 |
 | Northwind's Fall Builders Cohort invoice FF-YYYY-0001 ($1,000) is SENT, not paid | `hiring.ts` | step 7 "mark paid" |
 | Maya's project "Reschedule Desk" (`/projects/proj-maya`) has Priya and Leo Park assigned. Leo's review is posted: 3 on every score except D (technical decisions) = 2, and 3 on every role criterion. Priya has no review yet. Maya has no decision. | `review.ts` | step 4 |
@@ -26,7 +27,7 @@ Open http://localhost:3000. Switch people at `/signin` ("continue as <name>"). S
 | DECISION: Maya's defense interview is pre-scheduled (JOINT, in person at the Firefly studio, about 3 hours after the reset, interviewers Priya and Jordan) so step 5 needs no scheduling step. It only makes sense after step 4's advance, so steps 4 and 5 must run in order. | `hiring.ts` | step 5 |
 | 5 advanced Fall candidates are on the shortlists of the 3 enrolled roles; Aisha Rahman is marked HIRED for Harbor Health | `hiring.ts` | step 6 context |
 | Maya is also on team Patchwork (Open Build Weekend, winner of best tool), so her profile shows a win before step 5 makes her cohort project verified | `hackathons.ts`, `projects.ts` | profile |
-| Theo Grant (`cand-theo`) finished Open Build Weekend, was not hired, has visible written feedback and `talentPoolOptIn = false` | `people.ts`, `review.ts` | step 8 |
+| Theo Grant (`cand-theo`) finished Open Build Weekend and Summer Builders Cohort, was not hired, has visible written feedback and `talentPoolOptIn = false`. The Summer project makes him eligible for the talent pool | `people.ts`, `hackathons.ts`, `projects.ts`, `review.ts` | step 8 |
 | Invoice numbers FF-YYYY-0001 to 0005 are seeded; step 2 creates 0006 and step 6 creates 0007 | `hiring.ts` | step 7 |
 
 Blind codes are derived from user ids, so they are stable: Maya is **candidate 9824**, Theo is candidate C4BF.
@@ -34,7 +35,7 @@ Blind codes are derived from user ids, so they are stable: Maya is **candidate 9
 ## Step 1. Visitor
 
 1. Signed out, open `/`. Expect the landing page.
-2. Choose "hackathons" in the nav. Expect `/hackathons` listing Fall Builders Cohort, Winter Builders Cohort, Open Build Weekend and Tools for Makers Jam.
+2. Choose "hackathons" in the nav. Expect `/hackathons` listing Fall Builders Cohort, Winter Builders Cohort, Summer Builders Cohort, Open Build Weekend and Tools for Makers Jam.
 3. Open **Fall Builders Cohort**. Expect the hiring cohort overview with type "hiring cohort", the 2-week schedule (kickoff, 2 check-ins, 2 office hours, deadline, defense window, results) with times in America/Los_Angeles.
 4. Back to the listing, open **Open Build Weekend**, then the prizes tab. Expect "awarded" labels: best tool (Patchwork), best use of open data (Transit Gaps), best first hackathon project (Alt Text Check).
 

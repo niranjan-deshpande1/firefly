@@ -5,6 +5,7 @@ const db = vi.hoisted(() => ({
   candidateProfile: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   companyMember: { count: vi.fn(), findMany: vi.fn(async () => []) },
   cohortEnrollment: { findFirst: vi.fn() },
+  project: { findFirst: vi.fn() },
   dataRequest: { findFirst: vi.fn(), create: vi.fn() },
   $transaction: vi.fn(),
 }));
@@ -56,10 +57,28 @@ describe("privacy toggles", () => {
     expect((await setVisibility("EVERYONE")).ok).toBe(false);
     expect(db.candidateProfile.update).not.toHaveBeenCalled();
   });
-  it("save the talent pool opt-in on the caller's own profile", async () => {
+  it("save the talent pool opt-in on the caller's own profile when they finished a cohort", async () => {
     db.candidateProfile.findUnique.mockResolvedValue({ id: "p1" });
+    db.project.findFirst.mockResolvedValue({ id: "proj-1" });
     expect(await setTalentPoolOptIn(true)).toEqual({ ok: true });
+    expect(db.project.findFirst).toHaveBeenCalledWith({
+      where: { ownerId: "u1", status: "SUBMITTED", hackathon: { type: "HIRING_COHORT", status: "COMPLETED" } },
+      select: { id: true },
+    });
     expect(db.candidateProfile.update).toHaveBeenCalledWith({ where: { id: "p1" }, data: { talentPoolOptIn: true } });
+  });
+  it("refuse the opt-in without a finished cohort project", async () => {
+    db.candidateProfile.findUnique.mockResolvedValue({ id: "p1" });
+    db.project.findFirst.mockResolvedValue(null);
+    const result = await setTalentPoolOptIn(true);
+    expect(result.ok).toBe(false);
+    expect(db.candidateProfile.update).not.toHaveBeenCalled();
+  });
+  it("always allow leaving the talent pool", async () => {
+    db.candidateProfile.findUnique.mockResolvedValue({ id: "p1" });
+    expect(await setTalentPoolOptIn(false)).toEqual({ ok: true });
+    expect(db.project.findFirst).not.toHaveBeenCalled();
+    expect(db.candidateProfile.update).toHaveBeenCalledWith({ where: { id: "p1" }, data: { talentPoolOptIn: false } });
   });
   it("are builder-only", async () => {
     current.user = { id: "u2", role: "COMPANY", username: null };

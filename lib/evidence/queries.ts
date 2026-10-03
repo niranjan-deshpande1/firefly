@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db";
 import type { Facts } from "@/lib/permissions";
+import { identifiersFor } from "./mask";
 
 /** An assigned reviewer sees no identity until they post and then reveal it, which is audited (brief 4.2, 4.4). */
 export function isBlindViewer(role: string, facts: Facts): boolean {
@@ -62,3 +63,14 @@ export async function loadLocker(projectId: string) {
 }
 
 export type Locker = NonNullable<Awaited<ReturnType<typeof loadLocker>>>;
+
+/** What a blind viewer must not read: the owner's and team members' names, usernames and emails, and the repo owner. */
+export async function loadIdentifiers(projectId: string): Promise<string[]> {
+  const person = { select: { name: true, username: true, email: true } } as const;
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { repoUrl: true, owner: person, team: { select: { members: { select: { user: person } } } } },
+  });
+  if (!project) return [];
+  return identifiersFor([project.owner, ...(project.team?.members.map((m) => m.user) ?? [])], project.repoUrl);
+}

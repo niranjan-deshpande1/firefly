@@ -40,13 +40,10 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 2. Section timers in the interview room are not saved across reloads.
 3. No interview cancel or reschedule; admins can't act on company interview requests yet.
 4. Held feedback has no scheduled send; it needs a job runner.
-5. Transcripts and check-ins are not masked in blind review. A builder who writes their name in them is identifiable.
 6. The retention setting is not enforced. Nothing deletes old data on a schedule.
-7. Any builder can opt into the talent pool, finished or not.
 8. Organizer actions don't write audit entries.
 9. Hackathons have no time zone column; they display in America/Los_Angeles.
 10. No image reordering; hidden comments can't be unhidden.
-11. GitHub reads stop at 100 commits.
 12. No project cover images in the seed, so galleries show text cards and project pages have no focal media. Real screenshots are needed.
 13. AI summary lock is per process; more than one server instance needs a database claim.
 14. No Content-Security-Policy yet (other security headers are set).
@@ -55,8 +52,6 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 
 17. Blind codes belong to the person, not the project. A reviewer who revealed someone in one cohort recognizes their code in the next. RECOMMENDATION: per-project codes.
 18. The seed schedules Maya's interview before her review is posted. Interview pages now show the blind code until the reveal, but the seed order is still unrealistic.
-19. Verified badges show on profiles only after the cohort completes, so the demo never shows one on a profile.
-20. The talent pool lists open-hackathon finishers too, and leaves out the current cohort until it completes. The brief says past cohort finishers.
 21. QA polish not done:
     - $0 and 0% fees are accepted.
     - More hires than a role's hire count are accepted without a warning.
@@ -72,6 +67,13 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
     - Audit rows are noisy (one per transcript per page load).
     - The project wizard drops unsaved steps.
     - Completing an interview has no confirmation step.
+
+Fixed since handoff:
+
+- Blind review masks the builder's and teammates' names, name parts, usernames, emails and GitHub handle as `[builder]` in commit messages, transcripts, check-ins, the decision log, the summary and evidence link labels. The AI summary prompt gets the masked text too. Masking is a word match: a nickname or a misspelling still gets through.
+- Only past hiring-cohort finishers (a posted project in a COMPLETED cohort) can join the talent pool, and the talent pool lists only them. Others see one line on the settings page instead of the switch.
+- GitHub reads page through up to 500 commits.
+- The seed has a completed cohort (Summer Builders Cohort) with a verified project, so a profile shows the verified badge and the talent pool has entries.
 
 ## 4. Needs a lawyer
 

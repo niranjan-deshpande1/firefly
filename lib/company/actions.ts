@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { authorize, check, ForbiddenError, requireRoleForAction } from "@/lib/permissions";
 import { BillingError, enrollRoleInCohort, reportHire } from "@/lib/billing";
 import { sendEmail } from "@/lib/email";
+import { isTalentPoolEligible } from "@/lib/profiles/queries";
 import { fieldErrors, roleFromForm, slugify, zCompany, zHire, zInterviewRequest, zRole, dollarsToCents } from "./schemas";
 
 export type FormState<T = undefined> =
@@ -246,7 +247,8 @@ export async function requestInterviewAction(_prev: FormState, form: FormData): 
     // A company may ask to interview someone on its own shortlist, or an opted-in finisher while it is enrolled.
     const onShortlist = await check(user, "report.view", { roleId, candidateId });
     const profile = await prisma.candidateProfile.findUnique({ where: { userId: candidateId }, select: { talentPoolOptIn: true, blindCode: true } });
-    const inPool = !!profile?.talentPoolOptIn && (await check(user, "talentPool.browse", { companyId: role.companyId }));
+    const inPool =
+      !!profile?.talentPoolOptIn && (await check(user, "talentPool.browse", { companyId: role.companyId })) && (await isTalentPoolEligible(candidateId));
     if (!profile || (!onShortlist && !inPool)) throw new ForbiddenError("you can only request candidates on your shortlist or in the talent pool, open one of those lists.");
 
     const pending = await prisma.interviewRequest.findFirst({ where: { roleId, candidateId, status: "PENDING" } });
