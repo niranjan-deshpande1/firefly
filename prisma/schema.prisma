@@ -194,6 +194,7 @@ model Hackathon {
   slug                String   @unique
   type                String // HackathonType: OPEN | HIRING_COHORT
   status              String   @default("DRAFT") // HackathonStatus
+  timeZone            String   @default("America/Los_Angeles") // IANA zone every date on the hackathon is shown in
   title               String
   tagline             String
   description         String // Markdown
@@ -645,6 +646,7 @@ model Feedback {
   authorId    String
   body        String // Markdown
   visibleAt   DateTime?
+  notifiedAt  DateTime? // email sent to the candidate; held feedback is emailed by the jobs runner
   createdAt   DateTime  @default(now())
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   candidate   User      @relation("FeedbackCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
