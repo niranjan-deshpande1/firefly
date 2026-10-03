@@ -35,8 +35,25 @@ Every variable has a working local fallback. They are mirrored in `.env.example`
 | `GITHUB_TOKEN` | empty | Repo reads use GitHub's unauthenticated rate limit; seeded commits show when GitHub can't be reached. |
 | `ANTHROPIC_API_KEY` | empty | The seeded evidence summary shows and "prepare a new summary" is hidden. |
 | `ANTHROPIC_MODEL` | `claude-sonnet-5-5` | Model for the evidence summary. |
+| `CRON_SECRET` | empty | Vercel only: the daily cron call to `/api/cron/jobs` is refused. |
+| `RESEED_DEMO` | empty | Vercel only: `true` wipes and reseeds the hosted demo on the next build. |
 
 Nothing sends real email (everything goes to the email log in admin), charges money (invoices are records with a "mark paid" action), or hosts video (interviews store a link).
+
+## Deploy on Vercel
+
+The hosted deploy runs on Postgres; local dev stays on SQLite. `vercel.json` points the build at `scripts/vercel-build.mjs`, which writes a Postgres copy of the schema, pushes it to the database, seeds the fictional demo data when the database is empty, and builds.
+
+1. In the Vercel project, **Settings > Git**: production branch `main`.
+2. **Storage > Create Database > Neon (Postgres)**, connect it to the project for all environments. It sets `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
+3. **Settings > Environment Variables**:
+   - `AUTH_SECRET`: a long random string (`npx auth secret`).
+   - `DEMO_MODE`: `true` for the public demo. Anyone with the link can then act as any seeded person, admin included. Use it only with fictional data.
+   - `CRON_SECRET`: a long random string, for the daily scheduled-jobs call.
+   - Optional: `ANTHROPIC_API_KEY`, `GITHUB_TOKEN`.
+4. Redeploy. The first build seeds the demo. To reset the demo later, set `RESEED_DEMO=true`, redeploy, then remove it.
+
+Uploads are stored in the database (4 MB per image, 2 MB per transcript), so no file storage service is needed.
 
 ## Scripts
 

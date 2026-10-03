@@ -32,3 +32,4 @@ __pycache__/
 next-env.d.ts
 /.claude/worktrees/
 /docs/build/screenshots/design-review/
+/prisma/postgres/

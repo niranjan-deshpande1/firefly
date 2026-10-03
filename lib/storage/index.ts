@@ -1,5 +1,5 @@
 import "server-only";
-import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
+import { readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { prisma, type FileKind } from "@/lib/db";
@@ -12,19 +12,18 @@ const ROOT = path.resolve(/*turbopackIgnore: true*/ process.cwd(), "storage");
 
 export class UploadError extends Error {}
 
-/** Validates and stores an uploaded file under ./storage. Returns the StoredFile row. */
+/** Validates and stores an uploaded file in the database (no writable disk on serverless hosts). Returns the StoredFile row. */
 export async function saveFile(ownerId: string, kind: FileKind, file: File) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const result = validateUpload(kind, file.name, bytes);
   if (!result.ok) throw new UploadError(result.error);
+  // ponytail: bytes live in the database row (limit 4 MB each); move to object storage if uploads grow.
   const relative = path.join(/*turbopackIgnore: true*/ kind.toLowerCase(), `${randomUUID()}.${result.ext}`);
-  const absolute = path.join(/*turbopackIgnore: true*/ ROOT, relative);
-  await mkdir(path.dirname(/*turbopackIgnore: true*/ absolute), { recursive: true });
-  await writeFile(absolute, bytes);
   return prisma.storedFile.create({
     data: {
       ownerId,
       path: relative,
+      data: bytes,
       kind,
       mimeType: result.mime,
       sizeBytes: bytes.byteLength,
@@ -33,9 +32,10 @@ export async function saveFile(ownerId: string, kind: FileKind, file: File) {
   });
 }
 
-/** Reads a stored file's bytes. Paths come only from the database, never from the request. */
-export async function readStoredFile(relativePath: string): Promise<Buffer> {
-  const absolute = path.resolve(/*turbopackIgnore: true*/ ROOT, relativePath);
+/** Reads a stored file's bytes: from the row, or from ./storage for files saved before bytes moved into the database. */
+export async function readStoredFile(file: { path: string; data: Uint8Array | null }): Promise<Uint8Array> {
+  if (file.data) return file.data;
+  const absolute = path.resolve(/*turbopackIgnore: true*/ ROOT, file.path);
   if (!absolute.startsWith(ROOT + path.sep)) throw new UploadError("Invalid path.");
   return readFile(absolute);
 }

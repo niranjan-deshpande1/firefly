@@ -1,6 +1,7 @@
 // Hackathon listing filters. Pure: URL search params in, a validated filter object, a Prisma
 // where clause and removable chips out. The URL is the only filter state (no client store).
 import { z } from "zod";
+import { containsText } from "@/lib/db/search";
 import type { Prisma } from "@prisma/client";
 
 export const TYPE_OPTIONS = { OPEN: "open hackathon", HIRING_COHORT: "hiring cohort" } as const;
@@ -53,8 +54,7 @@ export function withoutKey(f: ListingFilters, key: FilterKey): ListingFilters {
 
 export function toWhere(f: ListingFilters): Prisma.HackathonWhereInput {
   const and: Prisma.HackathonWhereInput[] = [{ status: { not: "DRAFT" } }];
-  // ponytail: SQLite `contains` is case-insensitive for ASCII; on Postgres add mode: "insensitive".
-  if (f.q) and.push({ OR: [{ title: { contains: f.q } }, { tagline: { contains: f.q } }] });
+  if (f.q) and.push({ OR: [{ title: containsText(f.q) }, { tagline: containsText(f.q) }] });
   if (f.type) and.push({ type: f.type });
   if (f.status) and.push({ status: f.status });
   // Themes are a JSON string[] column, so match the quoted value.

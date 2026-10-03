@@ -2,7 +2,7 @@
 import type { FileKind } from "@/lib/db/enums";
 
 export const LIMITS: Record<FileKind, number> = {
-  IMAGE: 5 * 1024 * 1024,
+  IMAGE: 4 * 1024 * 1024, // Vercel caps request bodies at 4.5 MB
   TRANSCRIPT: 2 * 1024 * 1024,
 };
 

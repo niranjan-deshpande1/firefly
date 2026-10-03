@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!user || (user.id !== file.ownerId && user.role !== "ADMIN")) return new NextResponse("Not found", { status: 404 });
     if (user.id !== file.ownerId) await auditAccess(user, "TRANSCRIPT_VIEW", file.ownerId, { type: "StoredFile", id: file.id });
   }
-  const bytes = await readStoredFile(file.path);
+  const bytes = await readStoredFile(file);
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
       "Content-Type": file.mimeType,

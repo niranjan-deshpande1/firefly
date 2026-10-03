@@ -1,4 +1,5 @@
 // Pure filter parsing for the admin logs. No database access, so it is unit tested.
+import { containsText } from "@/lib/db/search";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { AUDIT_ACTIONS, INVOICE_STATUSES } from "@/lib/db/enums";
@@ -41,7 +42,7 @@ export function parseFilters<T extends z.ZodObject>(schema: T, params: SearchPar
 
 /** Matches a person by id, name, email or username. */
 function personWhere(query: string): Prisma.UserWhereInput {
-  return { OR: [{ id: query }, { name: { contains: query } }, { email: { contains: query } }, { username: { contains: query } }] };
+  return { OR: [{ id: query }, { name: containsText(query) }, { email: containsText(query) }, { username: containsText(query) }] };
 }
 
 /** Inclusive date range in UTC days: from 00:00 of `from` to the end of `to`. */
@@ -66,7 +67,7 @@ export function auditWhere(f: AuditFilters): Prisma.AuditLogWhereInput {
 export function emailWhere(f: EmailFilters): Prisma.EmailLogWhereInput {
   const where: Prisma.EmailLogWhereInput = {};
   if (f.template) where.template = f.template;
-  if (f.to) where.to = { contains: f.to };
+  if (f.to) where.to = containsText(f.to);
   return where;
 }
 

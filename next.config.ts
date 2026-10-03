@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Cover images go up to 5 MB through server actions (default limit is 1 MB).
+// Cover images go up to 4 MB through server actions (default limit is 1 MB; Vercel caps bodies at 4.5 MB).
 const SECURITY_HEADERS = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,7 +10,7 @@ const SECURITY_HEADERS = [
 
 // ponytail: no CSP yet; add a nonce-based one before a public deploy.
 const nextConfig: NextConfig = {
-  experimental: { serverActions: { bodySizeLimit: "6mb" } },
+  experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
   headers: async () => [{ source: "/:path*", headers: SECURITY_HEADERS }],
 };
 

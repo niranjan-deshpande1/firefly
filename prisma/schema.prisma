@@ -856,6 +856,7 @@ model StoredFile {
   mimeType     String
   sizeBytes    Int
   originalName String
+  data         Bytes? // file bytes; kept in the database so serverless hosts with no writable disk work
   createdAt    DateTime @default(now())
   owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
