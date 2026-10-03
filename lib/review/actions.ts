@@ -250,12 +250,14 @@ export async function writeFeedback(input: z.input<typeof zFeedback>): Promise<A
     const now = new Date();
     const resultsAt = project.hackathon.cohortConfig?.resultsAt;
     const visibleAt = resultsAt && resultsAt > now ? resultsAt : now;
+    // Visible now: email at write time and mark it sent. Held: leave notifiedAt empty for the jobs runner (lib/jobs).
+    const visibleNow = visibleAt <= now;
+    const notifiedAt = visibleNow ? now : null;
     for (const c of projectCandidates(project)) {
       const existing = await prisma.feedback.findFirst({ where: { projectId, candidateId: c.id }, select: { id: true } });
-      if (existing) await prisma.feedback.update({ where: { id: existing.id }, data: { body, authorId: user.id, visibleAt } });
-      else await prisma.feedback.create({ data: { projectId, candidateId: c.id, authorId: user.id, body, visibleAt } });
-      // ponytail: feedback held until a future results time gets no email; a scheduled sender would cover that case.
-      if (c.email && visibleAt <= now) await sendEmail(c.email, "feedbackReady", { name: c.name ?? "there" }, { projectId });
+      if (existing) await prisma.feedback.update({ where: { id: existing.id }, data: { body, authorId: user.id, visibleAt, notifiedAt } });
+      else await prisma.feedback.create({ data: { projectId, candidateId: c.id, authorId: user.id, body, visibleAt, notifiedAt } });
+      if (c.email && visibleNow) await sendEmail(c.email, "feedbackReady", { name: c.name ?? "there" }, { projectId });
     }
     revalidateProject(projectId);
     revalidatePath("/dashboard");

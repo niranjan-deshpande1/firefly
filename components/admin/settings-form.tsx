@@ -9,7 +9,7 @@ const FIELDS: { name: keyof Values; label: string; hint: string; inputMode: "dec
   { name: "flatFee", label: "cohort fee in dollars", hint: "charged per role at enrollment in a hiring cohort. always non-refundable.", inputMode: "decimal" },
   { name: "hireFeePercent", label: "hire fee as a percent of first-year salary", hint: "applies to hires reported after you save.", inputMode: "decimal" },
   { name: "attributionWindowMonths", label: "attribution window in months", hint: "a hire counts if it starts within this many months of cohort end.", inputMode: "numeric" },
-  { name: "retentionMonths", label: "data retention in months", hint: "how long candidate data is kept after their last cohort.", inputMode: "numeric" },
+  { name: "retentionMonths", label: "data retention in months", hint: "process evidence is deleted this many months after a hackathon ends, except for hires.", inputMode: "numeric" },
 ];
 
 export function SettingsForm({ values }: { values: Values }) {

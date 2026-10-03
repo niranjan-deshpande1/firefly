@@ -43,7 +43,7 @@ export function ConsentCopy({ retentionMonths }: { retentionMonths: number }) {
       <section aria-labelledby="consent-keep" className="flex flex-col gap-3">
         <h2 id="consent-keep" className="type-display-4">how long we keep it</h2>
         <p className="type-body">
-          we keep your evaluation data for {retentionMonths} months after your last hackathon ends, then delete it. your public profile and posted projects stay until you delete them.
+          we keep the process evidence from each hackathon (commit history, AI transcripts, decision logs, check-ins and evidence summaries) for {retentionMonths} months after that hackathon ends, then delete it. if a company hires you from a project, we keep that project&apos;s evidence and your check-ins. your public profile, posted projects, reviews, interview notes and hiring decisions stay until you ask us to delete your data.
         </p>
       </section>
       <section aria-labelledby="consent-rights" className="flex flex-col gap-3">

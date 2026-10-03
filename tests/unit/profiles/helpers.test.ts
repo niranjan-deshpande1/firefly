@@ -72,6 +72,7 @@ describe("visibility", () => {
     expect(isProfileVisible("PRIVATE", true)).toBe(true);
   });
   it("has a dated consent version", () => {
-    expect(CONSENT_VERSION).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // A second change on the same day adds a suffix, for example 2026-10-03.2.
+    expect(CONSENT_VERSION).toMatch(/^\d{4}-\d{2}-\d{2}(\.\d+)?$/);
   });
 });

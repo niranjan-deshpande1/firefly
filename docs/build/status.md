@@ -39,9 +39,9 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 1. **Paywall on candidate data (founder call).** A self-serve company sees the talent pool and gets shortlists as soon as it enrolls, before its invoice is paid or anyone checks it. RECOMMENDATION: require admin approval of new companies before enrollment counts.
 2. Section timers in the interview room are not saved across reloads.
 3. No interview cancel or reschedule; admins can't act on company interview requests yet.
-4. Held feedback has no scheduled send; it needs a job runner.
+4. Handled: held feedback is emailed by `npm run jobs` once its results time passes (README, scheduled jobs). Needs a cron entry on the server.
 5. Transcripts and check-ins are not masked in blind review. A builder who writes their name in them is identifiable.
-6. The retention setting is not enforced. Nothing deletes old data on a schedule.
+6. Handled: `npm run jobs` deletes process evidence from hackathons that ended more than the retention setting ago, except for hires. The consent copy now says exactly that (consent version 2026-10-03.2, so builders see it again). Needs a cron entry on the server and a founder check of the new copy.
 7. Any builder can opt into the talent pool, finished or not.
 8. Organizer actions don't write audit entries.
 9. Hackathons have no time zone column; they display in America/Los_Angeles.
@@ -88,12 +88,12 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 2. A hire outside the attribution window: refuse it (current), or record it with no fee? RECOMMENDATION: record with no fee, so placement stats stay complete.
 3. Should hiring cohort projects ever show on public profiles? Today they show after the cohort completes.
 4. Should only finishers be able to join the talent pool? RECOMMENDATION: yes.
-5. Enforce retention automatically, or soften the copy until a job runner exists? RECOMMENDATION: soften the copy now.
+5. Retention is now enforced by the job runner, and the consent copy was narrowed to match it. Is the new copy (process evidence per hackathon, kept for hires) the promise we want? RECOMMENDATION: yes, then lawyer review (section 4.3).
 
 ## 6. What to build next
 
 1. Admin approval for new companies (gap 1).
-2. A small job runner for held feedback, retention deletes and reminder emails (gaps 4, 6).
+2. Reminder emails on the job runner (gaps 4 and 6 are handled by `npm run jobs`).
 3. Interview cancel, reschedule and request handling (gap 3).
 4. Real GitHub OAuth app and email provider, once the founders set up those accounts.
 5. Masking names in transcripts and check-ins for blind review (gap 5).
