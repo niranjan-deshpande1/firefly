@@ -1,0 +1,856 @@
+// Firefly data model.
+// SQLite for local dev and the demo; kept Postgres-compatible:
+// enums are stored as String (allowed values live in lib/db/enums.ts),
+// lists and JSON are stored as JSON-encoded String columns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Accounts (Auth.js) ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  username      String?   @unique
+  role          String    @default("CANDIDATE") // UserRole
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts                Account[]
+  sessions                Session[]
+  candidateProfile        CandidateProfile?
+  companyMembers          CompanyMember[]
+  organizedHackathons     Hackathon[]            @relation("HackathonOrganizer")
+  registrations           Registration[]
+  teamMembers             TeamMember[]
+  teamInvitesSent         TeamInvite[]           @relation("InviteFrom")
+  teamInvitesGot          TeamInvite[]           @relation("InviteTo")
+  checkIns                CheckIn[]
+  projects                Project[]              @relation("ProjectOwner")
+  likes                   ProjectLike[]
+  comments                Comment[]
+  reviews                 Review[]               @relation("Reviewer")
+  reviewerAssignments     ReviewerAssignment[]
+  judgeAssignments        JudgeAssignment[]
+  calibrationNotes        CalibrationNote[]
+  decisionsMade           Decision[]             @relation("DecidedBy")
+  feedbackGiven           Feedback[]             @relation("FeedbackAuthor")
+  feedbackGot             Feedback[]             @relation("FeedbackCandidate")
+  interviewsAsInterviewer InterviewInterviewer[]
+  interviewsAsCandidate   Interview[]            @relation("InterviewCandidate")
+  identityChecks          Interview[]            @relation("IdentityCheckedBy")
+  shortlistEntries        ShortlistEntry[]
+  reports                 CandidateReport[]
+  hires                   Hire[]
+  interviewRequests       InterviewRequest[]     @relation("RequestedCandidate")
+  dataRequests            DataRequest[]
+  auditActs               AuditLog[]             @relation("AuditActor")
+  auditSubjects           AuditLog[]             @relation("AuditSubject")
+  uploads                 StoredFile[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model CandidateProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  headline        String?
+  bio             String?
+  skills          String    @default("[]") // JSON string[]
+  links           String    @default("[]") // JSON {label,url}[]
+  location        String?
+  school          String?
+  experienceLevel String? // ExperienceLevel
+  visibility      String    @default("PUBLIC") // ProfileVisibility
+  talentPoolOptIn Boolean   @default(false)
+  consentVersion  String?
+  consentAt       DateTime?
+  blindCode       String    @unique // e.g. "7F3A"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Companies ----------
+
+model Company {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  website     String?
+  description String?
+  size        String?
+  stage       String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members           CompanyMember[]
+  roles             Role[]
+  enrollments       CohortEnrollment[]
+  invoices          Invoice[]
+  hires             Hire[]
+  interviewRequests InterviewRequest[]
+  reports           CandidateReport[]
+}
+
+model CompanyMember {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+  title     String?
+  isOwner   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId])
+}
+
+model Role {
+  id              String   @id @default(cuid())
+  companyId       String
+  title           String
+  level           String // ExperienceLevel
+  description     String
+  requiredSkills  String   @default("[]") // JSON string[]
+  domainKnowledge String?
+  traits          String?
+  numberOfHires   Int      @default(1)
+  salaryMinCents  Int?
+  salaryMaxCents  Int?
+  location        String?
+  remote          String   @default("HYBRID") // RemotePolicy
+  status          String   @default("OPEN") // RoleStatus
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  criteria          RoleCriterion[]
+  enrollments       CohortEnrollment[]
+  shortlist         Shortlist?
+  hires             Hire[]
+  interviewRequests InterviewRequest[]
+  reports           CandidateReport[]
+  interviews        Interview[]
+}
+
+model RoleCriterion {
+  id          String        @id @default(cuid())
+  roleId      String
+  name        String
+  description String
+  jobRelated  String // why this is job-related (required)
+  sortOrder   Int           @default(0)
+  role        Role          @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  scores      ReviewScore[]
+}
+
+// ---------- Hackathons ----------
+
+model Hackathon {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  type                String // HackathonType: OPEN | HIRING_COHORT
+  status              String   @default("DRAFT") // HackathonStatus
+  title               String
+  tagline             String
+  description         String // Markdown
+  rules               String // Markdown
+  eligibility         String // Markdown
+  themes              String   @default("[]") // JSON string[]
+  format              String   @default("ONLINE") // EventFormat: ONLINE | IN_PERSON | HYBRID
+  location            String?
+  teamPolicy          String   @default("SOLO") // TeamPolicy: SOLO | TEAMS_ALLOWED
+  maxTeamSize         Int      @default(1)
+  registrationOpensAt DateTime
+  startsAt            DateTime
+  submissionDeadline  DateTime
+  endsAt              DateTime
+  coverImage          String?
+  organizerId         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organizer        User               @relation("HackathonOrganizer", fields: [organizerId], references: [id])
+  cohortConfig     CohortConfig?
+  enrollments      CohortEnrollment[]
+  prizes           Prize[]
+  schedule         ScheduleItem[]
+  criteria         JudgingCriterion[]
+  resources        Resource[]
+  updates          Update[]
+  registrations    Registration[]
+  teams            Team[]
+  projects         Project[]
+  checkIns         CheckIn[]
+  judgeAssignments JudgeAssignment[]
+  winners          Winner[]
+}
+
+model CohortConfig {
+  id                 String    @id @default(cuid())
+  hackathonId        String    @unique
+  prompt             String // Markdown brief
+  checkInSchedule    String    @default("[]") // JSON {week:number, dueAt:ISO, prompt:string}[]
+  officeHours        String    @default("[]") // JSON {startsAt:ISO, endsAt:ISO, link?:string}[]
+  defenseWindowStart DateTime
+  defenseWindowEnd   DateTime
+  resultsAt          DateTime
+  suggestedHours     Int       @default(20)
+  hackathon          Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model CohortEnrollment {
+  id           String    @id @default(cuid())
+  hackathonId  String
+  companyId    String
+  roleId       String
+  enrolledAt   DateTime  @default(now())
+  enrolledById String?
+  invoiceId    String?   @unique
+  hackathon    Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role         Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  invoice      Invoice?  @relation(fields: [invoiceId], references: [id])
+
+  @@unique([hackathonId, roleId])
+}
+
+model Prize {
+  id          String    @id @default(cuid())
+  hackathonId String
+  name        String
+  description String?
+  valueCents  Int?
+  quantity    Int       @default(1)
+  sortOrder   Int       @default(0)
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  winners     Winner[]
+}
+
+model ScheduleItem {
+  id          String    @id @default(cuid())
+  hackathonId String
+  kind        String    @default("MILESTONE") // ScheduleKind
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  link        String?
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model JudgingCriterion {
+  id          String        @id @default(cuid())
+  hackathonId String
+  name        String
+  description String
+  weight      Int           @default(1)
+  sortOrder   Int           @default(0)
+  hackathon   Hackathon     @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  scores      ReviewScore[]
+}
+
+model Resource {
+  id          String    @id @default(cuid())
+  hackathonId String
+  title       String
+  url         String
+  description String?
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+model Update {
+  id          String    @id @default(cuid())
+  hackathonId String
+  title       String
+  body        String // Markdown
+  authorId    String?
+  publishedAt DateTime  @default(now())
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Participation ----------
+
+model Registration {
+  id                   String    @id @default(cuid())
+  hackathonId          String
+  userId               String
+  status               String    @default("REGISTERED") // RegistrationStatus
+  eligibilityConfirmed Boolean   @default(false)
+  lookingForTeam       Boolean   @default(false)
+  lookingForNote       String?
+  createdAt            DateTime  @default(now())
+  hackathon            Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([hackathonId, userId])
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  hackathonId String
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  hackathon   Hackathon    @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  invites     TeamInvite[]
+  projects    Project[]
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  isLead   Boolean  @default(false)
+  joinedAt DateTime @default(now())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvite {
+  id         String   @id @default(cuid())
+  teamId     String
+  fromUserId String
+  toUserId   String
+  status     String   @default("PENDING") // InviteStatus
+  createdAt  DateTime @default(now())
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser   User     @relation("InviteFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("InviteTo", fields: [toUserId], references: [id], onDelete: Cascade)
+}
+
+model CheckIn {
+  id          String    @id @default(cuid())
+  hackathonId String
+  userId      String
+  projectId   String?
+  week        Int
+  progress    String // Markdown
+  blockers    String?
+  nextSteps   String?
+  aiUsage     String?
+  hoursSpent  Int?
+  submittedAt DateTime  @default(now())
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([hackathonId, userId, week])
+}
+
+// ---------- Projects ----------
+
+model Project {
+  id          String    @id @default(cuid())
+  hackathonId String
+  ownerId     String
+  teamId      String?
+  title       String
+  tagline     String
+  story       String    @default("") // Markdown
+  builtWith   String    @default("[]") // JSON string[]
+  links       String    @default("[]") // JSON {label,url}[]
+  repoUrl     String?
+  videoUrl    String?
+  status      String    @default("DRAFT") // ProjectStatus: DRAFT | SUBMITTED
+  submittedAt DateTime?
+  verified    Boolean   @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  hackathon           Hackathon            @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  owner               User                 @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  team                Team?                @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  images              ProjectImage[]
+  likes               ProjectLike[]
+  comments            Comment[]
+  checkIns            CheckIn[]
+  repoSnapshots       RepoSnapshot[]
+  commits             Commit[]
+  transcripts         AITranscript[]
+  decisionLog         DecisionLogEntry[]
+  summaries           EvidenceSummary[]
+  reviews             Review[]
+  reviewerAssignments ReviewerAssignment[]
+  judgeAssignments    JudgeAssignment[]
+  calibrationNotes    CalibrationNote[]
+  decisions           Decision[]
+  winners             Winner[]
+  feedback            Feedback[]
+  interviews          Interview[]
+  shortlistEntries    ShortlistEntry[]
+  reports             CandidateReport[]
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  url       String
+  alt       String
+  sortOrder Int     @default(0)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model ProjectLike {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  projectId  String
+  authorId   String
+  body       String
+  hidden     Boolean  @default(false)
+  hiddenById String?
+  createdAt  DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Evidence ----------
+
+model RepoSnapshot {
+  id            String   @id @default(cuid())
+  projectId     String
+  repoUrl       String
+  owner         String
+  name          String
+  defaultBranch String?
+  headSha       String?
+  source        String   @default("SEED") // EvidenceSource: GITHUB | SEED
+  fetchedAt     DateTime @default(now())
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commits       Commit[]
+}
+
+model Commit {
+  id           String        @id @default(cuid())
+  projectId    String
+  snapshotId   String?
+  sha          String
+  message      String
+  authorName   String
+  authorEmail  String?
+  committedAt  DateTime
+  additions    Int           @default(0)
+  deletions    Int           @default(0)
+  filesChanged Int           @default(0)
+  url          String?
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshot     RepoSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, sha])
+}
+
+model AITranscript {
+  id         String   @id @default(cuid())
+  projectId  String
+  title      String
+  tool       String? // e.g. "Claude", "ChatGPT", "Cursor"
+  content    String // text or Markdown, untrusted
+  fileId     String?
+  uploadedAt DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model DecisionLogEntry {
+  id           String   @id @default(cuid())
+  projectId    String
+  title        String
+  decision     String
+  reasoning    String
+  alternatives String?
+  aiInvolved   Boolean  @default(false)
+  aiNote       String?
+  decidedAt    DateTime @default(now())
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model EvidenceSummary {
+  id          String   @id @default(cuid())
+  projectId   String
+  content     String // Markdown
+  model       String?
+  seeded      Boolean  @default(false)
+  generatedAt DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Review ----------
+
+model RubricDimension {
+  id          String        @id @default(cuid())
+  key         String        @unique // "A".."F"
+  name        String
+  description String
+  anchors     String // JSON {level:number, text:string}[]
+  universal   Boolean       @default(true)
+  isGate      Boolean       @default(false)
+  sortOrder   Int           @default(0)
+  scores      ReviewScore[]
+}
+
+model ReviewerAssignment {
+  id         String   @id @default(cuid())
+  projectId  String
+  reviewerId String
+  assignedAt DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, reviewerId])
+}
+
+model JudgeAssignment {
+  id          String    @id @default(cuid())
+  hackathonId String
+  judgeId     String
+  projectId   String? // null = all projects in the hackathon
+  assignedAt  DateTime  @default(now())
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  judge       User      @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id          String        @id @default(cuid())
+  projectId   String
+  reviewerId  String
+  kind        String // ReviewKind: RUBRIC | JUDGING
+  blind       Boolean       @default(true)
+  status      String        @default("DRAFT") // ReviewStatus: DRAFT | SUBMITTED
+  summaryNote String?
+  revealedAt  DateTime?
+  submittedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewer    User          @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  scores      ReviewScore[]
+
+  @@unique([projectId, reviewerId, kind])
+}
+
+model ReviewScore {
+  id                 String            @id @default(cuid())
+  reviewId           String
+  dimensionId        String?
+  roleCriterionId    String?
+  judgingCriterionId String?
+  score              Int
+  rationale          String
+  evidenceRefs       String            @default("[]") // JSON EvidenceRef[]
+  review             Review            @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  dimension          RubricDimension?  @relation(fields: [dimensionId], references: [id])
+  roleCriterion      RoleCriterion?    @relation(fields: [roleCriterionId], references: [id], onDelete: Cascade)
+  judgingCriterion   JudgingCriterion? @relation(fields: [judgingCriterionId], references: [id], onDelete: Cascade)
+}
+
+model CalibrationNote {
+  id            String   @id @default(cuid())
+  projectId     String
+  dimensionKey  String // rubric key or "criterion:<id>"
+  note          String
+  resolvedScore Int?
+  authorId      String
+  createdAt     DateTime @default(now())
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, dimensionKey])
+}
+
+model Decision {
+  id          String   @id @default(cuid())
+  projectId   String
+  outcome     String // DecisionOutcome: ADVANCE | HOLD | REJECT
+  reason      String
+  decidedById String
+  decidedAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  decidedBy   User     @relation("DecidedBy", fields: [decidedById], references: [id])
+}
+
+model Winner {
+  id          String    @id @default(cuid())
+  hackathonId String
+  prizeId     String
+  projectId   String
+  announcedAt DateTime  @default(now())
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  prize       Prize     @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([prizeId, projectId])
+}
+
+model Feedback {
+  id          String    @id @default(cuid())
+  projectId   String
+  candidateId String
+  authorId    String
+  body        String // Markdown
+  visibleAt   DateTime?
+  createdAt   DateTime  @default(now())
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  candidate   User      @relation("FeedbackCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  author      User      @relation("FeedbackAuthor", fields: [authorId], references: [id])
+}
+
+// ---------- Interviews ----------
+
+model Interview {
+  id                  String                 @id @default(cuid())
+  projectId           String
+  candidateId         String
+  roleId              String?
+  model               String // InterviewModel: WE_RUN | JOINT | COMPANY_RUN
+  mode                String // InterviewMode: IN_PERSON | VIDEO
+  scheduledAt         DateTime
+  durationMin         Int                    @default(75)
+  location            String?
+  videoLink           String?
+  status              String                 @default("SCHEDULED") // InterviewStatus
+  identityCheckedById String?
+  identityCheckedAt   DateTime?
+  outcome             String? // InterviewOutcome: PASS | FAIL
+  notes               String?
+  completedAt         DateTime?
+  createdAt           DateTime               @default(now())
+  project             Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  candidate           User                   @relation("InterviewCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+  role                Role?                  @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  identityCheckedBy   User?                  @relation("IdentityCheckedBy", fields: [identityCheckedById], references: [id])
+  interviewers        InterviewInterviewer[]
+  scores              InterviewScore[]
+}
+
+model InterviewInterviewer {
+  id          String    @id @default(cuid())
+  interviewId String
+  userId      String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, userId])
+}
+
+model InterviewScore {
+  id          String    @id @default(cuid())
+  interviewId String
+  section     String // InterviewSection
+  score       Int
+  notes       String
+  scoredById  String
+  createdAt   DateTime  @default(now())
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, section, scoredById])
+}
+
+// ---------- Hiring ----------
+
+model Shortlist {
+  id        String           @id @default(cuid())
+  roleId    String           @unique
+  createdAt DateTime         @default(now())
+  role      Role             @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  entries   ShortlistEntry[]
+}
+
+model ShortlistEntry {
+  id          String    @id @default(cuid())
+  shortlistId String
+  candidateId String
+  projectId   String
+  addedById   String?
+  note        String?
+  status      String    @default("ACTIVE") // ShortlistStatus
+  addedAt     DateTime  @default(now())
+  shortlist   Shortlist @relation(fields: [shortlistId], references: [id], onDelete: Cascade)
+  candidate   User      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([shortlistId, candidateId])
+}
+
+model InterviewRequest {
+  id            String   @id @default(cuid())
+  companyId     String
+  roleId        String
+  candidateId   String
+  requestedById String
+  message       String?
+  status        String   @default("PENDING") // InterviewRequestStatus
+  createdAt     DateTime @default(now())
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role          Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  candidate     User     @relation("RequestedCandidate", fields: [candidateId], references: [id], onDelete: Cascade)
+}
+
+model CandidateReport {
+  id          String   @id @default(cuid())
+  companyId   String
+  roleId      String
+  candidateId String
+  projectId   String
+  snapshot    String // JSON report snapshot
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role        Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, candidateId])
+}
+
+model Hire {
+  id           String   @id @default(cuid())
+  companyId    String
+  roleId       String
+  candidateId  String
+  salaryCents  Int
+  startDate    DateTime
+  status       String   @default("REPORTED") // HireStatus
+  reportedById String?
+  reportedAt   DateTime @default(now())
+  invoiceId    String?  @unique
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  candidate    User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id])
+}
+
+// ---------- Billing ----------
+
+model Invoice {
+  id            String            @id @default(cuid())
+  number        String            @unique
+  companyId     String
+  type          String // InvoiceType: FLAT_FEE | HIRE_FEE
+  amountCents   Int
+  description   String
+  status        String            @default("DRAFT") // InvoiceStatus: DRAFT | SENT | PAID
+  nonRefundable Boolean           @default(false)
+  issuedAt      DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime          @default(now())
+  company       Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  enrollment    CohortEnrollment?
+  hire          Hire?
+}
+
+// ---------- Operations ----------
+
+model DataRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  kind         String // DataRequestKind: EXPORT | DELETE
+  status       String    @default("OPEN") // DataRequestStatus
+  note         String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String?
+  action        String // AuditAction
+  subjectUserId String?
+  resourceType  String
+  resourceId    String?
+  metadata      String   @default("{}") // JSON
+  createdAt     DateTime @default(now())
+  actor         User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  subjectUser   User?    @relation("AuditSubject", fields: [subjectUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  template  String
+  metadata  String   @default("{}") // JSON
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AppSetting {
+  key       String   @id
+  value     String // JSON
+  updatedAt DateTime @updatedAt
+}
+
+model StoredFile {
+  id           String   @id @default(cuid())
+  ownerId      String
+  path         String   @unique // relative to ./storage
+  kind         String // FileKind: IMAGE | TRANSCRIPT
+  mimeType     String
+  sizeBytes    Int
+  originalName String
+  createdAt    DateTime @default(now())
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}

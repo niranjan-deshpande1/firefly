@@ -1,0 +1,406 @@
+@import "tailwindcss";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
+@import "@fontsource/space-mono/400-italic.css";
+
+/*
+ * Firefly tokens. Binding source: docs/design/build-manual.md (sections 2 to 4, 10, 14).
+ * Order is primitive, semantic, component. Components reference semantic or component tokens only.
+ * This file is the only place literal values may appear (manual 14.5).
+ */
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Array";
+  src: url("/fonts/Array-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- primitive ---------- */
+  --primitive-color-black: #000000;
+  --primitive-color-raised: #0e0e0e;
+  --primitive-color-raised-2: #1a1a1a;
+  --primitive-color-line: #262626;
+  --primitive-color-white: #ffffff;
+  --primitive-color-grey-500: #8a8a8a;
+  --primitive-color-grey-600: #6b6b6b;
+  --primitive-color-blue-500: #4da3ff;
+  --primitive-color-blue-600: #4390e0;
+  --primitive-color-blue-deep: #1b4fd8;
+  --primitive-color-green-500: #3fd98a;
+  --primitive-color-red-500: #ff6b6b;
+  --primitive-color-yellow-500: #ffc24d;
+  --primitive-color-cream-100: #fffdf0;
+  --primitive-color-cream-200: #f7f0d4;
+  --primitive-color-cream-300: #ede2bc;
+
+  --primitive-space-4: 4px;
+  --primitive-space-8: 8px;
+  --primitive-space-12: 12px;
+  --primitive-space-16: 16px;
+  --primitive-space-24: 24px;
+  --primitive-space-32: 32px;
+  --primitive-space-48: 48px;
+  --primitive-space-64: 64px;
+  --primitive-space-96: 96px;
+  --primitive-space-128: 128px;
+
+  --primitive-radius-0: 0;
+  --primitive-radius-6: 6px;
+  --primitive-radius-12: 12px;
+  --primitive-radius-pill: 999px;
+
+  --primitive-border-1: 1px;
+  --primitive-border-2: 2px;
+
+  --primitive-offset-chip: 2px;
+  --primitive-offset-button: 4px;
+  --primitive-offset-card: 6px;
+
+  --primitive-opacity-disabled: 0.48;
+  --primitive-opacity-scrim: 0.6;
+
+  --primitive-z-base: 0;
+  --primitive-z-sticky: 1;
+  --primitive-z-chrome: 2;
+  --primitive-z-menu: 3;
+  --primitive-z-drawer: 4;
+  --primitive-z-modal: 5;
+  --primitive-z-toast: 6;
+  --primitive-z-critical: 7;
+
+  --primitive-duration-100: 100ms;
+  --primitive-duration-160: 160ms;
+  --primitive-duration-220: 220ms;
+  --primitive-duration-280: 280ms;
+  --primitive-ease-linear: cubic-bezier(0, 0, 1, 1);
+  --primitive-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --primitive-ease-view: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --primitive-rail-width: 240px;
+  --primitive-rail-collapsed: 64px;
+  --primitive-bottom-bar: 56px;
+  --primitive-target: 44px;
+  --primitive-measure: 55ch;
+  --primitive-stream: 60ch;
+  --primitive-container: 1200px;
+
+  /* ---------- semantic ---------- */
+  --semantic-color-surface-ground: var(--primitive-color-black);
+  --semantic-color-surface-raised: var(--primitive-color-raised);
+  --semantic-color-surface-raised-2: var(--primitive-color-raised-2);
+  --semantic-color-surface-emphasis: var(--primitive-color-cream-100);
+  --semantic-color-surface-emphasis-hover: var(--primitive-color-cream-200);
+  --semantic-color-surface-emphasis-active: var(--primitive-color-cream-300);
+  --semantic-color-surface-scrim: rgb(0 0 0 / var(--primitive-opacity-scrim));
+  --semantic-color-surface-illustration: var(--primitive-color-blue-deep);
+  --semantic-color-content-primary: var(--primitive-color-white);
+  --semantic-color-content-secondary: var(--primitive-color-grey-500);
+  --semantic-color-content-muted: var(--primitive-color-grey-600);
+  --semantic-color-content-on-emphasis: var(--primitive-color-raised);
+  --semantic-color-content-accent: var(--primitive-color-blue-500);
+  --semantic-color-content-accent-active: var(--primitive-color-blue-600);
+  --semantic-color-content-success: var(--primitive-color-green-500);
+  --semantic-color-content-error: var(--primitive-color-red-500);
+  --semantic-color-content-warning: var(--primitive-color-yellow-500);
+  --semantic-color-border-default: var(--primitive-color-line);
+  --semantic-color-border-control: var(--primitive-color-grey-500);
+  --semantic-color-border-strong: var(--primitive-color-white);
+  --semantic-color-border-on-emphasis: var(--primitive-color-raised);
+  --semantic-color-border-focus: var(--primitive-color-blue-500);
+  --semantic-color-border-error: var(--primitive-color-red-500);
+  --semantic-color-offset-sticker: var(--primitive-color-blue-deep);
+
+  --semantic-shadow-overlay: 0 8px 32px rgb(0 0 0 / 0.6);
+
+  --semantic-font-display: "Satoshi", Arial, sans-serif;
+  --semantic-font-body: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --semantic-font-accent: "Array", "Satoshi", Arial, sans-serif;
+  --semantic-font-nonlatin: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --motion-instant: var(--primitive-duration-100) var(--primitive-ease-linear);
+  --motion-state: var(--primitive-duration-160) var(--primitive-ease-standard);
+  --motion-enter: var(--primitive-duration-220) var(--primitive-ease-standard);
+  --motion-view: var(--primitive-duration-280) var(--primitive-ease-view);
+
+  /* ---------- component ---------- */
+  --component-button-primary-bg: var(--semantic-color-surface-emphasis);
+  --component-button-primary-bg-hover: var(--semantic-color-surface-emphasis-hover);
+  --component-button-primary-bg-active: var(--semantic-color-surface-emphasis-active);
+  --component-button-primary-text: var(--semantic-color-content-on-emphasis);
+  --component-button-primary-border: var(--semantic-color-border-on-emphasis);
+  --component-button-primary-offset: var(--semantic-color-offset-sticker);
+  --component-button-secondary-bg: var(--semantic-color-surface-raised-2);
+  --component-button-secondary-bg-hover: var(--semantic-color-surface-raised);
+  --component-button-secondary-text: var(--semantic-color-content-primary);
+  --component-button-secondary-border: var(--semantic-color-border-control);
+  --component-button-ghost-bg-hover: var(--semantic-color-surface-raised-2);
+  --component-button-ghost-text: var(--semantic-color-content-primary);
+  --component-button-destructive-text: var(--semantic-color-content-error);
+  --component-control-bg: var(--semantic-color-surface-raised);
+  --component-control-bg-hover: var(--semantic-color-surface-raised-2);
+  --component-control-text: var(--semantic-color-content-primary);
+  --component-control-placeholder: var(--semantic-color-content-muted);
+  --component-control-border: var(--semantic-color-border-control);
+  --component-control-border-error: var(--semantic-color-border-error);
+  --component-control-readonly-text: var(--semantic-color-content-secondary);
+  --component-chip-bg: var(--semantic-color-surface-raised);
+  --component-chip-bg-hover: var(--semantic-color-surface-raised-2);
+  --component-chip-border: var(--semantic-color-border-strong);
+  --component-chip-offset: var(--semantic-color-offset-sticker);
+  --component-overlay-bg: var(--semantic-color-surface-raised-2);
+  --component-overlay-border: var(--semantic-color-border-default);
+  --component-skeleton-bg: var(--semantic-color-surface-raised);
+}
+
+@theme inline {
+  /* Tailwind utilities resolve to tokens only (manual 14.3). */
+  --color-*: initial;
+  --color-ground: var(--semantic-color-surface-ground);
+  --color-raised: var(--semantic-color-surface-raised);
+  --color-raised-2: var(--semantic-color-surface-raised-2);
+  --color-emphasis: var(--semantic-color-surface-emphasis);
+  --color-emphasis-hover: var(--semantic-color-surface-emphasis-hover);
+  --color-emphasis-active: var(--semantic-color-surface-emphasis-active);
+  --color-illustration: var(--semantic-color-surface-illustration);
+  --color-primary: var(--semantic-color-content-primary);
+  --color-secondary: var(--semantic-color-content-secondary);
+  --color-muted: var(--semantic-color-content-muted);
+  --color-on-emphasis: var(--semantic-color-content-on-emphasis);
+  --color-accent: var(--semantic-color-content-accent);
+  --color-accent-active: var(--semantic-color-content-accent-active);
+  --color-success: var(--semantic-color-content-success);
+  --color-error: var(--semantic-color-content-error);
+  --color-warning: var(--semantic-color-content-warning);
+  --color-line: var(--semantic-color-border-default);
+  --color-control: var(--semantic-color-border-control);
+  --color-strong: var(--semantic-color-border-strong);
+  --color-focus: var(--semantic-color-border-focus);
+  --color-offset: var(--semantic-color-offset-sticker);
+  --color-transparent: transparent;
+
+  --font-*: initial;
+  --font-display: var(--semantic-font-display);
+  --font-body: var(--semantic-font-body);
+  --font-accent: var(--semantic-font-accent);
+  --font-mono: var(--semantic-font-body);
+
+  --radius-*: initial;
+  --radius-none: var(--primitive-radius-0);
+  --radius-control: var(--primitive-radius-6);
+  --radius-card: var(--primitive-radius-12);
+  --radius-pill: var(--primitive-radius-pill);
+
+  --shadow-*: initial;
+  --shadow-overlay: var(--semantic-shadow-overlay);
+
+  --breakpoint-*: initial;
+  --breakpoint-tablet: 640px;
+  --breakpoint-desktop: 1024px;
+}
+
+/* ---------- type scale (manual 3.2). Desktop values at 1024px and above. ---------- */
+@utility type-poster {
+  font-family: var(--semantic-font-accent);
+  font-weight: 400;
+  font-size: 4rem;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: lowercase;
+  @media (width >= 1024px) { font-size: 7.5rem; }
+}
+@utility type-display-1 {
+  font-family: var(--semantic-font-display);
+  font-weight: 900;
+  font-size: 2.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  @media (width >= 1024px) { font-size: 4.5rem; }
+}
+@utility type-display-2 {
+  font-family: var(--semantic-font-display);
+  font-weight: 700;
+  font-size: 1.875rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  @media (width >= 1024px) { font-size: 3rem; }
+}
+@utility type-display-3 {
+  font-family: var(--semantic-font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  @media (width >= 1024px) { font-size: 1.75rem; }
+}
+@utility type-display-4 {
+  font-family: var(--semantic-font-display);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+  @media (width >= 1024px) { font-size: 1.125rem; }
+}
+@utility type-body-l {
+  font-family: var(--semantic-font-body);
+  font-weight: 400;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  @media (width >= 1024px) { font-size: 1.125rem; }
+}
+@utility type-body {
+  font-family: var(--semantic-font-body);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  @media (width >= 1024px) { font-size: 1rem; }
+}
+@utility type-body-s {
+  font-family: var(--semantic-font-body);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+@utility type-label {
+  font-family: var(--semantic-font-body);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+}
+@utility type-eyebrow {
+  font-family: var(--semantic-font-body);
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+@utility type-button {
+  font-family: var(--semantic-font-body);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+@utility measure {
+  max-inline-size: var(--primitive-measure);
+}
+@utility measure-stream {
+  max-inline-size: var(--primitive-stream);
+}
+@utility target {
+  min-block-size: var(--primitive-target);
+  min-inline-size: var(--primitive-target);
+}
+@utility z-sticky { z-index: var(--primitive-z-sticky); }
+@utility z-chrome { z-index: var(--primitive-z-chrome); }
+@utility z-menu { z-index: var(--primitive-z-menu); }
+@utility z-drawer { z-index: var(--primitive-z-drawer); }
+@utility z-modal { z-index: var(--primitive-z-modal); }
+@utility z-toast { z-index: var(--primitive-z-toast); }
+@utility z-critical { z-index: var(--primitive-z-critical); }
+
+/* Sticker construction (manual 4.3 and 5.1): 2px outline, hard offset with zero blur. */
+@utility sticker-button {
+  border: var(--primitive-border-2) solid var(--component-button-primary-border);
+  box-shadow: var(--primitive-offset-button) var(--primitive-offset-button) 0 0 var(--component-button-primary-offset);
+}
+@utility sticker-chip {
+  border: var(--primitive-border-2) solid var(--component-chip-border);
+  box-shadow: var(--primitive-offset-chip) var(--primitive-offset-chip) 0 0 var(--component-chip-offset);
+}
+@utility sticker-card {
+  border: var(--primitive-border-2) solid var(--semantic-color-border-strong);
+  box-shadow: var(--primitive-offset-card) var(--primitive-offset-card) 0 0 var(--semantic-color-offset-sticker);
+}
+@utility sticker-toast {
+  border: var(--primitive-border-2) solid var(--semantic-color-border-strong);
+  box-shadow: var(--primitive-offset-button) var(--primitive-offset-button) 0 0 var(--semantic-color-offset-sticker);
+}
+@utility rotate-card-a { rotate: -1.5deg; }
+@utility rotate-card-b { rotate: 1.5deg; }
+@utility transition-state { transition: background-color var(--motion-state), border-color var(--motion-state), color var(--motion-state), transform var(--motion-state), box-shadow var(--motion-state), opacity var(--motion-state); }
+@utility transition-instant { transition: background-color var(--motion-instant), border-color var(--motion-instant), color var(--motion-instant), transform var(--motion-instant), box-shadow var(--motion-instant), opacity var(--motion-instant); }
+
+@layer base {
+  html {
+    background: var(--semantic-color-surface-ground);
+    color: var(--semantic-color-content-primary);
+    font-family: var(--semantic-font-body);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    min-block-size: 100dvh;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  @media (width >= 1024px) {
+    body { font-size: 1rem; }
+  }
+  :focus-visible {
+    outline: var(--primitive-border-2) solid var(--semantic-color-border-focus);
+    outline-offset: var(--primitive-border-2);
+  }
+  a {
+    color: inherit;
+  }
+  /* Editable text renders at 16px on touch devices to prevent auto-zoom (manual 13.5). */
+  @media (pointer: coarse) {
+    input, textarea, select { font-size: 1rem; }
+  }
+  [dir="auto"] { unicode-bidi: plaintext; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-property: opacity !important;
+      transition-duration: var(--primitive-duration-100) !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Builder-authored Markdown. Never case-transformed. */
+  .prose-ff {
+    font-family: var(--semantic-font-body);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    max-inline-size: var(--primitive-measure);
+    overflow-wrap: break-word;
+  }
+  @media (width >= 1024px) {
+    .prose-ff { font-size: 1.125rem; }
+  }
+  .prose-ff > * + * { margin-block-start: var(--primitive-space-16); }
+  .prose-ff h1, .prose-ff h2, .prose-ff h3, .prose-ff h4 {
+    font-family: var(--semantic-font-display);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-block-start: var(--primitive-space-32);
+  }
+  .prose-ff h1 { font-size: 1.375rem; }
+  .prose-ff h2 { font-size: 1.375rem; }
+  .prose-ff h3, .prose-ff h4 { font-size: 1.0625rem; font-weight: 500; }
+  .prose-ff a { color: var(--semantic-color-content-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .prose-ff a:active { color: var(--semantic-color-content-accent-active); }
+  .prose-ff ul { list-style: disc; padding-inline-start: var(--primitive-space-24); }
+  .prose-ff ol { list-style: decimal; padding-inline-start: var(--primitive-space-24); }
+  .prose-ff code { background: var(--semantic-color-surface-raised-2); padding-inline: var(--primitive-space-4); border-radius: var(--primitive-radius-6); }
+  .prose-ff pre { background: var(--semantic-color-surface-raised); padding: var(--primitive-space-16); border-radius: var(--primitive-radius-12); overflow-x: auto; }
+  .prose-ff pre code { background: none; padding: 0; }
+  .prose-ff blockquote { border-inline-start: var(--primitive-border-1) solid var(--semantic-color-border-control); padding-inline-start: var(--primitive-space-16); color: var(--semantic-color-content-secondary); font-style: italic; }
+  .prose-ff table { inline-size: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .prose-ff th, .prose-ff td { border-block-end: var(--primitive-border-1) solid var(--semantic-color-border-default); padding: var(--primitive-space-8); text-align: start; }
+  .prose-ff img { max-inline-size: 100%; }
+}

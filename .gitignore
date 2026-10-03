@@ -16,7 +16,17 @@ Thumbs.db
 # Dependencies and builds (Phase 6)
 node_modules/
 dist/
-build/
+/build/
 .next/
 __pycache__/
 *.pyc
+
+# App
+/storage/
+/prisma/*.db
+/prisma/*.db-journal
+/test-results/
+/playwright-report/
+/coverage/
+*.tsbuildinfo
+next-env.d.ts

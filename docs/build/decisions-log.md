@@ -1,0 +1,18 @@
+# Build decisions log
+
+Decisions made during the platform build run (brief dated 2026-10-03). The brief wins over earlier docs; conflicts are logged here.
+
+| # | Decision | Why |
+|---|---|---|
+| 1 | Attribution off in `~/.claude/settings.json` and `.claude/settings.json` with `attribution.commit = ""`, `attribution.pr = ""`, `attribution.sessionUrl = false`. `includeCoAuthoredBy` is deprecated, so it isn't set. | Brief section 2; keys checked against code.claude.com/docs/en/settings-reference. |
+| 2 | Commit messages on `nd/platform-v0` rewritten with `git filter-branch --msg-filter`; authors, dates and trees unchanged; force-pushed with lease. | Brief section 2. |
+| 3 | ASSUMPTION: attribution window for hire fees is 12 months from cohort end, editable by admins (AppSetting). | Brief section 3. |
+| 4 | CONFLICT: PRD v0.2 says cohort 1 runs with no custom software and moved the verified profile, talent pool and office hours to Later. The brief approves the full platform and brings those three back. The brief wins. The code similarity check stays out. | Brief sections 1 and 3. |
+| 5 | CONFLICT: the PRD charges the flat fee "at signing"; the brief says "at enrollment" per hiring cohort joined. Same moment in the product (company enrolls a role into a cohort). Issue #3 closed with the non-refundable note. | Brief section 3. |
+| 6 | CONFLICT: evaluation.md recommends no company-specific dimension for the pilot. The brief requires role-specific criteria scored alongside the rubric. The brief wins. | Brief section 4.2. |
+| 7 | No dataviz skill is installed; charts use Recharts with the DESIGN.md tokens. | Brief section 5. |
+| 8 | /design-consultation questions answered from the brief: direction "builder's workshop at dusk", Fraunces + Instrument Sans + JetBrains Mono (self-hosted via fontsource), amber glow accent, no HTML preview page. | Brief sections 1 and 7. |
+| 9 | SUPERSEDES 8. Founders (2026-10-03): follow the Launchology visual constitution and build manual 1:1. Both are saved verbatim in `docs/design/`; DESIGN.md maps them to Firefly. Conflicts with the brief are DESIGN.md D1 to D8: no light mode or toggle (D1), no glow (D2), winners as plain text chips (D3), scores only in reviewer, calibration and company report views and "don't advance" as the reject label (D4), no visible like counts (D5), terminology (D6), Launchology nav with Firefly destinations (D7), fonts self-hosted (D8). | Founder message mid-run; spec wins on visual design, brief keeps product scope. |
+| 10 | Repo moved from `~/Desktop/firefly` to `~/code/firefly`. iCloud evicted Desktop files to "dataless" placeholders and git hung on them. The Desktop copy is left untouched. | Disk ran out mid-run; iCloud reclaimed space by evicting files. |
+| 11 | `npm run lint:design` runs the manual 14.5 drift checks (literal colors, locked properties without tokens, literal px/ms/easing, banned effects) over `app/` and `components/`, excluding the token file. The podium and swipe/reject greps are left out because the brief requires winners (D3) and a REJECT decision value (D4). | Manual 14.5 plus DESIGN.md D3, D4. |
+| 12 | ASSUMPTION: times display in America/Los_Angeles by default with the zone and offset always shown (manual: explicit IANA zones). Users can override in their profile later. | Pilot is Seattle first; both cities share the zone. |
