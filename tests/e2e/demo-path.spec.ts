@@ -17,6 +17,13 @@ const main = (page: Page) => page.getByRole("main");
 
 test.describe.configure({ mode: "serial" });
 
+// `DEMO_SCREENSHOTS=1 npm run e2e -- demo-path` saves where each step ends to docs/build/screenshots/.
+test.afterEach(async ({ page }, info) => {
+  if (!process.env.DEMO_SCREENSHOTS || info.status !== "passed") return;
+  const step = info.title.split(".")[0];
+  await page.screenshot({ path: `docs/build/screenshots/step-${step}.png`, fullPage: true });
+});
+
 test("1. visitor browses to the hiring cohort and the finished hackathon with winners", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

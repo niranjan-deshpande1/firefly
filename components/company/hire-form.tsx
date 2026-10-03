@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button, Field, Input, Select, TextLink } from "@/components/ui";
+import { Button, Field, Input, Select } from "@/components/ui";
 import { reportHireAction, type HireResult } from "@/lib/company/actions";
 import { formatCents } from "@/lib/billing/math";
 import { useFormAction } from "./use-form-action";
@@ -22,7 +22,6 @@ export function HireForm({ roleId, candidates, feePercent }: { roleId: string; c
           <Button asChild variant="primary">
             <Link href="/company/billing">view invoices</Link>
           </Button>
-          <TextLink href={`/company/roles/${roleId}`} className="target inline-flex items-center">back to the role</TextLink>
         </div>
       </section>
     );
