@@ -29,3 +29,7 @@ Shared changes requested by builders, applied at integration (step 4).
 | 8 Evidence (`build/evidence` 563e4f7) | `evidence.view` allows the hackathon's organizer | apply |
 | 8 Evidence | `AUTH_SECRET ||` fix (same as Profiles) | apply |
 | 8 Evidence | Seed summaries must not name the candidate (blind reviewers see them) | check at merge |
+| 5 Organizer (`build/organize` 956fbd1) | `next.config.ts` serverActions `bodySizeLimit: "6mb"` (cover uploads) | apply |
+| 5 Organizer | `AUTH_SECRET ||` fix (third request) | apply |
+| 5 Organizer | Office hours live in both `CohortConfig.officeHours` and `ScheduleItem` kind OFFICE_HOURS; Discovery should read both | check at merge |
+| 5 Organizer | Organizer writes have no audit action | note in status.md |
