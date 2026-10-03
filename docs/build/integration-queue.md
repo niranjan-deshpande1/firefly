@@ -14,3 +14,9 @@ Shared changes requested by builders, applied at integration (step 4).
 | 4 Profiles | Seed uses `CONSENT_VERSION` from `lib/profiles` | sent to Ops; verify at merge |
 | 4 Profiles | Founder calls: retention promise isn't enforced automatically; hiring cohorts show on public profiles (signals job seeking); any builder can opt into the talent pool | list in status.md |
 | all | Worktrees resolve `file:./dev.db` to the main checkout's DB through the symlink; told running builders to use an absolute DATABASE_URL. Main DB gets `demo:reset` at integration. | done |
+| 2 Participation (`worktree-agent-a274bcff21e4b92bb` 29367cc) | `team.manage` gets an `isTeamMember` fact; then pass it in `authorizeTeam` | apply |
+| 2 Participation | `loadFacts` sets `resultsPublished` when `cohortConfig.resultsAt <= now` | apply |
+| 2 Participation | Registration consent check adds `consentVersion === CONSENT_VERSION` (TODO in lib/participation/actions.ts) after Profiles merges | apply |
+| 2 Participation | Discovery overview links to register and check-ins | check at merge |
+| 6 Companies (`build/companies` 338866d) | none required. Amounts render "$1,000"; brief examples say "$1,000.00": switch `formatCents` to 2 decimals | apply (matches brief) |
+| 6 Companies | No admin handling of interview requests yet; Interviews marks matching requests SCHEDULED | note in status.md |
