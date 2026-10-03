@@ -131,7 +131,7 @@ describe("saveProfile", () => {
     db.candidateProfile.findUnique.mockResolvedValue({ id: "p1" });
     db.user.findUnique.mockResolvedValue({ id: "someone-else" });
     const result = await saveProfile(null, form(fields));
-    expect(result).toEqual({ ok: false, error: "maya is taken, choose another username." });
+    expect(result).toEqual({ ok: false, error: "maya is taken, choose another username.", field: "username" });
   });
   it("only saves the name for people without a builder profile", async () => {
     current.user = { id: "u2", role: "COMPANY", username: null };

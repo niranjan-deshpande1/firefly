@@ -92,7 +92,15 @@ export const RUBRIC_V0: RubricSeed[] = [
   },
 ];
 
-/** Level meanings shared by all dimensions; used for role and judging criteria, which have no anchors of their own. */
+/** Level meanings for open-hackathon judging criteria: no hiring language, since nobody is being hired. */
+export const JUDGING_ANCHORS = [
+  "absent or wrong.",
+  "partial or rough.",
+  "solid, does what it set out to do.",
+  "stands out among the projects in this hackathon.",
+];
+
+/** Level meanings shared by all dimensions; used for role criteria, which have no anchors of their own. */
 export const GENERIC_ANCHORS = [
   "absent or wrong.",
   "partial or needs heavy prompting.",

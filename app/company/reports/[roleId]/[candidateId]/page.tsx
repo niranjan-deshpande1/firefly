@@ -2,7 +2,7 @@
 // Scores render as numbers with their anchor text and rationale, per reviewer and per dimension.
 // They are never totalled, averaged or ranked (DESIGN.md D4). Every view is audited (brief 4.4).
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Button, EmptyState, PageHeader, StatusPill, TextLink, Time } from "@/components/ui";
 import { EvidenceLink, EvidenceSummaryCard, evidenceAnchor } from "@/components/evidence";
 import { InterviewRequestForm } from "@/components/company/interview-request-form";
@@ -52,6 +52,7 @@ function CalibrationNote({ calibration }: { calibration: Calibration }) {
 export default async function CandidateReportPage({ params }: PageProps<"/company/reports/[roleId]/[candidateId]">) {
   const { roleId, candidateId } = await params;
   const user = await getCurrentUser();
+  if (user?.role === "ADMIN") redirect("/admin");
   await authorizePage(user, "report.view", { roleId, candidateId });
   const report = await viewCandidateReport(user!, roleId, candidateId);
   if (!report) notFound();

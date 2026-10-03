@@ -64,6 +64,7 @@ export function CalibrationNoteForm({ projectId, itemKey, itemName, note, resolv
   return (
     <form
       className="flex flex-col gap-4"
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         run(() => saveCalibrationNote({ projectId, key: itemKey, note: text, resolvedScore: level ? Number(level) : null }));

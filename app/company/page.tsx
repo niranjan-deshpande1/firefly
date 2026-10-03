@@ -91,7 +91,7 @@ export default async function CompanyPage({ searchParams }: PageProps<"/company"
             <ul className="flex flex-col">
               {dash.enrollments.map((e) => (
                 <li key={e.id} className="row flex flex-col gap-1 py-3">
-                  <TextLink href={`/hackathons/${e.hackathon.slug}`} className="type-body">{e.hackathon.title}</TextLink>
+                  <TextLink href={`/hackathons/${e.hackathon.slug}`} className="min-h-11 inline-flex items-center type-body">{e.hackathon.title}</TextLink>
                   <p className="type-body-s text-secondary">
                     {e.role.title}, <Time value={e.hackathon.startsAt} /> to <Time value={e.hackathon.endsAt} />
                     {e.invoice ? `, invoice ${e.invoice.number}` : ""}

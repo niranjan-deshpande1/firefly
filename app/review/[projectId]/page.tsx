@@ -100,7 +100,7 @@ export default async function ScoringWorkspacePage({ params }: PageProps<"/revie
                 {review?.submittedAt ? <Time value={review.submittedAt} format="datetime" /> : null}
               </p>
             ) : (
-              <StatusPill>{review ? "draft" : "not started"}</StatusPill>
+              <StatusPill className="self-start">{review ? "draft" : "not started"}</StatusPill>
             )}
             {posted && !revealed ? <RevealButton projectId={projectId} /> : null}
             {revealed && review?.revealedAt ? (

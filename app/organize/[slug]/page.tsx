@@ -84,7 +84,7 @@ export default async function HackathonConsolePage({ params }: PageProps<"/organ
           <ul className="flex flex-col border-t border-line">
             {setup.map((s) => (
               <li key={s.href} className="flex min-h-11 items-center justify-between gap-4 border-b border-line py-2">
-                <TextLink href={s.href}>{s.label}</TextLink>
+                <TextLink href={s.href} className="min-h-11 inline-flex items-center">{s.label}</TextLink>
                 <StatusPill tone={s.state === "missing" ? "warning" : "neutral"}>{s.state}</StatusPill>
               </li>
             ))}
@@ -96,7 +96,7 @@ export default async function HackathonConsolePage({ params }: PageProps<"/organ
           <ul className="flex flex-col border-t border-line">
             {counts.map((c) => (
               <li key={c.label} className="flex min-h-11 items-center border-b border-line py-2">
-                <TextLink href={c.href}>{c.label}</TextLink>
+                <TextLink href={c.href} className="min-h-11 inline-flex items-center">{c.label}</TextLink>
               </li>
             ))}
           </ul>

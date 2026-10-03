@@ -67,7 +67,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
               <ul className="flex flex-col gap-4">
                 {projects.map((p) => (
                   <li key={p.id} className="card flex flex-col gap-3">
-                    <TextLink href={`/projects/${p.id}`} className="type-display-4">{p.title}</TextLink>
+                    <TextLink href={`/projects/${p.id}`} className="min-h-11 inline-flex items-center type-display-4">{p.title}</TextLink>
                     <p className="type-body">{p.tagline}</p>
                     <p className="type-body-s text-secondary">
                       {p.hackathon.title}
@@ -143,7 +143,7 @@ export default async function ProfilePage({ params }: PageProps<"/u/[username]">
               <ul className="flex flex-col">
                 {hackathons.map((h) => (
                   <li key={h.id} className="row flex items-center">
-                    <TextLink href={`/hackathons/${h.slug}`} className="type-body-s">{h.title}</TextLink>
+                    <TextLink href={`/hackathons/${h.slug}`} className="min-h-11 inline-flex items-center type-body-s">{h.title}</TextLink>
                   </li>
                 ))}
               </ul>

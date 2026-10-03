@@ -62,7 +62,7 @@ export default async function TeamsPage({ params }: PageProps<"/hackathons/[slug
         <section aria-labelledby="my-team-title" className="grid gap-12 desktop:grid-cols-12 desktop:gap-6">
           <div className="flex flex-col gap-6 desktop:col-span-7">
             <h2 id="my-team-title" className="type-display-3">
-              your team
+              your team: {myTeam.name}
             </h2>
             {myTeam.description ? <p className="type-body measure">{myTeam.description}</p> : null}
             <ul className="flex flex-col" aria-label={`members of ${myTeam.name}`}>

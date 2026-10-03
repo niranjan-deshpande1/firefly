@@ -28,12 +28,17 @@ const URL_ERROR = "that link is not an http or https address, paste the full lin
 
 export const zHttpUrl = z.string().trim().max(LIMITS.url, "that link is too long, use a shorter one.").refine(isHttpUrl, URL_ERROR);
 
-/** Optional URL field: blank means "not set". */
+const zHttpsUrl = zHttpUrl.refine(
+  (v) => new URL(v).protocol === "https:",
+  "that link is not https, paste the full link starting with https://.",
+);
+
+/** Optional https URL field (repo and demo video, as their hints say): blank means "not set". */
 export const zOptionalUrl = z
   .string()
   .trim()
   .transform((v) => v || null)
-  .pipe(zHttpUrl.nullable());
+  .pipe(zHttpsUrl.nullable());
 
 /** Splits "react, Next.js,  postgres" into unique trimmed tags, case-insensitively deduplicated, order kept. */
 export function parseBuiltWith(raw: string | string[]): string[] {
@@ -83,6 +88,11 @@ export function postingProblems(p: Pick<ParsedProjectInput, "title" | "tagline" 
 /** Changes are allowed until the posting deadline. */
 export function isBeforeDeadline(deadline: Date, now: Date = new Date()): boolean {
   return now.getTime() <= deadline.getTime();
+}
+
+/** Projects can be posted once the hackathon starts; drafts are allowed before that. */
+export function hasStarted(startsAt: Date, now: Date = new Date()): boolean {
+  return now.getTime() >= startsAt.getTime();
 }
 
 export const commentSchema = z.object({

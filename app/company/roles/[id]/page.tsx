@@ -97,7 +97,7 @@ export default async function RolePage({ params, searchParams }: PageProps<"/com
           <ul className="flex flex-col">
             {role.enrollments.map((e) => (
               <li key={e.id} className="row flex flex-col gap-1 py-3">
-                <TextLink href={`/hackathons/${e.hackathon.slug}`}>{e.hackathon.title}</TextLink>
+                <TextLink href={`/hackathons/${e.hackathon.slug}`} className="min-h-11 inline-flex items-center">{e.hackathon.title}</TextLink>
                 <span className="type-body-s text-secondary">
                   enrolled <Time value={e.enrolledAt} />, runs <Time value={e.hackathon.startsAt} /> to <Time value={e.hackathon.endsAt} />
                   {e.invoice ? `, invoice ${e.invoice.number} for ${formatCents(e.invoice.amountCents)}${e.invoice.nonRefundable ? ", non-refundable" : ""}` : ""}
@@ -105,7 +105,7 @@ export default async function RolePage({ params, searchParams }: PageProps<"/com
               </li>
             ))}
             <li className="pt-4">
-              <TextLink href={`/company/roles/${role.id}/enroll`}>enroll in another hiring cohort</TextLink>
+              <TextLink href={`/company/roles/${role.id}/enroll`} className="min-h-11 inline-flex items-center">enroll in another hiring cohort</TextLink>
             </li>
           </ul>
         ) : (

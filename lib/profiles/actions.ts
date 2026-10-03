@@ -20,6 +20,7 @@ import {
 import { isTalentPoolEligible } from "./queries";
 
 const firstError = (error: z.ZodError) => error.issues[0]?.message ?? "something in the form is not valid, check it and try again.";
+const invalidResult = (error: z.ZodError) => ({ ok: false as const, error: firstError(error), field: error.issues[0]?.path[0]?.toString() });
 
 async function forbiddenAsResult<T>(fn: () => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
   try {
@@ -97,20 +98,20 @@ export async function saveProfile(_prev: ActionResult | null, formData: FormData
     const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
     if (!profile) {
       const parsed = nameSchema.safeParse(fields);
-      if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
+      if (!parsed.success) return invalidResult(parsed.error);
       await prisma.user.update({ where: { id: user.id }, data: { name: parsed.data.name } });
       revalidatePath("/", "layout");
       return { ok: true };
     }
 
     const parsed = profileSchema.safeParse(fields);
-    if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
+    if (!parsed.success) return invalidResult(parsed.error);
     const links = parseLinks(parsed.data.links);
-    if (links.error) return { ok: false, error: links.error };
+    if (links.error) return { ok: false, error: links.error, field: "links" };
     const { name, username, headline, bio, skills, location, school, experienceLevel } = parsed.data;
 
     const owner = await prisma.user.findUnique({ where: { username }, select: { id: true } });
-    if (owner && owner.id !== user.id) return { ok: false, error: `${username} is taken, choose another username.` };
+    if (owner && owner.id !== user.id) return { ok: false, error: `${username} is taken, choose another username.`, field: "username" };
 
     await prisma.$transaction([
       prisma.user.update({ where: { id: user.id }, data: { name, username } }),

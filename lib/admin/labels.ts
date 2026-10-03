@@ -42,6 +42,27 @@ export function actionLabel(action: string): string {
   return ACTION_LABELS[action] ?? action.toLowerCase().replace(/_/g, " ");
 }
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  registrationConfirmed: "registration confirmed",
+  teamInvite: "team invite",
+  checkInReminder: "check-in reminder",
+  submissionReceived: "project posted",
+  hackathonUpdate: "hackathon update",
+  decisionMade: "review decision",
+  interviewScheduled: "interview scheduled",
+  feedbackReady: "feedback ready",
+  invoiceIssued: "invoice issued",
+  interviewRequested: "interview requested",
+  interviewCancelled: "interview cancelled",
+  interviewRescheduled: "interview rescheduled",
+  interviewRequestDeclined: "interview request declined",
+};
+
+/** Email template key to lowercase words: "submissionReceived" -> "project posted". Unknown keys are split at capitals. */
+export function templateLabel(template: string): string {
+  return TEMPLATE_LABELS[template] ?? template.replace(/([A-Z])/g, " $1").toLowerCase().trim();
+}
+
 function valueText(v: unknown): string {
   if (v === null || v === undefined) return "none";
   if (typeof v === "object") {
