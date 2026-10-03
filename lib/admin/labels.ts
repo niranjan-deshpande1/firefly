@@ -10,6 +10,7 @@ const ACTION_LABELS: Record<string, string> = {
   INTERVIEW_COMPLETED: "interview completed",
   HIRE_REPORTED: "hire reported",
   INVOICE_CREATED: "invoice created",
+  INVOICE_SENT: "invoice sent",
   INVOICE_PAID: "invoice paid",
   ENROLLMENT_CREATED: "cohort enrollment",
   DATA_EXPORT: "data exported",

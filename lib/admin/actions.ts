@@ -59,8 +59,7 @@ export async function markInvoiceSentAction(invoiceId: string): Promise<ActionRe
     if (!invoice) return { ok: false, error: "that invoice does not exist, return to invoices." };
     if (!canTransition(invoice.status, "SENT")) return { ok: false, error: `a ${invoice.status.toLowerCase()} invoice can't be sent, reload invoices.` };
     await prisma.invoice.update({ where: { id: invoice.id }, data: { status: "SENT", issuedAt: new Date() } });
-    // ponytail: no INVOICE_SENT audit action exists; issuing is recorded as INVOICE_CREATED with event "issued".
-    await audit({ actorId: user.id, action: "INVOICE_CREATED", resourceType: "Invoice", resourceId: invoice.id, metadata: { event: "issued", type: invoice.type } });
+    await audit({ actorId: user.id, action: "INVOICE_SENT", resourceType: "Invoice", resourceId: invoice.id, metadata: { type: invoice.type } });
     const to = invoice.company.members[0]?.user.email;
     if (to) {
       await sendEmail(to, "invoiceIssued", { company: invoice.company.name, number: invoice.number, amount: formatCents(invoice.amountCents), nonRefundable: invoice.nonRefundable });

@@ -38,7 +38,7 @@ function providers(): Provider[] {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET ?? (isDemoMode() ? DEMO_SECRET : undefined),
+  secret: process.env.AUTH_SECRET || (isDemoMode() ? DEMO_SECRET : undefined),
   trustHost: true,
   providers: providers(),
   pages: { signIn: "/signin" },

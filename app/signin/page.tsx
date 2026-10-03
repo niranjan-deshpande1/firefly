@@ -38,7 +38,7 @@ export default async function SignInPage() {
 
   const demo = isDemoMode();
   const users = demo
-    ? await prisma.user.findMany({ orderBy: [{ role: "asc" }, { name: "asc" }], select: { id: true, name: true, role: true } })
+    ? await prisma.user.findMany({ where: { name: { not: "deleted account" } }, orderBy: [{ role: "asc" }, { name: "asc" }], select: { id: true, name: true, role: true } })
     : [];
 
   return (
