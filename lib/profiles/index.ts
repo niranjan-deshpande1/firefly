@@ -5,7 +5,7 @@ import { EXPERIENCE_LEVELS } from "@/lib/db/enums";
 import type { LinkItem } from "@/lib/db/json";
 
 /** Bump when the consent copy changes; builders whose stored version differs see the screen again. */
-export const CONSENT_VERSION = "2026-10-03";
+export const CONSENT_VERSION = "2026-10-03.2";
 
 /** True when the builder agreed to the current consent text. */
 export function hasCurrentConsent(profile: { consentAt: Date | null; consentVersion: string | null } | null | undefined): boolean {

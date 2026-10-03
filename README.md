@@ -50,6 +50,20 @@ Nothing sends real email (everything goes to the email log in admin), charges mo
 | `npm test` | Vitest unit tests |
 | `npm run e2e` | Playwright: smoke, permission checks and the eight-step demo path. Run `npm run build` and reseed first; it serves on port 3100 |
 | `npm run db:migrate`, `npm run db:seed`, `npm run demo:reset` | Database |
+| `npm run jobs` | Runs the scheduled jobs once (see below) |
+
+## Scheduled jobs
+
+`npm run jobs` runs two jobs from `lib/jobs` and prints the counts as one JSON line. There is no queue or outside service; schedule it with cron. Hourly is enough:
+
+```
+0 * * * * cd /path/to/firefly && npm run jobs >> jobs.log 2>&1
+```
+
+1. **Held feedback.** Written feedback held until a cohort's results time gets its "feedback ready" email once that time passes. Each row is claimed before the email is written, so overlapping runs never send twice.
+2. **Retention.** For hackathons that ended more than the retention setting ago (admin > settings, 12 months by default), deletes process evidence: commits and repo snapshots, AI transcripts and their files, decision logs, check-ins, evidence summaries and cached candidate reports. Evidence of a project someone was hired from, and that person's check-ins, stay. Projects, reviews, decisions, interviews, feedback, invoices, hires and the audit log stay. Each run writes one "old evidence deleted" audit entry.
+
+Both jobs are safe to run again at any time. Admins can also run them from admin > settings with "run scheduled jobs now".
 
 ## The demo path
 

@@ -74,5 +74,6 @@ export const AUDIT_ACTIONS = [
   "DATA_REQUEST_RESOLVED",
   "SETTINGS_CHANGED",
   "COMMENT_HIDDEN",
+  "RETENTION_RUN",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { BillingError, canTransition, formatCents, markInvoicePaid } from "@/lib/billing";
 import { getSettings, saveSettings } from "@/lib/settings";
 import { ForbiddenError, authorize, requireRoleForAction } from "@/lib/permissions";
+import { runJobs } from "@/lib/jobs";
 import { anonymizeUser } from "./data-requests";
 import { fieldErrors, resolveRequestSchema, settingsFormSchema, settingsFromForm } from "./forms";
 
@@ -129,5 +130,18 @@ export async function saveSettingsAction(_prev: ActionResult | null, formData: F
       return { ok: false, error: "some settings are out of range, see the fields below.", fieldErrors: errors };
     }
     return failure(error, "the settings were not saved, try again.");
+  }
+}
+
+/** Runs the scheduled jobs now, the same ones `npm run jobs` runs. ActionButton passes an id, which is ignored. */
+export async function runJobsAction(): Promise<ActionResult> {
+  try {
+    const user = await requireAdmin("admin.access");
+    const { feedbackEmails, retention: r } = await runJobs(new Date(), user.id);
+    for (const path of ["/admin", "/admin/audit", "/admin/emails", "/dashboard"]) revalidatePath(path);
+    const evidence = r.transcripts + r.decisionLogEntries + r.commits + r.repoSnapshots + r.evidenceSummaries + r.checkIns;
+    return { ok: true, message: `jobs done: ${feedbackEmails} feedback emails sent, ${evidence} old evidence rows deleted from ${r.projects} projects` };
+  } catch (error) {
+    return failure(error, "the scheduled jobs didn't finish, try again or check the server log.");
   }
 }

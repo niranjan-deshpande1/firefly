@@ -18,6 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   DATA_REQUEST_RESOLVED: "data request resolved",
   SETTINGS_CHANGED: "settings changed",
   COMMENT_HIDDEN: "comment hidden",
+  RETENTION_RUN: "old evidence deleted",
 };
 
 export function actionLabel(action: string): string {

@@ -115,6 +115,7 @@ export async function seedReviews() {
   });
 
   // Written feedback for cohort builders who will not advance; visible when results go out.
+  // Held until then, so notifiedAt stays empty and `npm run jobs` emails it once results are out.
   const fallFeedback: [CandidateKey, string][] = [
     ["felix", "Your mobile flow was the clearest patient-facing design in the cohort. The demo did not run from the README on a clean machine; fix the setup steps and we will look again."],
     ["grace", "Calm Forms never loses input, which is exactly the problem you named. The evidence showed few checks on AI output; next time write a test before accepting a suggestion and note it in the decision log."],
@@ -173,7 +174,7 @@ export async function seedReviews() {
   ];
   for (const [i, [key, owner, body]] of openFeedback.entries()) {
     await prisma.feedback.create({
-      data: { projectId: projectId(owner), candidateId: CANDIDATES[key].id, authorId: i % 2 === 0 ? L : H, body, visibleAt: OPEN.endsAt, createdAt: daysFromNow(-41) },
+      data: { projectId: projectId(owner), candidateId: CANDIDATES[key].id, authorId: i % 2 === 0 ? L : H, body, visibleAt: OPEN.endsAt, notifiedAt: OPEN.endsAt, createdAt: daysFromNow(-41) },
     });
   }
 }

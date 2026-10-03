@@ -2,7 +2,7 @@
 import { daysFromNow, email, hex, json, prisma } from "./util";
 
 // Matches CONSENT_VERSION in lib/profiles once that module lands.
-export const CONSENT_VERSION = "2026-10-03";
+export const CONSENT_VERSION = "2026-10-03.2";
 
 // A spread of profile visibilities so lists and permissions are exercised.
 const VISIBILITY: Record<string, string> = { hugolaurent: "PLATFORM", sofialindqvist: "PLATFORM", kenjimori: "PRIVATE", yaranasser: "PRIVATE" };
