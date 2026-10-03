@@ -113,7 +113,7 @@ Prices RESEARCHED 2026-10-03 from the linked page.
 ## 6. Security and privacy
 
 **RECOMMENDATION:**
-- **Access:** two founder accounts with MFA own the sheet, Drive and Codespaces org. The contract engineer gets only the one Codespace per defense. Companies get only their own docs.
+- **Access:** two founder accounts with MFA own the sheet, Drive and Codespaces org. The founder planting a bug works only in that finalist's Codespace. Companies get only their own docs.
 - **Per-company isolation:** one doc per company per candidate. Never put two companies on one doc. A company's own interview notes stay in its own doc (legal F1).
 - **View and audit log:** `view_log` tab plus Drive activity; every share, unshare, approval and deletion logged in the sheet.
 - **Secrets:** none in cohort 1 beyond tool logins in a password manager. No secret ever enters a Codespace.
@@ -127,7 +127,6 @@ Prices RESEARCHED 2026-10-03 from the linked page.
 2. If the candidate's app needs an API key, use a capped test key and revoke it after the session.
 3. One bug per finalist, planted the day before on the deadline bundle, committed to a private `defense` branch.
 4. Destroy the Codespace after the session and log `sandbox_destroyed_at`.
-5. The Dolos similarity check (PRD S2) runs in the same kind of sandbox.
 
 **AI posture:** no AI reads submissions in cohort 1 (PRD Do not build). If founders approve AI summaries later (constitution 7.5): no tools, no network, candidate text labeled as untrusted data, output shown beside the source evidence, and a human makes every decision.
 

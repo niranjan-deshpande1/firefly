@@ -1,6 +1,6 @@
-# Execution plan v0.1
+# Execution plan v0.2
 
-Draft, 2026-10-03. Built from [PRD v0.1](prd/PRD.md) and [technical design v0.1](technical-design.md). **No product code until both founders write APPROVED with a scope (constitution 2.2).** Milestone 0 is discovery, which can start now.
+Draft, 2026-10-03. Built from [PRD v0.2](prd/PRD.md) and [technical design v0.1](technical-design.md). **No product code until both founders write APPROVED with a scope (constitution 2.2).** Milestone 0 is discovery, which can start now.
 
 **RECOMMENDATION:** cohort 1 runs with no custom software. Track A sets up the tools, runs the evidence and sandbox steps, and builds software only for cohort 2, only for whichever manual step cohort 1 shows is the bottleneck (technical design TQ5). This is founder decision 1 in [technical-design.md](technical-design.md) section 11.
 
@@ -12,7 +12,7 @@ Estimates show human time / time with Claude Code and gstack (illustrative).
 |---|---|---|---|---|
 | M0 | Discovery calls | Both | 12 startup and 10 candidate calls scored against H1 to H10, with the contact log. H1, H3 and H9 pass the PRD gate. | Weeks 1 to 2 |
 | M1 | Founder review (Phase 5) | Both | APPROVED with a scope | End of week 2 |
-| M2 | Tools and contractor | A | Accounts set up (each sign-up approved), sheet tabs match technical design section 2, sandbox org with a spending limit, contract engineer hired | Week 3 |
+| M2 | Tools and bug kit | A | Accounts set up (each sign-up approved), sheet tabs match technical design section 2, sandbox org with a spending limit, bug menu and fresh-task bank drafted | Week 3 |
 | M3 | Pilot kit | B | Brief, handbook, rubric, defense script, forms, email templates ready. Legal docs out to a lawyer. | Weeks 3 to 4 |
 | M4 | Dry run (PRD M12) | Both | 2 volunteers end to end, including one clone, one approval and one withdrawal. Timings, reviewer agreement and the consented clip captured. | Week 5 |
 | M5 | Cohort 1 live | Both | Kickoff go/no-go passes: 3 or more partners signed, 40 or more accepted | Week 6 onward (5 weeks long) |
@@ -41,9 +41,9 @@ Estimates show human time / time with Claude Code and gstack (illustrative).
 | A4 | Test Drive activity with a non-Workspace account. Answers TQ1. | 1 h | A1 | none |
 | A5 | Evidence runbook (`docs/ops/` via Track B): access at acceptance, SHA on the form, clone and bundle at grace end, failure table | 0.5 d / 1 h | A2 | /review |
 | A6 | Company-view runbook: report template, approval email, share settings, weekly view check, same-day unshare | 0.5 d / 1 h | A4, B9 | /review |
-| A7 | Hire and brief the contract engineer: bug menu, fresh-task bank, sandbox prep (PRD Q1) | 1 d plus contractor time | A3, Q1 | none |
+| A7 | Bug menu, fresh-task bank and sandbox prep runbook, written by the founders (PRD A2) | 2 d / 3 h | A3 | none |
 | A8 | Retention calendar and deletion-request checklist (lawyer periods pending) | 2 h | B9 | none |
-| A9 | Run the clone, bundle and SHA check on deadline night; run sandbox prep for each finalist with the contractor | during cohort | M5 | none |
+| A9 | Run the clone, bundle and SHA check on deadline night; plant one bug per finalist in a sandbox | during cohort | M5 | none |
 
 **Cohort 2 only, after M6 and a new APPROVED:** build whichever of evidence capture or company view cohort 1 showed was the bottleneck, using the technical design 3.3 sketch. Isolation tests on every deploy. `/review` and `/cso` on every PR; `/qa` on UI. **Never `/ship` or deploy to production before APPROVED.** The first production deploy also needs a founder yes (constitution 12).
 
@@ -65,7 +65,7 @@ Estimates show human time / time with Claude Code and gstack (illustrative).
 
 ## Capacity check
 
-PRD section 7 puts one cohort at about 67 founder hours and 33 contractor hours (illustrative). If M0 calls show founders have less time than that, cut the shortlist to 6 before cutting anything below.
+PRD section 7 puts one cohort at about 83 founder hours, both founders combined (illustrative). If founders have less time than that, cut the shortlist to 6 before cutting anything below.
 
 ## Testing strategy
 
@@ -79,7 +79,5 @@ Kickoff day, day-8 feedback, deadline night (clone and SHA check), bug-planting 
 
 ## If time runs short, cut in this order
 
-1. S2 similarity check.
-2. Day-10 office hours (keep the day-8 feedback).
-3. Shortlist from 8 to 6 (fewer defenses and bugs to plant).
-4. Last resort: one partner company instead of 2 to 4 (the H3 fallback).
+1. Shortlist from 8 to 6 (fewer defenses and bugs to plant).
+2. Last resort: one partner company instead of 2 to 4 (the H3 fallback).

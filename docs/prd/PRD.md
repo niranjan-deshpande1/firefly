@@ -1,6 +1,6 @@
 # PRD: firefly MVP pilot
 
-**v0.1, pre-validation.** Customer evidence today is **zero recorded calls**. This PRD can't clear the Phase 2 gate until customer interviews back it up (section 10). Only items marked DECISION are decided. v0.1 folds in the skeptic review ([review-v0.md](review-v0.md)).
+**v0.2, pre-validation.** Customer evidence today is **zero recorded calls**. This PRD can't clear the Phase 2 gate until customer interviews back it up (section 10). Only items marked DECISION are decided. v0.1 folded in the skeptic review ([review-v0.md](review-v0.md)). v0.2 folds in the founders' answers to the CEO review ([designs](../designs/)).
 
 Driver: Founder A (nd) · Reviewer: Founder B · 2026-10-03
 
@@ -15,10 +15,10 @@ Built from: [flows](flows.md) · [evaluation](../research/evaluation.md) · [ver
 | ID | ASSUMPTION | Source | Risk if wrong | How to verify |
 |---|---|---|---|---|
 | A1 | Target: early-career software engineers (0 to 3 years), full-time, at seed to Series A startups | Kickoff default | **High.** New grads were under 6% of startup hires in 2024 (RESEARCHED, [hiring-practices.md](../research/hiring-practices.md)). | H9 |
-| A2 | Team: two founders, part-time. Neither is a senior engineer. A **paid contract engineer** is the second reviewer, plants the bugs and builds the fresh-task bank. | Kickoff default plus skeptic review | High. Without engineering judgment in the ranking, a CTO has no reason to trust our shortlist. | Founders state roles and hours, then hire the contractor |
-| A3 | Pilot cash budget: $5,000 to $10,000, mostly prizes (illustrative). **It doesn't yet cover a lawyer or the contractor.** | Kickoff default | Medium | Founders state it (Q7) |
+| A2 | Team: two founders, part-time. **The founders review every submission, plant the bugs and build the fresh-task bank** (DECISION, CEO review 2026-10-03). No contract engineer. | Founders | High. A CTO may ask why to trust a founder-made shortlist. Mitigation: company engineers co-interview in every defense, and M13 tests our cut against their blind ratings. | Founders state roles and hours |
+| A3 | Pilot cash budget: $5,000 to $10,000, mostly prizes (illustrative). **It doesn't yet cover a lawyer.** | Kickoff default | Medium | Founders state it (Q7) |
 | A4 | One city, whichever gives more warm access (Seattle or San Francisco) | Kickoff default | Low. California triggers the ADS rules (legal F3). | Founders pick |
-| A5 | The $1,000 flat fee is charged per company per cohort | Default for an OPEN QUESTION | Medium. Flows rates paying before seeing anyone as the biggest company drop-off. | H10, P1 |
+| A5 | The $1,000 flat fee is charged per company per cohort, at signing (DECISION, CEO review 2026-10-03) | Founders | Medium. Flows rates paying before seeing anyone as the biggest company drop-off. | H3, H10 |
 | A6 | Candidates will put about 20 hours into a two-week build | Evaluation research | High. Week 2 is the likeliest drop-off. | H4, H5 |
 | A7 | Companies give about 6 hours per cohort: a 75-minute shared defense for each of up to 4 finalists, plus a short blind-rating task (M13) | Interview DECISION plus a RECOMMENDATION on length | Medium | Guide A16 states exactly this |
 | A8 | Candidates keep code ownership. The brief is synthetic. Companies get view-only access. | Legal F5 | Low | Lawyer |
@@ -50,8 +50,7 @@ Both are the first things to build if cohort 1 shows the manual version is the b
 |---|---|---|
 | Startup founder or CTO | Customer, pays | Finalists worth advancing, with evidence they can check |
 | Company interviewer | Co-interviews or runs the defense | One script, one rubric, about 6 hours per cohort |
-| Early-career candidate | Free user | A fair, known time ask; real interviews; written feedback and a verified project profile whether hired or not |
-| Contract engineer | Second reviewer, bug planter | Clear rubric anchors, the sandbox runbook, paid hours |
+| Early-career candidate | Free user | A fair, known time ask; real interviews; written feedback whether hired or not |
 | Our team | Operator | Runs cohort 1 by hand, within the capacity budget in section 7 |
 
 ## 3. Feature spec
@@ -63,23 +62,21 @@ Everything in cohort 1 is run by hand.
 | ID | Feature | Tests | How cohort 1 runs it |
 |---|---|---|---|
 | M1 | Cohort page, application with consent (versioned consent text, timestamp, method recorded) | H4, legal F2 | Form tool |
-| M2 | Company agreement and role intake (job-related criteria only, salary, interview mode) | H3, H10, legal F3 | Doc, e-signature, form |
+| M2 | Company agreement and role intake. The intake asks for: domain knowledge wanted; behavioral characteristics wanted; how many offers they expect to make; a detailed job description; other traits beyond the job description; salary range; interview mode (co-interview or run it). We review every answer for job-relatedness before use. Expected offers sets how many finalists that company sees. | H3, H10, legal F3 | Doc, e-signature, form |
 | M3 | Brief, rules, rubric and handbook published at kickoff | H5 | Doc, video call |
 | M4 | **Evidence pinning:** the repo is public or shared read-only with us. The deadline form collects the final commit SHA. We clone at the deadline and check the SHA matches. Push times are context only, since they don't prove who wrote the code. | Verification layer 3 | Form plus clone ([technical-design.md](../technical-design.md)) |
-| M5 | Check-ins: day 3 written plan, day 8 form plus a 2-minute recorded walkthrough, day 10 office hours. Feedback within 48 hours. | H5 | Form, chat server |
+| M5 | Check-ins: day 3 written plan, day 8 form plus a 2-minute recorded walkthrough. Feedback within 48 hours. | H5 | Form, chat server |
 | M6 | Submission: repo and final SHA, README, `DECISIONS.md`, 3 to 5 minute demo video, weekly hours log. Optional AI transcript excerpts (up to 3 sessions). | H6, H11 | Form |
-| M7 | Artifact review: **two reviewers, a founder and the contract engineer.** The contractor sees no names, schools or GitHub handles. The founder isn't blind (they run operations), and we say so. Rubric v0 ([evaluation.md](../research/evaluation.md) section 3). An evidence note for every score. | H6, H11, legal F3 | Spreadsheet |
+| M7 | Artifact review: **both founders score every submission independently.** The founder not running operations that week reviews without names, schools or GitHub handles; the other isn't blind, and we say so. Rubric v0 ([evaluation.md](../research/evaluation.md) section 3). An evidence note for every score. | H6, H11, legal F3 | Spreadsheet |
 | M8 | **Shared defense, 75 minutes, one per finalist**, with every interested company in the room. One planted bug per finalist, prepared in a disposable cloud sandbox. ID checked and logged as "checked, matched", never copied. Scores filed independently before discussion. | H6, H11 | Calendar, venue, scorecard form, Codespace |
 | M9 | **Company packet:** one access-limited doc per company. Six rubric scores side by side with no total, plus evidence links. Shared only after the candidate approves by email. Views checked in the doc's activity log (technical design TQ1). | H6, legal F1 | Docs and email |
-| M10 | Results, written feedback to every submitter, and a verified project profile | H4 (retention), constitution 4.12 | Email, PDF |
+| M10 | Results and written rubric feedback to every submitter | H4 (retention), constitution 4.12 | Email |
 | M11 | Funnel and evidence tracker. Per candidate: funnel events, both reviewers' scores, defense scores, company verdict, hire. | All | Spreadsheet |
-| M12 | Dry run before cohort 1: 2 volunteers, shortened brief, full defense. Calibrates reviewers and timings, and produces the pitch clip. | H6, H11 | By hand |
+| M12 | Dry run before cohort 1: 2 volunteers, shortened brief, full defense. Calibrates reviewers and timings. | H6, H11 | By hand |
 | M13 | **Below-cut comparison:** each company blind-rates the artifacts of its shortlisted candidates mixed with 2 or 3 anonymized below-cut submissions (candidate consent covers this) | H6 | Doc plus form |
 
 ### Should have
 - **S1.** A free tool credit for anyone who asks (fairness, constitution 4.13).
-- **S2.** Code similarity check with Dolos. Results are flags only.
-- **S4.** A standing pool of past finishers who opt in, with a retention limit. This matters for H7, because recruiting lead time comes on top of the six weeks.
 
 ### Later
 1. **First to build, for cohort 2, only if manual was the bottleneck:**
@@ -87,7 +84,7 @@ Everything in cohort 1 is run by hand.
    - **Company view:** per-company isolation in the database and a logged read, which needs the lawyer's FCRA answer first
 
    Designs are in [technical-design.md](../technical-design.md).
-2. Verified profile as a public page; application-to-tracker sync; self-serve company signup.
+2. Verified project profile (cut from M10 in the CEO review); code similarity check with Dolos (was S2); a standing pool of past finishers (was S4, first to build if H7 fails); application-to-tracker sync; self-serve company signup.
 3. Second city with verified video interviews; AI summaries of evidence for reviewers (founder approval needed, constitution 7.5).
 
 ### Do not build
@@ -127,11 +124,11 @@ Details are in [flows.md](flows.md) section 2.
 | Length | Two weeks (DECISION) |
 | Format | Solo. One fixed synthetic brief with an open product choice inside it. |
 | Hours | About 20 suggested. No enforced cap. Weekly hours log. |
-| Check-ins | Day 3 plan, day 8 walkthrough plus form, day 10 office hours |
+| Check-ins | Day 3 plan, day 8 walkthrough plus form |
 | Deadline | Day 14 at a fixed time, with a 2-hour grace window. The final SHA goes in the form. Late work gets feedback but isn't shortlisted. |
-| Review | Days 15 to 19. A founder and the contract engineer review. They decide together who advances, with written reasons. |
+| Review | Days 15 to 19. Both founders review. They decide together who advances, with written reasons. Each company's job-related criteria pick among the shortlist. |
 | Defense script (75 min) | ID and setup 5, walkthrough 12, "what breaks if" 10, live change 15, planted bug 15, fresh task 13, candidate questions 5. Then a 10-minute independent scoring and debrief. |
-| Bugs | One per finalist, planted by the contract engineer in a disposable Codespace |
+| Bugs | One per finalist, planted by a founder in a disposable Codespace |
 | AI transcripts | Optional excerpts. `DECISIONS.md` is required. |
 
 **Canonical funnel (ASSUMPTION; every plan number derives from it):**
@@ -147,16 +144,16 @@ Details are in [flows.md](flows.md) section 2.
 
 ## 7. Capacity budget (illustrative, per cohort)
 
-| Work | Inputs | Founder hours | Contractor hours |
-|---|---|---|---|
-| Review | 15 submissions x 30 min, one reviewer each side | 8 | 8 |
-| Bug planting and fresh-task bank | 8 finalists x 75 min, plus 4 h for the bank | 0 | 14 |
-| Defenses | 8 x (75 + 10 min), facilitator and contractor present | 11 | 11 |
-| Feedback and profiles | 15 submitters x 30 min | 8 | 0 |
-| Recruiting, partners, check-ins, comms | estimate | 40 | 0 |
-| **Total** | | **about 67** | **about 33** |
+| Work | Inputs | Founder hours (both founders combined) |
+|---|---|---|
+| Review | 15 submissions x 30 min x 2 founders | 15 |
+| Bug planting and fresh-task bank | 8 finalists x 75 min, plus 4 h for the bank | 14 |
+| Defenses | 8 x (75 + 10 min), one founder facilitating | 11 |
+| Written feedback | 15 submitters x 30 min | 8 |
+| Recruiting, partners, check-ins, comms | estimate | 35 |
+| **Total** | | **about 83** |
 
-The contractor rate is an OPEN QUESTION (Q1). Illustrative: at $100 to $150 an hour, 33 hours is $3,300 to $5,000.
+About 40 hours each over 5 weeks, about 8 a week (ASSUMPTION; founders confirm). If that's too much, cut the shortlist from 8 to 6 first (saves about 6 hours).
 
 ## 8. User stories and functional requirements
 
@@ -168,12 +165,12 @@ The contractor rate is an OPEN QUESTION (Q1). Illustrative: at $100 to $150 an h
 | M4 | As a reviewer, I know exactly which code was submitted | FR4.1 The form requires the final SHA. FR4.2 We clone within 2 hours of the deadline and confirm the SHA. A mismatch is flagged for the defense, never auto-rejected. FR4.3 Nothing outside the repo is collected. |
 | M5 | As a candidate, I get feedback mid-build | FR5.1 Feedback within 48 hours of day 8. FR5.2 Anyone with no commits by day 3 gets a ping. |
 | M6 | As a candidate, I submit in one step and get a receipt | FR6.1 One form. FR6.2 The receipt states review dates. |
-| M7 | As a reviewer, I score consistently | FR7.1 The contractor reviews blind. FR7.2 Every score has an evidence note. FR7.3 Disagreements of more than one level are discussed. FR7.4 Every reject has a written reason. |
+| M7 | As a reviewer, I score consistently | FR7.1 The founder not running operations reviews blind. FR7.2 Every score has an evidence note. FR7.3 Disagreements of more than one level are discussed. FR7.4 Every reject has a written reason. |
 | M8 | As an interviewer, I run one structured defense | FR8.1 Script and rubric sent 48 hours ahead. FR8.2 ID logged, never copied. FR8.3 Scores filed before discussion. FR8.4 The sandbox is destroyed after. |
 | M9 | As a company, I see only my shortlist and the evidence | FR9.1 One doc per company, shared with named people only. FR9.2 Six scores, no total. FR9.3 Shared only after candidate approval. FR9.4 On withdrawal we remove access the same day. |
-| M10 | As a candidate who wasn't hired, I leave with something useful | FR10.1 Rubric feedback by day 26. FR10.2 A verified project profile. |
+| M10 | As a candidate who wasn't hired, I leave with something useful | FR10.1 Rubric feedback by day 26. |
 | M11 | As a founder, I see the funnel and the hypothesis data | FR11.1 Funnel events logged the same day. FR11.2 H5, H6 and H11 fields captured per candidate. |
-| M12 | As a founder, I test the process before real candidates see it | FR12.1 Timings, reviewer agreement and a consented clip. |
+| M12 | As a founder, I test the process before real candidates see it | FR12.1 Timings and reviewer agreement. |
 | M13 | As a founder, I can tell whether our cut beats chance | FR13.1 Companies rate anonymized artifacts without knowing which were shortlisted. |
 
 ## 9. Non-functional requirements
@@ -197,10 +194,10 @@ Customer interviews test H1 to H4 and H7 to H10. The pilot tests H5, H6 and H11.
 | H4 | Candidates already do unpaid builds | 6 of 10, median 10 hours or more | 4 or 5: more calls | Stipends for every finisher |
 | H5 | Enough candidates finish two weeks | Pilot: 12 or more of 40 submit | 8 to 11: add stipends next cohort | Raise build length with the founders (only they can change a DECISION) |
 | H6 | Our cut beats chance | Pilot: companies rate shortlisted artifacts above below-cut ones in M13, **and** 60% or more of finalists are rated "would advance" | 40 to 59%: rework the rubric, then rerun | Rework the rubric and artifact review before cohort 2 |
-| H7 | Our timeline is no slower than theirs | Their median is 6 weeks or more (a tie counts as a pass) | 4 to 5 weeks: build S4 first | Build the standing pool before cohort 2 |
+| H7 | Our timeline is no slower than theirs | Their median is 6 weeks or more (a tie counts as a pass) | 4 to 5 weeks: build the standing pool first | Build the standing pool before cohort 2 |
 | H8 | Startups spend real money per hire today | Median $5,000 or more | | Our price looks high. Revisit with the founders. |
 | H9 | Buyers hire 0 to 3 year engineers | 40% or more of startups contacted | 25 to 39%: more calls | Below 25%: change the target level, then the brief and pitch |
-| H10 | Startups accept $1,000 plus 5% | 2 or more of the H3 commitments | | Test charging the flat fee at shortlist delivery (P1) |
+| H10 | Startups accept $1,000 at signing plus 5% | 2 or more of the H3 commitments | | Bring founders the option of charging the flat fee at shortlist delivery |
 | H11 | The defense predicts company verdicts better than the artifact review alone | Pilot: among finalists, defense scores match company verdicts more often than artifact scores do (pre-registered, directional only at n of 8 or fewer) | Tie | Revisit defense length. Triplebyte found project talk didn't predict success ([competitors.md](../research/competitors.md)). |
 
 **Gate rule (RECOMMENDATION):** if H1, H3 or H9 fails, don't run the pilot as written.
@@ -209,10 +206,13 @@ Customer interviews test H1 to H4 and H7 to H10. The pilot tests H5, H6 and H11.
 
 **DECISION (founders, 2026-10-03):** companies pay $1,000 flat plus 5% of first-year salary per hire. The 1% model is retired.
 
+**DECISION (founders, CEO review 2026-10-03):**
+- The $1,000 is charged per company per cohort, at signing. It's flat, with no refund (founders: "it's all proportional. 1k is a flat fee").
+- The number of finalists each company sees is proportional to the offers it expects to make (M2 intake).
+- If a hire leaves within 90 days, we find the company a replacement for free.
+
 OPEN QUESTIONS:
-- **P1.** What triggers the flat fee? Default: per company per cohort. Flows suggests charging it at shortlist delivery.
 - **P2.** How long after an introduction does a hire still count as ours? Suggested starting point: 12 months.
-- **P3.** Refund or replacement if a hire leaves within 90 days
 - **P4.** How bonus and equity count toward first-year salary
 - **P5.** How we learn a hire happened
 
@@ -221,8 +221,8 @@ OPEN QUESTIONS:
 Lead with evidence, then the process.
 1. **The scoreboard:** calls completed against each threshold, plus any written A16 yeses, with exact counts. If it's zero, show zero.
 2. **The brief and rubric** (M3, M7). Six dimensions, no total score.
-3. **A 2-minute clip of the planted-bug segment** from the dry run (M12), captioned "Volunteer dry run. Not a candidate." Everyone present consents. **The pitch must fall after the dry run** (Q8).
-4. **The company packet** (M9) as it actually runs in cohort 1: a doc with a sample report, captioned the same way.
+3. **The defense script** (M8): 75 minutes, ending in a planted bug in the candidate's own code.
+4. **The company packet** (M9) as it actually runs in cohort 1: a doc with a sample report, captioned "Sample. Not a real candidate."
 
 Say: "We think how someone defends AI-built code shows whether they can engineer with AI. This pilot tests it." Never say "predicts", "validated", "bias-free" or "compliant", and don't show software the pilot won't use.
 
@@ -230,12 +230,10 @@ Say: "We think how someone defends AI-built code shows whether they can engineer
 
 | ID | Question | Blocks | Who answers |
 |---|---|---|---|
-| Q1 | Contract engineer: who, rate, hours | M7, M8, M12 | Founders |
 | Q2 | City and venue | M8 | Founders |
 | Q3 | Prize amounts and tool credits | M10, S1 | Founders |
 | Q4 | Do candidate reports make us a consumer reporting agency (FCRA, California ICRAA)? | M9 | Lawyer |
 | Q5 | Retention schedule and the license terms for submitted code | M1, M4 | Lawyer |
 | Q6 | Build the evidence capture or company view software for cohort 2? Decide after cohort 1. | Later | Founders |
 | Q7 | Lawyer: who, cost, timing. It blocks signup (Q4, Q5). | M1, M9 | Founders |
-| Q8 | Pitch date, relative to the dry run and the calls | Section 12 | Founders |
-| P1 to P5 | Pricing details | M2 | Founders |
+| P2, P4, P5 | Pricing details | M2 | Founders |
