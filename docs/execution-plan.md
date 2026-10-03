@@ -38,7 +38,7 @@ Estimates show human time / time with Claude Code and gstack (illustrative).
 | A1 | Set up Workspace, Tally, Cal.com, Dropbox Sign, Stripe (each sign-up approved by founders) | 0.5 d | M1 | none |
 | A2 | Build the tracker sheet with the 10 tabs from technical design section 2 | 0.5 d / 1 h | A1 | none |
 | A3 | Sandbox GitHub org: Codespaces billing, $25 spending limit, no org secrets. Answers TQ2. | 0.5 d | M1 | /cso (checklist) |
-| A4 | Test Drive activity with a non-Workspace account. Answers TQ1. | 1 h | A1 | none |
+| A4 | Build the separate blind review sheet and the deadline export step (`git archive` of the submitted SHA, filed by candidate_id) | 1 h / 10 min | A2 | none |
 | A5 | Evidence runbook (`docs/ops/` via Track B): access at acceptance, SHA on the form, clone and bundle at grace end, failure table | 0.5 d / 1 h | A2 | /review |
 | A6 | Company-view runbook: report template, approval email, share settings, weekly view check, same-day unshare | 0.5 d / 1 h | A4, B9 | /review |
 | A7 | Bug menu, fresh-task bank and sandbox prep runbook, written by the founders (PRD A2) | 2 d / 3 h | A3 | none |
@@ -70,7 +70,7 @@ PRD section 7 puts one cohort at about 83 founder hours, both founders combined 
 ## Testing strategy
 
 1. The dry run (M4) is the end-to-end test of every manual flow: application, check-ins, submission, clone and SHA check, review, defense, report approval, withdrawal.
-2. TQ1 and TQ2 are tested in A3 and A4 before the dry run.
+2. TQ2 is tested in A3 before the dry run. The dry run also checks that the blind export carries no name.
 3. Cohort 2 software, if built: isolation tests on every deploy, failure-path tests from the technical design failure tables, one Playwright smoke test per page at 375 px and 1440 px.
 
 ## Runbooks to write in `docs/ops/` (Track B)

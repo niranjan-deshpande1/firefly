@@ -34,12 +34,12 @@ Pilot funnel used for every number (RECOMMENDATION, PRD v0.1): ~100 applicants, 
 | `enrollment` | candidate_id, name, email, github_user, city, years_exp, work_auth, accommodation_requested (yes/no), status (applied, accepted, building, submitted, late, shortlisted, interviewed, offer, hired, withdrawn), status_changed_at |
 | `consent_record` | candidate_id, consent_type (terms, data, report_sharing, recording, standing_pool), text_version, given_at, method, withdrawn_at |
 | `evidence` | candidate_id, repo_url, access (public or collaborator), final_sha (from form), cloned_at, sha_matched (yes/no), bundle_path, notes |
-| `evaluation` | candidate_id, reviewer, dimension (A to F), score (1 to 4), evidence_note, evidence_link, filed_at |
+| `evaluation` | candidate_id, reviewer, dimension (A to F), score (1 to 4), evidence_note, evidence_link, filed_at. **Lives in a separate review sheet** keyed only by candidate_id (DECISION, eng review 2026-10-03): a Sheet can't hide a tab from anyone who can open the file, so the blind founder gets the review sheet and never the tracker. |
 | `interview` | candidate_id, session_at, companies_present, facilitator, id_checked (yes/no, never an image), recording_consented, bug_ref, sandbox_destroyed_at |
 | `interview_score` | candidate_id, scorer, company, dimension, score, evidence_note, filed_at (before discussion) |
 | `company` | company_id, name, agreement_signed_at, flat_fee_status, role_title, salary_range, criteria (job-related only), criteria_review_note |
 | `report` | candidate_id, company_id, version, doc_link, sent_to_candidate_at, approved_at, approval_email_link, shared_with_company_at, withdrawn_at, unshared_at |
-| `view_log` | company_id, candidate_id, viewer_email, viewed_at, source (Drive activity or company says) |
+| `share_log` | company_id, candidate_id, shared_with_email, action (shared, unshared), at, by. A share log, not a view log (see 3.2). |
 | `hire` | candidate_id, company_id, first_year_salary, start_date, invoice_id, day90_checked_at |
 
 Rules (RECOMMENDATION): scores stay one row per dimension with no total column. A new report version needs a new approval. Retention follows legal F4: the hiring record (consent, scores, reasons, reports sent) for 4 years; everything else 12 months after the cohort; recordings 90 days. A lawyer confirms (PRD Q5).
@@ -54,7 +54,7 @@ Rules (RECOMMENDATION): scores stay one row per dimension with no total column. 
 
 1. At acceptance, the candidate either keeps the repo public or adds our GitHub account as a read-only collaborator. We accept the invite and log `access`.
 2. The deadline form asks for the final commit SHA.
-3. At the end of the 2-hour grace window, a founder clones every repo (`git clone --mirror`), checks the submitted SHA exists, and saves a `git bundle` to a restricted Drive folder. Never run, install or build the code on that machine.
+3. At the end of the 2-hour grace window, a founder clones every repo (`git clone --mirror`), checks the submitted SHA exists, and saves a `git bundle` to a restricted Drive folder. It also saves a `git archive` export of the submitted SHA (code only, no history, so no commit author names or emails), filed under the candidate_id. The blind reviewer gets only that export. Never run, install or build the code on that machine.
 4. Log `cloned_at`, `sha_matched` and `bundle_path`. The bundle is what gets judged.
 5. Optional, public repos only: a throwaway script reads the repo Events API (30 days, 300 events, verification.md 2.1) for push times. Its output goes to the sheet, never to this repo.
 
@@ -72,7 +72,7 @@ Rules (RECOMMENDATION): scores stay one row per dimension with no total column. 
 1. Founder writes the report from a fixed template: six scores, evidence links, no total.
 2. Email it to the candidate. The candidate approves per company by reply. Log `approved_at` and the email link.
 3. Share the doc with named company emails only, view-only, with download, print and copy turned off (Google Drive sharing settings).
-4. Check Drive activity weekly and log views (OPEN QUESTION TQ1: how well it records outside viewers).
+4. Log every share and unshare in `share_log`. RESEARCHED: Drive's Activity dashboard isn't in Business Starter and doesn't track people outside our Workspace ([Google admin help](https://support.google.com/a/answer/7573825), accessed 2026-10-03). So cohort 1 records who *could* see each report, not who opened it (DECISION, eng review 2026-10-03).
 5. Withdrawal: unshare the doc the same day and log `unshared_at`.
 
 | Failure | Handling (RECOMMENDATION) |
@@ -115,7 +115,7 @@ Prices RESEARCHED 2026-10-03 from the linked page.
 **RECOMMENDATION:**
 - **Access:** two founder accounts with MFA own the sheet, Drive and Codespaces org. The founder planting a bug works only in that finalist's Codespace. Companies get only their own docs.
 - **Per-company isolation:** one doc per company per candidate. Never put two companies on one doc. A company's own interview notes stay in its own doc (legal F1).
-- **View and audit log:** `view_log` tab plus Drive activity; every share, unshare, approval and deletion logged in the sheet.
+- **Access and audit log:** `share_log` tab; every share, unshare, approval and deletion logged in the sheet. We can't log views in cohort 1 (3.2); the PRD says so.
 - **Secrets:** none in cohort 1 beyond tool logins in a password manager. No secret ever enters a Codespace.
 - **Retention and deletion:** a monthly calendar reminder runs the three tiers in section 2. Deletion requests: delete tier-2 data within 30 days (ASSUMPTION, lawyer confirms) and tell the candidate what was kept and why (legal F4).
 - **Public repo (KNOWN: `firefly` is public):** it holds docs and, later, code with synthetic test data only. No names, emails, repo URLs, SHAs tied to people, call notes, reports, exports or Events API output. Turn on secret scanning and push protection (ASSUMPTION: free for public repos; check repo settings).
@@ -132,7 +132,7 @@ Prices RESEARCHED 2026-10-03 from the linked page.
 
 ## 8. Observability and testing
 
-**RECOMMENDATION:** the sheet is the observability. Funnel events are logged the same day (PRD FR11.1). A weekly founder check covers: repos with no new commits by day 3 (public ones visible on GitHub; others by asking), `sha_matched` for every submission, unshared docs after withdrawals, and Drive views. The M12 dry run is the end-to-end test of the whole manual flow, including one clone, one approval and one withdrawal.
+**RECOMMENDATION:** the sheet is the observability. Funnel events are logged the same day (PRD FR11.1). A weekly founder check covers: repos with no new commits by day 3 (public ones visible on GitHub; others by asking), `sha_matched` for every submission, unshared docs after withdrawals, and the share log against approvals. The M12 dry run is the end-to-end test of the whole manual flow, including one clone, one approval and one withdrawal.
 
 ## 9. Monthly cost (pilot)
 
@@ -153,7 +153,7 @@ Inputs (ASSUMPTION): 2 founders, 1 cohort, up to 8 finalists. Codespaces hours =
 
 | ID | Question | Blocks | Who answers |
 |---|---|---|---|
-| TQ1 | Does Drive activity record views by people outside our Workspace well enough to be the view log? | M9 manual log | Founders test with a non-Workspace account |
+| TQ1 | Answered (eng review): Drive can't log external views on our plan. Cohort 1 keeps a share log. | None | Closed |
 | TQ2 | Can a free GitHub org be billed for Codespaces, or does the sandbox org need a paid plan? | Sandboxing | Check GitHub billing settings |
 | TQ3 | Are the retention periods and the 30-day deletion window right? | Retention | Lawyer (PRD Q5) |
 | TQ4 | Is a candidate-approved report built on our own observations a consumer report? | M9 | Lawyer (PRD Q4) |
