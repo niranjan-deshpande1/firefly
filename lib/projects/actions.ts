@@ -9,7 +9,7 @@ import { audit } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
 import { deleteStoredFile } from "@/lib/storage";
 import { formatDate } from "@/lib/format/date";
-import { commentSchema, isBeforeDeadline, postingProblems, projectInputSchema, type ProjectInput } from "./schema";
+import { commentSchema, isBeforeDeadline, moveImageSchema, moveItem, postingProblems, projectInputSchema, type ProjectInput } from "./schema";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
@@ -32,8 +32,8 @@ function zodResult(error: z.ZodError): { ok: false; error: string; fieldErrors: 
   return { ok: false, error: error.issues[0]?.message ?? "something in the form is not valid, check each step.", fieldErrors };
 }
 
-function deadlineError(deadline: Date) {
-  return `the posting deadline passed on ${formatDate(deadline)}, changes are closed.`;
+function deadlineError(deadline: Date, timeZone: string) {
+  return `the posting deadline passed on ${formatDate(deadline, timeZone)}, changes are closed.`;
 }
 
 function revalidateProject(projectId: string, slug: string) {
@@ -52,10 +52,10 @@ export async function saveProject(raw: ProjectInput): Promise<ActionResult<{ pro
 
     const hackathon = await prisma.hackathon.findUnique({
       where: { id: input.hackathonId },
-      select: { id: true, slug: true, title: true, submissionDeadline: true },
+      select: { id: true, slug: true, title: true, submissionDeadline: true, timeZone: true },
     });
     if (!hackathon) return { ok: false, error: "that hackathon no longer exists, open the hackathon list." };
-    if (!isBeforeDeadline(hackathon.submissionDeadline)) return { ok: false, error: deadlineError(hackathon.submissionDeadline) };
+    if (!isBeforeDeadline(hackathon.submissionDeadline)) return { ok: false, error: deadlineError(hackathon.submissionDeadline, hackathon.timeZone) };
 
     let existing: { id: string; status: string; submittedAt: Date | null; hackathonId: string } | null = null;
     if (input.projectId) {
@@ -155,17 +155,44 @@ export async function removeProjectImage(raw: { id: string }): Promise<ActionRes
     const user = await getCurrentUser();
     const image = await prisma.projectImage.findUnique({
       where: { id: parsed.data.id },
-      select: { id: true, url: true, projectId: true, project: { select: { hackathon: { select: { slug: true, submissionDeadline: true } } } } },
+      select: { id: true, url: true, projectId: true, project: { select: { hackathon: { select: { slug: true, submissionDeadline: true, timeZone: true } } } } },
     });
     if (!image) return { ok: false, error: "that image is already gone, reload the page." };
     await authorize(user, "project.edit", { projectId: image.projectId });
-    const { slug, submissionDeadline } = image.project.hackathon;
-    if (!isBeforeDeadline(submissionDeadline)) return { ok: false, error: deadlineError(submissionDeadline) };
+    const { slug, submissionDeadline, timeZone } = image.project.hackathon;
+    if (!isBeforeDeadline(submissionDeadline)) return { ok: false, error: deadlineError(submissionDeadline, timeZone) };
     await prisma.projectImage.delete({ where: { id: image.id } });
     const fileId = image.url.match(/^\/api\/files\/([^/?#]+)$/)?.[1];
     if (fileId) await deleteStoredFile(fileId).catch(() => undefined); // the row is gone either way; a missing file is fine
     revalidateProject(image.projectId, slug);
     return { ok: true };
+  });
+}
+
+/** Moves one image a place up or down. Rewrites every sortOrder as 0..n-1 in one transaction, so the first is the cover. */
+export async function moveProjectImage(raw: { id: string; direction: "up" | "down" }): Promise<ActionResult<{ ids: string[] }>> {
+  return guarded(async () => {
+    const parsed = moveImageSchema.safeParse(raw);
+    if (!parsed.success) return zodResult(parsed.error);
+    const user = await getCurrentUser();
+    const image = await prisma.projectImage.findUnique({
+      where: { id: parsed.data.id },
+      select: { projectId: true, project: { select: { hackathon: { select: { slug: true, submissionDeadline: true, timeZone: true } } } } },
+    });
+    if (!image) return { ok: false, error: "that image is gone, reload the page." };
+    await authorize(user, "project.edit", { projectId: image.projectId });
+    const { slug, submissionDeadline, timeZone } = image.project.hackathon;
+    if (!isBeforeDeadline(submissionDeadline)) return { ok: false, error: deadlineError(submissionDeadline, timeZone) };
+    const ids = await prisma.$transaction(async (tx) => {
+      const rows = await tx.projectImage.findMany({ where: { projectId: image.projectId }, orderBy: [{ sortOrder: "asc" }, { id: "asc" }], select: { id: true } });
+      const order = moveItem(rows.map((r) => r.id), rows.findIndex((r) => r.id === parsed.data.id), parsed.data.direction);
+      if (!order) return null;
+      for (const [sortOrder, id] of order.entries()) await tx.projectImage.update({ where: { id }, data: { sortOrder } });
+      return order;
+    });
+    if (!ids) return { ok: false, error: `that image is already ${parsed.data.direction === "up" ? "first" : "last"}, nothing to move.` };
+    revalidateProject(image.projectId, slug);
+    return { ok: true, data: { ids } };
   });
 }
 
@@ -199,6 +226,15 @@ export async function postComment(raw: { projectId: string; body: string }): Pro
 
 /** Organizers of the project's hackathon and admins can hide a comment. Audited as COMMENT_HIDDEN. */
 export async function hideComment(raw: { id: string }): Promise<ActionResult> {
+  return setCommentHidden(raw, true);
+}
+
+/** Same permission as hiding; shows the comment to everyone again. Audited as COMMENT_UNHIDDEN. */
+export async function unhideComment(raw: { id: string }): Promise<ActionResult> {
+  return setCommentHidden(raw, false);
+}
+
+async function setCommentHidden(raw: { id: string }, hidden: boolean): Promise<ActionResult> {
   return guarded(async () => {
     const parsed = idSchema.safeParse(raw);
     if (!parsed.success) return zodResult(parsed.error);
@@ -206,11 +242,11 @@ export async function hideComment(raw: { id: string }): Promise<ActionResult> {
     const comment = await prisma.comment.findUnique({ where: { id: parsed.data.id }, select: { id: true, projectId: true, authorId: true, hidden: true } });
     if (!comment) return { ok: false, error: "that comment no longer exists, reload the page." };
     await authorize(user, "comment.moderate", { projectId: comment.projectId });
-    if (!comment.hidden) {
-      await prisma.comment.update({ where: { id: comment.id }, data: { hidden: true, hiddenById: user!.id } });
+    if (comment.hidden !== hidden) {
+      await prisma.comment.update({ where: { id: comment.id }, data: { hidden, hiddenById: hidden ? user!.id : null } });
       await audit({
         actorId: user!.id,
-        action: "COMMENT_HIDDEN",
+        action: hidden ? "COMMENT_HIDDEN" : "COMMENT_UNHIDDEN",
         resourceType: "Comment",
         resourceId: comment.id,
         subjectUserId: comment.authorId,

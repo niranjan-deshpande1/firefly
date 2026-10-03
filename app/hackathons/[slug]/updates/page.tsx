@@ -1,6 +1,5 @@
 import { EmptyState, Markdown, TextLink, Time } from "@/components/ui";
 import { prisma } from "@/lib/db";
-import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import { getHackathonForView } from "@/lib/discovery/queries";
 
 // Archetype: stream. Updates tab: organizer posts, newest first.
@@ -26,7 +25,7 @@ export default async function HackathonUpdatesPage({ params }: PageProps<"/hacka
               <article aria-labelledby={`update-${u.id}`} className="flex flex-col gap-3">
                 <h3 id={`update-${u.id}`} className="type-display-4">{u.title}</h3>
                 <p className="type-body-s text-secondary">
-                  <Time value={u.publishedAt} format="datetime" timeZone={DEFAULT_TIME_ZONE} />
+                  <Time value={u.publishedAt} format="datetime" timeZone={h.timeZone} />
                 </p>
                 <Markdown className="measure">{u.body}</Markdown>
               </article>

@@ -119,7 +119,7 @@ export async function buildExport(userId: string) {
     // Evidence comes with projects the person owns; team projects they joined list the project only.
     prisma.project.findMany({
       where: { ownerId: userId },
-      include: { images: true, transcripts: true, decisionLog: true, commits: true, repoSnapshots: true },
+      include: { images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] }, transcripts: true, decisionLog: true, commits: true, repoSnapshots: true },
     }),
   ]);
   const teamProjects = await prisma.project.findMany({

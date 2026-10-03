@@ -19,6 +19,20 @@ const ACTION_LABELS: Record<string, string> = {
   SETTINGS_CHANGED: "settings changed",
   COMMENT_HIDDEN: "comment hidden",
   RETENTION_RUN: "old evidence deleted",
+  COMMENT_UNHIDDEN: "comment shown again",
+  HACKATHON_CREATED: "hackathon created",
+  HACKATHON_UPDATED: "hackathon edited",
+  HACKATHON_STATUS_CHANGED: "hackathon status changed",
+  COHORT_CONFIG_CHANGED: "cohort settings changed",
+  HACKATHON_ITEM_SAVED: "prize, schedule, criterion or resource saved",
+  HACKATHON_ITEM_REMOVED: "prize, schedule, criterion or resource removed",
+  UPDATE_POSTED: "update posted",
+  JUDGE_ASSIGNED: "judge assigned",
+  JUDGE_REMOVED: "judge removed",
+  REVIEWER_ASSIGNED: "reviewer assigned",
+  REVIEWER_REMOVED: "reviewer removed",
+  WINNER_AWARDED: "winner awarded",
+  WINNER_REMOVED: "award removed",
 };
 
 export function actionLabel(action: string): string {

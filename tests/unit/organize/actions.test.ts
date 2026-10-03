@@ -9,10 +9,12 @@ const db = vi.hoisted(() => ({
   reviewerAssignment: { create: vi.fn() },
 }));
 const sendEmail = vi.hoisted(() => vi.fn());
+const audit = vi.hoisted(() => vi.fn());
 const currentUser = vi.hoisted(() => ({ value: { id: "o1", role: "ORGANIZER" } as { id: string; role: string } | null }));
 
 vi.mock("@/lib/db", () => ({ prisma: db }));
 vi.mock("@/lib/email", () => ({ sendEmail }));
+vi.mock("@/lib/audit", () => ({ audit }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: async () => currentUser.value }));
 vi.mock("@/lib/permissions", async () => {
@@ -56,6 +58,7 @@ describe("postUpdate", () => {
     expect(r).toEqual({ ok: true, message: "update posted, 2 emails logged" });
     expect(sendEmail).toHaveBeenCalledTimes(2);
     expect(sendEmail).toHaveBeenCalledWith("a@example.com", "hackathonUpdate", { hackathon: "Spring Build", title: "kickoff moved", body: "now at 10:00" }, expect.objectContaining({ updateId: "u1" }));
+    expect(audit).toHaveBeenCalledWith({ actorId: "o1", action: "UPDATE_POSTED", resourceType: "Hackathon", resourceId: "h1", metadata: { updateId: "u1", emails: 2 } });
   });
 
   it("refuses an organizer who does not run the hackathon", async () => {
@@ -63,6 +66,7 @@ describe("postUpdate", () => {
     const r = await postUpdate({ ok: true }, form({ hackathonId: "h1", title: "t", body: "b" }));
     expect(r.ok).toBe(false);
     expect(db.update.create).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled();
   });
 
   it("refuses a reviewer outright", async () => {
@@ -91,8 +95,10 @@ describe("assignReviewer", () => {
   it("assigns a reviewer to a project with room", async () => {
     db.project.findFirst.mockResolvedValue({ ownerId: "c1", team: null, reviewerAssignments: [{ reviewerId: "r1" }] });
     db.user.findUnique.mockResolvedValue({ role: "REVIEWER" });
+    db.reviewerAssignment.create.mockResolvedValue({ id: "ra1" });
     const r = await assignReviewer({ ok: true }, form({ hackathonId: "h1", projectId: "p1", reviewerId: "r2" }));
     expect(r).toEqual({ ok: true, message: "reviewer assigned" });
-    expect(db.reviewerAssignment.create).toHaveBeenCalledWith({ data: { projectId: "p1", reviewerId: "r2" } });
+    expect(db.reviewerAssignment.create).toHaveBeenCalledWith({ data: { projectId: "p1", reviewerId: "r2" }, select: { id: true } });
+    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ action: "REVIEWER_ASSIGNED", resourceId: "h1", metadata: { assignmentId: "ra1", projectId: "p1", reviewerId: "r2" } }));
   });
 });

@@ -3,7 +3,8 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { prisma, type AuditAction } from "@/lib/db";
+import { audit } from "@/lib/audit";
 import type { CurrentUser } from "@/lib/auth";
 import { authorize, authorizePage, ForbiddenError, requireRole, requireRoleForAction, type Action } from "@/lib/permissions";
 import type { ActionResult } from "./schemas";
@@ -51,4 +52,9 @@ export function revalidateHackathon(slug: string) {
 /** Unique-constraint violation (Prisma P2002), e.g. a slug taken between check and write. */
 export function isUniqueViolation(e: unknown): boolean {
   return typeof e === "object" && e !== null && "code" in e && (e as { code: unknown }).code === "P2002";
+}
+
+/** Audit row for an organizer change to a hackathon. Keep metadata to ids and changed field names. */
+export function auditHackathon(actorId: string, action: AuditAction, hackathonId: string, metadata?: Record<string, unknown>) {
+  return audit({ actorId, action, resourceType: "Hackathon", resourceId: hackathonId, metadata });
 }

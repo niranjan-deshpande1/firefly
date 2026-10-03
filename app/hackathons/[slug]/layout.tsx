@@ -2,7 +2,7 @@ import NextLink from "next/link";
 import { Button, PageHeader, StatusPill } from "@/components/ui";
 import { HackathonTabs } from "@/components/discovery/hackathon-tabs";
 import { prisma } from "@/lib/db";
-import { DEFAULT_TIME_ZONE, formatDateTime } from "@/lib/format/date";
+import { formatDateTime } from "@/lib/format/date";
 import { getHackathonForView } from "@/lib/discovery/queries";
 import { dateRange, formatLabel, isRegistrationOpen, statusLabel, typeLabel } from "@/lib/discovery/labels";
 
@@ -10,7 +10,7 @@ import { dateRange, formatLabel, isRegistrationOpen, statusLabel, typeLabel } fr
 export default async function HackathonLayout({ children, params }: LayoutProps<"/hackathons/[slug]">) {
   const { slug } = await params;
   const { hackathon: h, user } = await getHackathonForView(slug);
-  const tz = DEFAULT_TIME_ZONE;
+  const tz = h.timeZone;
 
   const registered =
     user?.role === "CANDIDATE"

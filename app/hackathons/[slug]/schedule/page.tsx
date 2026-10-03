@@ -1,6 +1,5 @@
 import { StatusPill, Time } from "@/components/ui";
 import { prisma } from "@/lib/db";
-import { DEFAULT_TIME_ZONE } from "@/lib/format/date";
 import { getHackathonForView } from "@/lib/discovery/queries";
 import { buildSchedule, KIND_LABELS } from "@/lib/discovery/schedule";
 import { safeUrl } from "@/lib/discovery/labels";
@@ -11,7 +10,7 @@ export default async function HackathonSchedulePage({ params }: PageProps<"/hack
   const { hackathon: h } = await getHackathonForView(slug);
   const items = await prisma.scheduleItem.findMany({ where: { hackathonId: h.id } });
   const entries = buildSchedule({ items, submissionDeadline: h.submissionDeadline, cohort: h.cohortConfig });
-  const tz = DEFAULT_TIME_ZONE;
+  const tz = h.timeZone;
 
   return (
     <section aria-labelledby="schedule-heading" className="flex flex-col gap-6">

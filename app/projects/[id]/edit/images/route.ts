@@ -33,8 +33,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   try {
     const stored = await saveFile(user!.id, "IMAGE", file);
+    // After a removal the count can repeat an existing sortOrder, so append after the current last image.
+    const last = await prisma.projectImage.findFirst({ where: { projectId: id }, orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
     const image = await prisma.projectImage.create({
-      data: { projectId: id, url: fileUrl(stored.id), alt: meta.data.alt, sortOrder: project._count.images },
+      data: { projectId: id, url: fileUrl(stored.id), alt: meta.data.alt, sortOrder: (last?.sortOrder ?? -1) + 1 },
       select: { id: true, url: true, alt: true },
     });
     revalidatePath(`/projects/${id}`);

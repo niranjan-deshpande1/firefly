@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button, Field, Textarea, useToast } from "@/components/ui";
-import { hideComment, postComment } from "@/lib/projects/actions";
+import { hideComment, postComment, unhideComment } from "@/lib/projects/actions";
 import { LIMITS } from "@/lib/projects/schema";
 
 export function CommentForm({ projectId }: { projectId: string }) {
@@ -47,7 +47,8 @@ export function CommentForm({ projectId }: { projectId: string }) {
   );
 }
 
-export function HideCommentButton({ commentId }: { commentId: string }) {
+/** Hides a comment, or shows a hidden one again. Organizers of the hackathon and admins only. */
+export function HideCommentButton({ commentId, hidden = false }: { commentId: string; hidden?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const toast = useToast();
@@ -56,16 +57,17 @@ export function HideCommentButton({ commentId }: { commentId: string }) {
       <Button
         variant="ghost"
         loading={pending}
-        loadingLabel="hiding comment"
+        loadingLabel={hidden ? "showing comment" : "hiding comment"}
         onClick={() =>
           start(async () => {
-            const res = await hideComment({ id: commentId });
-            if (res.ok) toast("comment hidden");
+            setError(null);
+            const res = await (hidden ? unhideComment : hideComment)({ id: commentId });
+            if (res.ok) toast(hidden ? "comment shown again" : "comment hidden");
             else setError(res.error);
           })
         }
       >
-        hide comment
+        {hidden ? "show comment" : "hide comment"}
       </Button>
       {error ? (
         <p role="alert" className="type-body-s text-error">

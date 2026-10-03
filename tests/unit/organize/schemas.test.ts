@@ -21,7 +21,7 @@ import {
 const LA = "America/Los_Angeles";
 
 describe("basics", () => {
-  const base = { title: "Spring Build", slug: "spring-build", type: "OPEN", tagline: "build a tool", description: "" };
+  const base = { title: "Spring Build", slug: "spring-build", type: "OPEN", tagline: "build a tool", description: "", timeZone: "America/Los_Angeles" };
 
   it("accepts a valid slug and rejects bad ones beside the slug field", () => {
     expect(basicsSchema.safeParse(base).success).toBe(true);

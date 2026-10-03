@@ -19,6 +19,7 @@ const cardSelect = {
   startsAt: true,
   endsAt: true,
   submissionDeadline: true,
+  timeZone: true,
 } as const;
 
 export type HackathonCard = {
@@ -34,6 +35,7 @@ export type HackathonCard = {
   startsAt: Date;
   endsAt: Date;
   submissionDeadline: Date;
+  timeZone: string;
 };
 
 type CardRow = Omit<HackathonCard, "themes"> & { themes: string };

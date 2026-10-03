@@ -20,10 +20,10 @@ export async function getProject(id: string, viewerId: string | null) {
   const p = await prisma.project.findUnique({
     where: { id },
     include: {
-      hackathon: { select: { id: true, slug: true, title: true, type: true, status: true, submissionDeadline: true } },
+      hackathon: { select: { id: true, slug: true, title: true, type: true, status: true, submissionDeadline: true, timeZone: true } },
       owner: { select: personSelect },
       team: { select: { id: true, name: true, members: { select: { user: { select: personSelect } }, orderBy: { joinedAt: "asc" } } } },
-      images: { orderBy: { sortOrder: "asc" } },
+      images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
       winners: { select: { id: true, prize: { select: { name: true, sortOrder: true } } } },
       comments: { orderBy: { createdAt: "asc" }, include: { author: { select: personSelect } } },
       likes: viewerId ? { where: { userId: viewerId }, select: { id: true } } : false,
@@ -56,7 +56,7 @@ export type ProjectView = NonNullable<Awaited<ReturnType<typeof getProject>>>;
 export async function getHackathonBySlug(slug: string) {
   return prisma.hackathon.findUnique({
     where: { slug },
-    select: { id: true, slug: true, title: true, type: true, status: true, submissionDeadline: true, organizerId: true },
+    select: { id: true, slug: true, title: true, type: true, status: true, submissionDeadline: true, timeZone: true, organizerId: true },
   });
 }
 
@@ -68,7 +68,7 @@ export async function getGallery(hackathonId: string) {
     include: {
       owner: { select: personSelect },
       team: { select: { name: true, members: { select: { user: { select: personSelect } } } } },
-      images: { orderBy: { sortOrder: "asc" }, take: 1 },
+      images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }], take: 1 },
       winners: { select: { prize: { select: { name: true, sortOrder: true } } } },
     },
   });
@@ -112,8 +112,8 @@ export async function getProjectForEdit(id: string) {
   const p = await prisma.project.findUnique({
     where: { id },
     include: {
-      hackathon: { select: { id: true, slug: true, title: true, submissionDeadline: true } },
-      images: { orderBy: { sortOrder: "asc" } },
+      hackathon: { select: { id: true, slug: true, title: true, submissionDeadline: true, timeZone: true } },
+      images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
     },
   });
   if (!p) return null;

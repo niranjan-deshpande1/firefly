@@ -46,10 +46,27 @@ export function zonedLocalToUtc(local: string, zone: string): Date | null {
   return new Date(guess);
 }
 
-/** Every IANA zone the runtime knows, plus UTC, for the zone picker. */
-export function timeZoneList(): string[] {
-  const zones = Intl.supportedValuesOf("timeZone");
-  return zones.includes("UTC") ? zones : [...zones, "UTC"];
+// ponytail: a short curated list; the server accepts any IANA zone, so widen this when organizers ask.
+export const COMMON_TIME_ZONES = [
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "America/Sao_Paulo",
+  "Europe/London",
+  "Europe/Berlin",
+  "Africa/Lagos",
+  "Asia/Kolkata",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Australia/Sydney",
+  "UTC",
+] as const;
+
+/** Zones for the hackathon time zone picker: the curated list, plus `current` when it is valid and not in it. */
+export function zoneOptions(current?: string | null): string[] {
+  const list: string[] = [...COMMON_TIME_ZONES];
+  return current && isValidTimeZone(current) && !list.includes(current) ? [current, ...list] : list;
 }
 
 /** UTC instant -> "2026-10-03T09:30" in `zone`, for datetime-local inputs. */

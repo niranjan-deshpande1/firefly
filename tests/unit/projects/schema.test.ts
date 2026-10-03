@@ -3,6 +3,7 @@ import {
   allTags,
   commentSchema,
   filterByBuiltWith,
+  moveItem,
   galleryIsOpen,
   isBeforeDeadline,
   isHttpUrl,
@@ -123,5 +124,21 @@ describe("commentSchema", () => {
     expect(commentSchema.safeParse({ projectId: "p", body: "   " }).success).toBe(false);
     expect(commentSchema.parse({ projectId: "p", body: " nice work " }).body).toBe("nice work");
     expect(commentSchema.safeParse({ projectId: "p", body: "x".repeat(2001) }).success).toBe(false);
+  });
+});
+
+describe("moveItem", () => {
+  it("swaps an item with its neighbour", () => {
+    expect(moveItem(["a", "b", "c"], 1, "up")).toEqual(["b", "a", "c"]);
+    expect(moveItem(["a", "b", "c"], 1, "down")).toEqual(["a", "c", "b"]);
+  });
+
+  it("refuses to move past either end or a missing index, and never mutates the input", () => {
+    const list = ["a", "b"];
+    expect(moveItem(list, 0, "up")).toBeNull();
+    expect(moveItem(list, 1, "down")).toBeNull();
+    expect(moveItem(list, -1, "down")).toBeNull();
+    expect(moveItem(list, 0, "down")).toEqual(["b", "a"]);
+    expect(list).toEqual(["a", "b"]);
   });
 });

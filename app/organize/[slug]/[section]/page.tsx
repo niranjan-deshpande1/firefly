@@ -31,7 +31,7 @@ export default async function ConsoleSectionPage({ params, searchParams }: PageP
   if (config.only && config.only !== hackathon.type) notFound();
   if (section === "winners") await authorizePage(user, "winner.pick", { hackathonId: hackathon.id });
 
-  const ctx = { hackathonId: hackathon.id, slug, editId: typeof edit === "string" ? edit : undefined };
+  const ctx = { hackathonId: hackathon.id, slug, timeZone: hackathon.timeZone, editId: typeof edit === "string" ? edit : undefined };
   const body: Record<string, () => ReactNode> = {
     prizes: () => <PrizesSection ctx={ctx} />,
     schedule: () => <ScheduleSection ctx={ctx} />,

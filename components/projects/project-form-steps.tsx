@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Button, Checkbox, Chip, Field, Input, Markdown, Tab, TabList, TabPanel, Tabs, Textarea, TextLink, useToast } from "@/components/ui";
-import { removeProjectImage } from "@/lib/projects/actions";
+import { moveProjectImage, removeProjectImage } from "@/lib/projects/actions";
 import { LIMITS, parseBuiltWith } from "@/lib/projects/schema";
 import { LIMITS as FILE_LIMITS } from "@/lib/storage/validate";
 import type { LinkItem } from "@/lib/db/json";
@@ -136,22 +136,45 @@ export function MediaStep({ form, update, fieldErrors, projectId, images: initia
     });
   }
 
+  function move(imageId: string, direction: "up" | "down") {
+    setError(undefined);
+    start(async () => {
+      const res = await moveProjectImage({ id: imageId, direction });
+      if (!res.ok) return setError(res.error);
+      const order = res.data?.ids ?? [];
+      setImages((prev) => order.map((id) => prev.find((i) => i.id === id)).filter((i) => i !== undefined));
+      toast(direction === "up" ? "image moved up" : "image moved down");
+      router.refresh();
+    });
+  }
+
   return (
     <>
       {images.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-4 tablet:grid-cols-2">
-          {images.map((img) => (
+        <ol className="grid grid-cols-1 gap-4 tablet:grid-cols-2">
+          {images.map((img, i) => (
             <li key={img.id} className="flex flex-col gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.url} alt={img.alt} className="h-auto w-full" />
-              <div>
+              <p className="type-body-s text-secondary">{i === 0 ? "image 1, the cover" : `image ${i + 1}`}</p>
+              <div className="flex flex-wrap gap-2">
+                {i > 0 ? (
+                  <Button variant="ghost" onClick={() => move(img.id, "up")} disabled={pending} aria-label={`move image ${i + 1} up`}>
+                    move up
+                  </Button>
+                ) : null}
+                {i < images.length - 1 ? (
+                  <Button variant="ghost" onClick={() => move(img.id, "down")} disabled={pending} aria-label={`move image ${i + 1} down`}>
+                    move down
+                  </Button>
+                ) : null}
                 <Button variant="ghost" onClick={() => remove(img.id)} disabled={pending} aria-label={`remove image: ${img.alt}`}>
                   remove image
                 </Button>
               </div>
             </li>
           ))}
-        </ul>
+        </ol>
       ) : (
         <p className="type-body text-secondary">no images yet. the first image leads your project page and gallery card.</p>
       )}

@@ -94,6 +94,17 @@ export const commentSchema = z.object({
     .max(LIMITS.comment, `comments are at most ${LIMITS.comment} characters, shorten it.`),
 });
 
+export const moveImageSchema = z.object({ id: z.string().min(1).max(64), direction: z.enum(["up", "down"]) });
+
+/** The list with the item at `index` swapped one place up or down; null when it is already at that end or missing. */
+export function moveItem<T>(list: readonly T[], index: number, direction: "up" | "down"): T[] | null {
+  const target = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || index >= list.length || target < 0 || target >= list.length) return null;
+  const next = [...list];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
 export const imageMetaSchema = z.object({
   projectId: z.string().min(1),
   alt: z.string().trim().min(1, "describe the image so screen reader users get it too.").max(LIMITS.alt),
