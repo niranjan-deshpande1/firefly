@@ -11,6 +11,8 @@ const SECURITY_HEADERS = [
 // ponytail: no CSP yet; add a nonce-based one before a public deploy.
 const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
+  // The SQLite demo database ships with every server function (see lib/db).
+  outputFileTracingIncludes: { "/**": ["./prisma/demo.db"] },
   headers: async () => [{ source: "/:path*", headers: SECURITY_HEADERS }],
 };
 

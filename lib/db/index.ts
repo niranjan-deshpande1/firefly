@@ -1,5 +1,15 @@
 import "server-only";
 import { PrismaClient } from "@prisma/client";
+import { copyFileSync, existsSync } from "node:fs";
+import path from "node:path";
+
+// ponytail: Vercel quick demo without a hosted database: copy the bundled seeded SQLite file to /tmp
+// (the only writable dir). Changes last only as long as the serverless instance; use Postgres for real data.
+if (process.env.VERCEL && !/^postgres(ql)?:/.test(process.env.DATABASE_URL ?? "")) {
+  const tmp = "/tmp/demo.db";
+  if (!existsSync(tmp)) copyFileSync(path.join(process.cwd(), "prisma", "demo.db"), tmp);
+  process.env.DATABASE_URL = `file:${tmp}`;
+}
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

@@ -8,7 +8,9 @@ import type { Provider } from "next-auth/providers";
 
 export const isGitHubAuthEnabled = () => Boolean(process.env.GITHUB_ID && process.env.GITHUB_SECRET);
 // Demo sign-in lets anyone act as any seeded person, so it switches off whenever real GitHub sign-in is configured.
-export const isDemoMode = () => process.env.DEMO_MODE === "true" && !isGitHubAuthEnabled();
+// On Vercel with no DEMO_MODE set, the public demo defaults to on (founder decision, fictional data only).
+export const isDemoMode = () =>
+  (process.env.DEMO_MODE === "true" || (!!process.env.VERCEL && process.env.DEMO_MODE === undefined)) && !isGitHubAuthEnabled();
 // Seeded people only: a user with a linked provider account is never offered or accepted by demo sign-in.
 export const DEMO_USER_WHERE = { accounts: { none: {} } } as const;
 

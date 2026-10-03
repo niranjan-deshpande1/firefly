@@ -12,8 +12,10 @@ const direct = process.env.DATABASE_URL_UNPOOLED || url;
 const run = (cmd, env = {}) => execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
 
 if (!/^postgres(ql)?:/.test(url)) {
-  console.error("DATABASE_URL must be a Postgres connection string on Vercel. Add a Neon database in the Vercel Storage tab, then redeploy.");
-  process.exit(1);
+  // No hosted database: ship the bundled seeded SQLite demo (lib/db copies it to /tmp at runtime).
+  console.log("no Postgres DATABASE_URL, building the SQLite demo");
+  run("npx next build", { DATABASE_URL: "file:./demo.db" });
+  process.exit(0);
 }
 
 const schema = readFileSync("prisma/schema.prisma", "utf8").replace(/provider\s*=\s*"sqlite"/, 'provider = "postgresql"');
