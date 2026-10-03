@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Personal Claude Code files (each founder keeps their own)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Dependencies and builds (Phase 6)
+node_modules
+dist/
+/build/
+.next/
+__pycache__/
+*.pyc
+
+# App
+/storage/
+/prisma/*.db
+/prisma/*.db-journal
+/test-results/
+/playwright-report/
+/coverage/
+*.tsbuildinfo
+next-env.d.ts
+/.claude/worktrees/
+/docs/build/screenshots/design-review/
+/prisma/postgres/
