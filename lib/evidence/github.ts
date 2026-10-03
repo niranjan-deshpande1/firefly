@@ -2,6 +2,7 @@
 
 export const REFRESH_COOLDOWN_MS = 10 * 60 * 1000;
 const COMMIT_PAGE = 100;
+const MAX_COMMIT_PAGES = 5; // ponytail: 500 commits covers a two-week build; older history is left out.
 const DETAIL_LIMIT = 20; // ponytail: per-commit stats cost one request each; 20 keeps an unauthenticated refresh under the 60/hour limit.
 const NAME = /^[A-Za-z0-9_.-]{1,100}$/;
 
@@ -40,12 +41,25 @@ export type FetchedCommit = {
 
 export type FetchedRepo = { defaultBranch: string; headSha: string | null; commits: FetchedCommit[] };
 
+/** Reads up to MAX_COMMIT_PAGES pages, stopping at the first short page. A failed page throws like any other API failure. */
+export async function listCommitPages<T>(fetchPage: (page: number) => Promise<T[]>): Promise<T[]> {
+  const all: T[] = [];
+  for (let page = 1; page <= MAX_COMMIT_PAGES; page++) {
+    const batch = await fetchPage(page);
+    all.push(...batch);
+    if (batch.length < COMMIT_PAGE) break;
+  }
+  return all;
+}
+
 /** Reads public repo metadata and recent commits. Throws on any API failure; the caller keeps existing data. */
 export async function fetchRepo(owner: string, name: string): Promise<FetchedRepo> {
   const { Octokit } = await import("@octokit/rest");
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN || undefined, request: { timeout: 10_000 } });
   const { data: repo } = await octokit.rest.repos.get({ owner, repo: name });
-  const { data: list } = await octokit.rest.repos.listCommits({ owner, repo: name, sha: repo.default_branch, per_page: COMMIT_PAGE });
+  const list = await listCommitPages((page) =>
+    octokit.rest.repos.listCommits({ owner, repo: name, sha: repo.default_branch, per_page: COMMIT_PAGE, page }).then((r) => r.data),
+  );
   const details = await Promise.all(
     list.slice(0, DETAIL_LIMIT).map((c) =>
       octokit.rest.repos

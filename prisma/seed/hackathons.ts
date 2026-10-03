@@ -3,6 +3,8 @@
 // The brief asks for 3 hackathons. A fourth, "Winter Builders Cohort" (UPCOMING, HIRING_COHORT),
 // exists only so demo step 2 has a cohort Northwind can enroll in: Founding Engineer is already
 // enrolled in Fall Builders Cohort, and `enrollRoleInCohort` refuses OPEN hackathons.
+// A fifth, "Summer Builders Cohort" (COMPLETED, HIRING_COHORT), is the past cohort: its finishers
+// fill the talent pool and Lina's verified project shows the verified badge on a profile.
 import { CANDIDATES, STAFF, type CandidateKey } from "./people";
 import { daysFromNow, json, prisma } from "./util";
 
@@ -11,6 +13,7 @@ export const HACKATHONS = {
   open: { id: "hack-open", slug: "open-build-weekend", title: "Open Build Weekend" },
   jam: { id: "hack-jam", slug: "tools-for-makers-jam", title: "Tools for Makers Jam" },
   winter: { id: "hack-winter", slug: "winter-builders-cohort", title: "Winter Builders Cohort" },
+  summer: { id: "hack-summer", slug: "summer-builders-cohort", title: "Summer Builders Cohort" },
 } as const;
 
 // Fall Builders Cohort timeline: a 2-week build that ended 6 days ago; the defense window is open now.
@@ -26,6 +29,19 @@ export const FALL = {
   endsAt: daysFromNow(7, 6),
 };
 
+// Summer Builders Cohort: a past cohort, from just after Open Build Weekend to the week before Fall started.
+export const SUMMER = {
+  registrationOpensAt: daysFromNow(-55, 16),
+  startsAt: daysFromNow(-39, 16),
+  week1Due: daysFromNow(-32, 6),
+  week2Due: daysFromNow(-25, 6),
+  submissionDeadline: daysFromNow(-25, 6),
+  defenseStart: daysFromNow(-24, 16),
+  defenseEnd: daysFromNow(-22, 1),
+  resultsAt: daysFromNow(-21, 17),
+  endsAt: daysFromNow(-21, 18),
+};
+
 export const OPEN = {
   registrationOpensAt: daysFromNow(-60, 16),
   startsAt: daysFromNow(-45, 16),
@@ -35,6 +51,8 @@ export const OPEN = {
 
 export const FALL_MEMBERS: CandidateKey[] = ["maya", "aisha", "ben", "camila", "daniel", "elena", "felix", "grace", "hugo", "isabel", "jamal", "kenji"];
 export const OPEN_MEMBERS: CandidateKey[] = ["maya", "theo", "lina", "marco", "nadia", "omar", "quinn", "ruth", "sofia", "tariq", "vera"];
+// Theo finished here too, so he is eligible for the talent pool (demo step 8); Lina and Nadia opted in.
+export const SUMMER_MEMBERS: CandidateKey[] = ["theo", "lina", "nadia"];
 const JAM_MEMBERS: CandidateKey[] = ["will", "yara", "theo", "ruth", "jamal"];
 
 export const TEAMS = {
@@ -57,7 +75,7 @@ const COHORT_RULES = `1. Work solo. Teams are not allowed in hiring cohorts.
 
 const COHORT_ELIGIBILITY = "Open to anyone 18 or older who can attend a defense interview in Seattle or by verified video.";
 
-async function cohortHackathon(h: (typeof HACKATHONS)["fall" | "winter"], status: string, t: { registrationOpensAt: Date; startsAt: Date; submissionDeadline: Date; endsAt: Date }, tagline: string) {
+async function cohortHackathon(h: (typeof HACKATHONS)["fall" | "winter" | "summer"], status: string, t: { registrationOpensAt: Date; startsAt: Date; submissionDeadline: Date; endsAt: Date }, tagline: string) {
   await prisma.hackathon.create({
     data: {
       ...h,
@@ -145,6 +163,34 @@ export async function seedHackathons() {
       { hackathonId: HACKATHONS.winter.id, kind: "KICKOFF", title: "kickoff", startsAt: winter.startsAt },
       { hackathonId: HACKATHONS.winter.id, kind: "DEADLINE", title: "projects due", startsAt: winter.submissionDeadline },
       { hackathonId: HACKATHONS.winter.id, kind: "DEFENSE", title: "defense interviews", startsAt: daysFromNow(40, 16), endsAt: daysFromNow(48, 1) },
+    ],
+  });
+
+  // ---------- Summer Builders Cohort (HIRING_COHORT, COMPLETED) ----------
+  await cohortHackathon(HACKATHONS.summer, "COMPLETED", SUMMER, "the summer two-week hiring cohort, results are out");
+  await prisma.cohortConfig.create({
+    data: {
+      hackathonId: HACKATHONS.summer.id,
+      prompt: "Build a tool that helps a neighborhood volunteer group plan its week. You choose which part of the problem to solve.",
+      checkInSchedule: json([
+        { week: 1, dueAt: SUMMER.week1Due.toISOString(), prompt: "who is your user, what is in scope, and what did you cut?" },
+        { week: 2, dueAt: SUMMER.week2Due.toISOString(), prompt: "what changed since week 1, and where did AI help or get in the way?" },
+      ]),
+      officeHours: json([]),
+      defenseWindowStart: SUMMER.defenseStart,
+      defenseWindowEnd: SUMMER.defenseEnd,
+      resultsAt: SUMMER.resultsAt,
+      suggestedHours: 20,
+    },
+  });
+  await prisma.scheduleItem.createMany({
+    data: [
+      { hackathonId: HACKATHONS.summer.id, kind: "KICKOFF", title: "kickoff", startsAt: SUMMER.startsAt },
+      { hackathonId: HACKATHONS.summer.id, kind: "CHECK_IN", title: "week 1 check-in due", startsAt: SUMMER.week1Due },
+      { hackathonId: HACKATHONS.summer.id, kind: "CHECK_IN", title: "week 2 check-in due", startsAt: SUMMER.week2Due },
+      { hackathonId: HACKATHONS.summer.id, kind: "DEADLINE", title: "projects due", startsAt: SUMMER.submissionDeadline },
+      { hackathonId: HACKATHONS.summer.id, kind: "DEFENSE", title: "defense interviews", startsAt: SUMMER.defenseStart, endsAt: SUMMER.defenseEnd },
+      { hackathonId: HACKATHONS.summer.id, kind: "RESULTS", title: "results", startsAt: SUMMER.resultsAt },
     ],
   });
 
@@ -258,6 +304,11 @@ export async function seedHackathons() {
   for (const key of OPEN_MEMBERS) {
     await prisma.registration.create({
       data: { hackathonId: HACKATHONS.open.id, userId: CANDIDATES[key].id, status: "FINISHED", eligibilityConfirmed: true, createdAt: daysFromNow(-55 + OPEN_MEMBERS.indexOf(key)) },
+    });
+  }
+  for (const key of SUMMER_MEMBERS) {
+    await prisma.registration.create({
+      data: { hackathonId: HACKATHONS.summer.id, userId: CANDIDATES[key].id, status: "FINISHED", eligibilityConfirmed: true, createdAt: daysFromNow(-50 + SUMMER_MEMBERS.indexOf(key)) },
     });
   }
   for (const key of JAM_MEMBERS) {

@@ -5,7 +5,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { authorize, ForbiddenError } from "@/lib/permissions";
-import { loadLocker } from "./queries";
+import { maskEvidence } from "./mask";
+import { loadIdentifiers, loadLocker } from "./queries";
 import { isSummaryEnabled, requestSummary, SUMMARY_COOLDOWN_MS } from "./summary";
 
 export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
@@ -89,7 +90,8 @@ export async function refreshSummary(projectId: string): Promise<ActionResult> {
   try {
     const locker = await loadLocker(projectId);
     if (!locker) return { ok: false, error: "that project was not found, reload the page." };
-    const { content, model } = await requestSummary(locker);
+    // Blind reviewers read the summary, so the model never sees the builder's names either.
+    const { content, model } = await requestSummary(maskEvidence(locker, await loadIdentifiers(projectId)));
     await prisma.evidenceSummary.create({ data: { projectId, content, model, seeded: false } });
   } catch {
     return { ok: false, error: "the summary could not be prepared, read the evidence below or try again later." };

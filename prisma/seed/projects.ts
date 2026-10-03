@@ -1,15 +1,16 @@
-// 18 projects (10 in Fall Builders Cohort, 8 in Open Build Weekend) with commits, AI transcripts,
+// 21 projects (10 in Fall Builders Cohort, 8 in Open Build Weekend, 3 in Summer Builders Cohort) with commits, AI transcripts,
 // decision logs, check-ins and seeded evidence summaries. All repo URLs point at example hosts.
 import type { EvidenceRef } from "../../lib/db/json";
 import { CANDIDATES, type CandidateKey } from "./people";
-import { FALL, HACKATHONS, OPEN, TEAMS } from "./hackathons";
+import { FALL, HACKATHONS, OPEN, SUMMER, TEAMS } from "./hackathons";
 import { daysFromNow, hex, json, prisma } from "./util";
 
 export const projectId = (key: CandidateKey) => `proj-${key}`;
 
 type Spec = {
   owner: CandidateKey;
-  hackathon: "fall" | "open";
+  hackathon: "fall" | "open" | "summer";
+  id?: string; // defaults to proj-<owner>; set when the owner has more than one project
   title: string;
   tagline: string;
   builtWith: string[];
@@ -40,6 +41,12 @@ export const OPEN_PROJECTS: Spec[] = [
   { owner: "sofia", hackathon: "open", title: "Loop Sketch", tagline: "sketch a drum loop in the browser", builtWith: ["TypeScript", "Web Audio"], topic: "loop playback", user: "beginner musicians" },
   { owner: "tariq", hackathon: "open", title: "Secret Sniff", tagline: "finds committed secrets before you push", builtWith: ["Go"], topic: "secret scanning", user: "small teams" },
   { owner: "vera", hackathon: "open", title: "Menu Margin", tagline: "shows which dishes actually make money", builtWith: ["Python", "dbt", "SQL"], topic: "margin models", user: "restaurant owners" },
+];
+
+export const SUMMER_PROJECTS: Spec[] = [
+  { id: "proj-theo-summer", owner: "theo", hackathon: "summer", title: "Shift Board", tagline: "who covers which volunteer shift this week", builtWith: ["Svelte", "JavaScript"], topic: "shift coverage", user: "the volunteer coordinator" },
+  { id: "proj-lina-summer", owner: "lina", hackathon: "summer", title: "Pantry Planner", tagline: "plans food pantry pickups around volunteer drivers", builtWith: ["TypeScript", "Node.js", "SQLite"], topic: "pickup routes", user: "pantry volunteers" },
+  { id: "proj-nadia-summer", owner: "nadia", hackathon: "summer", title: "Block Map", tagline: "maps which blocks the group has already canvassed", builtWith: ["Python", "PostGIS"], topic: "canvass coverage", user: "the outreach lead" },
 ];
 
 /** Evidence row ids by project, filled while seeding, read by the review seed for evidence links. */
@@ -137,7 +144,7 @@ function summaryFor(s: Spec, commits: number) {
 }
 
 async function createProject(s: Spec, submittedAt: Date, start: Date) {
-  const pid = projectId(s.owner);
+  const pid = s.id ?? projectId(s.owner);
   const owner = CANDIDATES[s.owner];
   const isMaya = s.owner === "maya";
   await prisma.project.create({
@@ -249,6 +256,20 @@ export async function seedProjects() {
     const start = new Date(OPEN.startsAt.getTime() + 3_600_000 * (1 + i));
     const submittedAt = new Date(OPEN.submissionDeadline.getTime() - 3_600_000 * (2 + i));
     await createProject(s, submittedAt, start);
+  }
+
+  for (const [i, s] of SUMMER_PROJECTS.entries()) {
+    const start = new Date(SUMMER.startsAt.getTime() + 3_600_000 * (2 + i));
+    const submittedAt = new Date(SUMMER.submissionDeadline.getTime() - 3_600_000 * (4 + i * 3));
+    await createProject(s, submittedAt, start);
+    for (const week of [1, 2]) {
+      const id = `${s.id}-w${week}`;
+      const due = week === 1 ? SUMMER.week1Due : SUMMER.week2Due;
+      await prisma.checkIn.create({
+        data: { id, hackathonId: HACKATHONS.summer.id, userId: CANDIDATES[s.owner].id, projectId: s.id, week, ...(week === 1 ? CHECKIN_WEEK1(s) : CHECKIN_WEEK2(s)), submittedAt: new Date(due.getTime() - 3_600_000 * (6 + i)) },
+      });
+      addRef(s.id!, { kind: "CHECKIN", id, label: `week ${week} check-in` });
+    }
   }
 
   // Likes and comments on the open hackathon gallery. One comment is hidden by the organizer.

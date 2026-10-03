@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { parseJson, prisma } from "@/lib/db";
+import { isTalentPoolEligible } from "@/lib/profiles/queries";
 import { checkInSlots, cohortStateLine, resultsOut, slotState, type CheckInSlotState } from "./logic";
 
 const CHECKIN_FIELDS = {
@@ -60,7 +61,7 @@ export type DashboardSlot = { week: number; dueAt: Date; state: CheckInSlotState
 
 /** Everything the builder dashboard shows, read in parallel. Nothing here ranks or scores. */
 export async function getDashboard(userId: string, now: Date) {
-  const [registrations, projects, feedback, profile, invites, hireCount, checkIns, openHackathons] = await Promise.all([
+  const [registrations, projects, feedback, profile, invites, hireCount, checkIns, openHackathons, poolEligible] = await Promise.all([
     prisma.registration.findMany({
       where: { userId, status: { not: "WITHDRAWN" } },
       include: { hackathon: { include: { cohortConfig: true } } },
@@ -100,6 +101,7 @@ export async function getDashboard(userId: string, now: Date) {
       orderBy: { startsAt: "asc" },
       take: 3,
     }),
+    isTalentPoolEligible(userId),
   ]);
 
   const hackathons = registrations.map(({ hackathon: h, status }) => {
@@ -147,12 +149,7 @@ export async function getDashboard(userId: string, now: Date) {
     };
   });
 
-  // The talent pool is for hiring-cohort finishers (brief 4.2); written feedback only goes to finishers.
-  const finished =
-    feedback.length > 0 ||
-    hackathons.some(
-      (h) => h.isCohort && (h.registrationStatus === "FINISHED" || (h.resultsOut && h.projects.some((p) => p.status === "SUBMITTED"))),
-    );
+  // The talent pool is for past hiring-cohort finishers (brief 4.2): a posted project in a cohort that has ended.
 
   return {
     current: hackathons.filter((h) => !h.isPast),
@@ -160,7 +157,7 @@ export async function getDashboard(userId: string, now: Date) {
     feedback,
     invites,
     openHackathons,
-    talentPool: finished && hireCount === 0 ? { optedIn: !!profile?.talentPoolOptIn } : null,
+    talentPool: poolEligible && hireCount === 0 ? { optedIn: !!profile?.talentPoolOptIn } : null,
   };
 }
 

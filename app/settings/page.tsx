@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { parseJson, type LinkItem } from "@/lib/db";
 import { authorizePage } from "@/lib/permissions";
 import { CONSENT_VERSION, formatLinks } from "@/lib/profiles";
-import { getOwnSettings } from "@/lib/profiles/queries";
+import { getOwnSettings, isTalentPoolEligible } from "@/lib/profiles/queries";
 import { SignOutButton } from "@/components/shell/app-shell";
 import { Button, Divider, PageHeader, TextLink, Time } from "@/components/ui";
 import { DeleteRequest } from "@/components/profiles/delete-request";
@@ -33,6 +33,7 @@ export default async function SettingsPage() {
   const isBuilder = user.role === "CANDIDATE" && !!profile;
   const consentCurrent = profile?.consentVersion === CONSENT_VERSION && !!profile.consentAt;
   const openDelete = me.dataRequests[0];
+  const poolEligible = isBuilder ? await isTalentPoolEligible(user.id) : false;
 
   return (
     <div className="flex flex-col gap-16 desktop:ms-[8.333%] desktop:w-7/12">
@@ -70,7 +71,11 @@ export default async function SettingsPage() {
         <>
           <Divider />
           <Section id="settings-privacy" title="privacy">
-            <PrivacyControls visibility={profile.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"} talentPoolOptIn={profile.talentPoolOptIn} />
+            <PrivacyControls
+              visibility={profile.visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE"}
+              talentPoolOptIn={profile.talentPoolOptIn}
+              poolEligible={poolEligible}
+            />
           </Section>
 
           <Divider />

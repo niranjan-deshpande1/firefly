@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { auditAccess } from "@/lib/audit";
 import { prisma } from "@/lib/db";
 import { authorizePage, requireRole } from "@/lib/permissions";
+import { maskEvidence, maskRow } from "@/lib/evidence/mask";
+import { loadIdentifiers } from "@/lib/evidence/queries";
 import { blindLabel, calibrationState, loadEvidence, loadProject, scoreItems, toDrafts } from "@/lib/review/queries";
 import { Avatar, PageHeader, StatusPill, TextLink, Time } from "@/components/ui";
 import { EvidencePanel } from "@/components/review/evidence-panel";
@@ -27,12 +29,15 @@ export default async function ScoringWorkspacePage({ params }: PageProps<"/revie
 
   await auditAccess(user, "EVIDENCE_VIEW", project.ownerId, { type: "Project", id: project.id, metadata: { surface: "scoring workspace" } });
 
-  const [items, evidence, drafts, assignments] = await Promise.all([
+  const [items, loaded, drafts, assignments, identifiers] = await Promise.all([
     scoreItems(project, "RUBRIC"),
     loadEvidence(project),
     toDrafts(review?.scores ?? []),
     prisma.reviewerAssignment.findMany({ where: { projectId }, include: { reviewer: { select: { id: true, name: true } } } }),
+    revealed ? [] : loadIdentifiers(projectId),
   ]);
+  // Until the reveal, any name the builder typed into the evidence is masked, the link labels included.
+  const evidence = revealed ? loaded : { ...maskEvidence(loaded, identifiers), options: loaded.options.map((o) => maskRow(o, identifiers)) };
   // The evidence panel renders every transcript, so each one counts as opened (brief 4.4).
   await Promise.all(
     evidence.transcripts.map((t) =>

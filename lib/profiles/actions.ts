@@ -17,6 +17,7 @@ import {
   uniqueBlindCode,
   type ActionResult,
 } from "./index";
+import { isTalentPoolEligible } from "./queries";
 
 const firstError = (error: z.ZodError) => error.issues[0]?.message ?? "something in the form is not valid, check it and try again.";
 
@@ -131,9 +132,14 @@ async function updateOwnPrivacy(data: { visibility?: string; talentPoolOptIn?: b
     await authorize(user, "privacy.manage", { subjectUserId: user.id });
     const profile = await prisma.candidateProfile.findUnique({ where: { userId: user.id }, select: { id: true } });
     if (!profile) return { ok: false, error: "you have no builder profile yet, finish onboarding first." };
+    // Leaving the pool is always allowed; joining needs a finished hiring cohort (brief 4.2).
+    if (data.talentPoolOptIn && !(await isTalentPoolEligible(user.id))) {
+      return { ok: false, error: "the talent pool is for builders who finished a hiring cohort, post a project in one and join after it ends." };
+    }
     await prisma.candidateProfile.update({ where: { id: profile.id }, data });
     revalidatePath("/settings");
     revalidatePath("/dashboard");
+    revalidatePath("/company/talent");
     if (user.username) revalidatePath(`/u/${user.username}`);
     return { ok: true };
   });

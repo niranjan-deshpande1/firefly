@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { can, loadFacts } from "@/lib/permissions";
 import { auditAccess } from "@/lib/audit";
-import { isBlindViewer, loadLocker } from "@/lib/evidence/queries";
+import { isBlindViewer, loadIdentifiers, loadLocker } from "@/lib/evidence/queries";
+import { maskEvidence } from "@/lib/evidence/mask";
 import { isSummaryEnabled } from "@/lib/evidence/summary";
 import { parseRepoUrl } from "@/lib/evidence/github";
 import { PageHeader, TextLink, Time } from "@/components/ui";
@@ -26,9 +27,11 @@ export default async function EvidenceLockerPage({ params }: PageProps<"/project
 
   const locker = await loadLocker(id);
   if (!locker) notFound();
-  const { project, latestSnapshot, commits, transcripts, decisions, checkIns, summary } = locker;
+  const { project, latestSnapshot } = locker;
 
   const blind = isBlindViewer(user.role, facts);
+  // A builder may have typed their own name into any free text, so a blind viewer gets it masked.
+  const { commits, transcripts, decisions, checkIns, summary } = blind ? maskEvidence(locker, await loadIdentifiers(project.id)) : locker;
   const canEdit = can(user, "evidence.edit", facts);
 
   // Every view by someone outside the project is logged, and each transcript shown counts as opened (brief 4.4).

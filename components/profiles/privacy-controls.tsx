@@ -12,7 +12,8 @@ const VISIBILITY_OPTIONS: { value: Visibility; label: string; hint: string }[] =
 ];
 
 /** Both controls save as soon as they change; a failed save puts the old value back and says why. */
-export function PrivacyControls({ visibility, talentPoolOptIn }: { visibility: Visibility; talentPoolOptIn: boolean }) {
+/** `poolEligible`: the builder finished a hiring cohort. Others see why the switch is missing, unless they are already in and need a way out. */
+export function PrivacyControls({ visibility, talentPoolOptIn, poolEligible }: { visibility: Visibility; talentPoolOptIn: boolean; poolEligible: boolean }) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [vis, setVis] = useState<Visibility>(visibility);
@@ -68,21 +69,25 @@ export function PrivacyControls({ visibility, talentPoolOptIn }: { visibility: V
 
       <section id="talent-pool" aria-labelledby="talent-pool-title" className="flex scroll-mt-8 flex-col gap-4">
         <h3 id="talent-pool-title" className="type-display-4">talent pool</h3>
-        <div className="flex items-start gap-4">
-          <Toggle
-            id="talent-pool-toggle"
-            checked={pool}
-            onCheckedChange={changePool}
-            disabled={pending}
-            aria-describedby={error?.field === "pool" ? "talent-pool-hint talent-pool-error" : "talent-pool-hint"}
-          />
-          <div className="flex flex-col gap-1">
-            <label htmlFor="talent-pool-toggle" className="type-label cursor-pointer">let companies hiring through firefly find me</label>
-            <p id="talent-pool-hint" className="type-body-s text-secondary measure">
-              companies enrolled in a hiring cohort can browse builders who opt in, see their profile and posted projects, and ask for an interview. this is off until you turn it on, and you can turn it off any time.
-            </p>
+        {!poolEligible && !pool ? (
+          <p className="type-body-s text-secondary measure">the talent pool opens to you once a hiring cohort you posted a project in has ended.</p>
+        ) : (
+          <div className="flex items-start gap-4">
+            <Toggle
+              id="talent-pool-toggle"
+              checked={pool}
+              onCheckedChange={changePool}
+              disabled={pending}
+              aria-describedby={error?.field === "pool" ? "talent-pool-hint talent-pool-error" : "talent-pool-hint"}
+            />
+            <div className="flex flex-col gap-1">
+              <label htmlFor="talent-pool-toggle" className="type-label cursor-pointer">let companies hiring through firefly find me</label>
+              <p id="talent-pool-hint" className="type-body-s text-secondary measure">
+                companies enrolled in a hiring cohort can browse builders who opt in, see their profile and posted projects, and ask for an interview. this is off until you turn it on, and you can turn it off any time.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
         {error?.field === "pool" ? <p id="talent-pool-error" className="type-body-s text-error">{error.message}</p> : null}
       </section>
     </div>

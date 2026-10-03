@@ -71,6 +71,14 @@ export function isProfileVisible(visibility: string | null | undefined, canManag
   return canManage || visibility === "PUBLIC";
 }
 
+/** A posted project in a hiring cohort that has ended: what makes a builder a past cohort finisher (brief 4.2). */
+export const FINISHED_COHORT_PROJECT = { status: "SUBMITTED", hackathon: { type: "HIRING_COHORT", status: "COMPLETED" } };
+
+/** Only past cohort finishers may join the talent pool. */
+export async function isTalentPoolEligible(userId: string): Promise<boolean> {
+  return !!(await prisma.project.findFirst({ where: { ownerId: userId, ...FINISHED_COHORT_PROJECT }, select: { id: true } }));
+}
+
 /** The settings page's own view of the signed-in user. */
 export async function getOwnSettings(userId: string) {
   return prisma.user.findUnique({

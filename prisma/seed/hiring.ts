@@ -9,7 +9,7 @@
 import { formatCents, hireFeeCents } from "../../lib/billing/math";
 import { COMPANIES, ROLES } from "./companies";
 import { CANDIDATES, COMPANY_PEOPLE, STAFF, type CandidateKey } from "./people";
-import { HACKATHONS } from "./hackathons";
+import { HACKATHONS, SUMMER } from "./hackathons";
 import { projectId } from "./projects";
 import { FALL_ENROLLED_ROLES, FALL_PLAN } from "./review";
 import { NOW, daysFromNow, hoursFromNow, prisma } from "./util";
@@ -134,6 +134,35 @@ export async function seedHiring() {
       await prisma.project.update({ where: { id: projectId(iv.key) }, data: { verified: true, verifiedAt: completedAt } });
     }
   }
+
+  // ---------- Summer Builders Cohort: Lina passed her defense, so Pantry Planner is verified ----------
+  // No company enrolled a role in the summer cohort, so the interview has no role (WE_RUN).
+  await prisma.decision.create({
+    data: { projectId: "proj-lina-summer", outcome: "ADVANCE", reason: "Decision log explains the routing tradeoffs and tests cover the empty route; ready for a defense.", decidedById: STAFF.leo.id, decidedAt: daysFromNow(-24) },
+  });
+  const linaAt = SUMMER.defenseStart;
+  const linaDone = new Date(linaAt.getTime() + 75 * 60_000);
+  await prisma.interview.create({
+    data: {
+      id: "interview-lina-summer",
+      projectId: "proj-lina-summer",
+      candidateId: CANDIDATES.lina.id,
+      model: "WE_RUN",
+      mode: "VIDEO",
+      scheduledAt: linaAt,
+      videoLink: "https://meet.example.test/defense-lina-summer",
+      status: "COMPLETED",
+      identityCheckedById: STAFF.leo.id,
+      identityCheckedAt: linaAt,
+      outcome: "PASS",
+      notes: "Explained the routing code she did not type, found the planted bug, and predicted the change outcome.",
+      completedAt: linaDone,
+      createdAt: daysFromNow(-25),
+      interviewers: { create: [{ userId: STAFF.leo.id }, { userId: STAFF.hana.id }] },
+      scores: { create: INTERVIEW_SECTIONS.map((section, i) => ({ section, score: [4, 3, 4, 3, 4][i], notes: `${section.toLowerCase().replace(/_/g, " ")}: see interview notes.`, scoredById: STAFF.leo.id, createdAt: linaDone })) },
+    },
+  });
+  await prisma.project.update({ where: { id: "proj-lina-summer" }, data: { verified: true, verifiedAt: linaDone } });
 
   // ---------- Interview requests from companies ----------
   await prisma.interviewRequest.createMany({

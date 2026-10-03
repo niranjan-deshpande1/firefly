@@ -37,41 +37,38 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 ## 3. Known gaps
 
 1. **Paywall on candidate data (founder call).** A self-serve company sees the talent pool and gets shortlists as soon as it enrolls, before its invoice is paid or anyone checks it. RECOMMENDATION: require admin approval of new companies before enrollment counts.
-2. Section timers in the interview room are not saved across reloads.
-3. No interview cancel or reschedule; admins can't act on company interview requests yet.
-4. Handled: held feedback is emailed by `npm run jobs` once its results time passes (README, scheduled jobs). Needs a cron entry on the server.
-5. Transcripts and check-ins are not masked in blind review. A builder who writes their name in them is identifiable.
-6. Handled: `npm run jobs` deletes process evidence from hackathons that ended more than the retention setting ago, except for hires. The consent copy now says exactly that (consent version 2026-10-03.2, so builders see it again). Needs a cron entry on the server and a founder check of the new copy.
-7. Any builder can opt into the talent pool, finished or not.
-8. Organizer actions don't write audit entries.
-9. Hackathons have no time zone column; they display in America/Los_Angeles.
-10. No image reordering; hidden comments can't be unhidden.
-11. GitHub reads stop at 100 commits.
-12. No project cover images in the seed, so galleries show text cards and project pages have no focal media. Real screenshots are needed.
-13. AI summary lock is per process; more than one server instance needs a database claim.
-14. No Content-Security-Policy yet (other security headers are set).
-15. Demo mode must be off on any public deploy (README).
-16. Team joins re-check membership and size inside one transaction, which narrows the race but does not close it under every isolation level. A database constraint (one team per person per hackathon) would close it; that needs a hackathon column on team members.
-
-17. Blind codes belong to the person, not the project. A reviewer who revealed someone in one cohort recognizes their code in the next. RECOMMENDATION: per-project codes.
-18. The seed schedules Maya's interview before her review is posted. Interview pages now show the blind code until the reveal, but the seed order is still unrealistic.
-19. Verified badges show on profiles only after the cohort completes, so the demo never shows one on a profile.
-20. The talent pool lists open-hackathon finishers too, and leaves out the current cohort until it completes. The brief says past cohort finishers.
-21. QA polish not done:
+2. **Scheduled jobs need a cron entry.** `npm run jobs` emails held feedback once results are out and deletes process evidence older than the retention setting, except for hires. Nothing runs it on a schedule until a server has a cron entry; admins can also press "run scheduled jobs now" in settings.
+3. **New consent copy needs a founder check.** The retention promise was rewritten to match what the job deletes (consent version 2026-10-03.2), so every builder sees the consent screen again.
+4. Blind masking is a word match on names, usernames, emails and the GitHub handle. A nickname or a misspelling still gets through.
+5. Blind codes belong to the person, not the project. A reviewer who revealed someone in one cohort recognizes their code in the next. RECOMMENDATION: per-project codes.
+6. No project cover images in the seed, so galleries show text cards and project pages have no focal media. Real screenshots are needed.
+7. The seed schedules Maya's interview before her review is posted. Interview pages show the blind code until the reveal, but the order is unrealistic.
+8. AI summary lock is per process; more than one server instance needs a database claim.
+9. No Content-Security-Policy yet (other security headers are set). Demo mode must be off on any public deploy.
+10. Team joins re-check membership and size inside one transaction, which narrows the race but does not close it under every isolation level. A one-team-per-person-per-hackathon constraint would close it.
+11. QA polish not done:
     - $0 and 0% fees are accepted.
-    - More hires than a role's hire count are accepted without a warning.
     - Demo video links aren't limited to https.
     - Projects can be posted before a hackathon starts.
     - Organizer status changes don't check date order.
     - Two actions fail silently (award with no project picked, empty reconciliation note).
-    - Some stale form errors.
-    - Two copy slips.
+    - Some stale form errors and two copy slips.
     - Admin can open /company.
-    - Small display issues.
     - Soft 404s return HTTP 200 while streaming.
     - Audit rows are noisy (one per transcript per page load).
     - The project wizard drops unsaved steps.
     - Completing an interview has no confirmation step.
+
+Added since the first handoff:
+
+- Interviews: organizers and admins can cancel (with a reason) and reschedule, both emailed and audited; company interview requests have a handling screen at `/interviews/requests` (schedule from the request, or decline with a reason); section timers survive a reload.
+- Scheduled jobs (`npm run jobs` and an admin button): held feedback emails and retention deletes.
+- Organizer actions write audit entries; hackathons have their own time zone, used for every date they show; hidden comments can be shown again; project images can be reordered.
+- Blind review masks the builder's and teammates' names, usernames, emails and GitHub handle as `[builder]` in commits, transcripts, check-ins, the decision log, the summary and the AI summary prompt.
+- Only past hiring-cohort finishers can join or appear in the talent pool.
+- The seed has a completed cohort (Summer Builders Cohort) with a verified project, so a profile shows the verified badge and the talent pool has entries.
+- GitHub reads page through up to 500 commits.
+- The hire page notes when a role's planned hires are already reported.
 
 ## 4. Needs a lawyer
 
@@ -87,13 +84,12 @@ Checks at handoff: typecheck, lint, design lint, 272 unit tests, production buil
 1. Should company access to candidate data wait for a paid invoice or admin approval? RECOMMENDATION: admin approval.
 2. A hire outside the attribution window: refuse it (current), or record it with no fee? RECOMMENDATION: record with no fee, so placement stats stay complete.
 3. Should hiring cohort projects ever show on public profiles? Today they show after the cohort completes.
-4. Should only finishers be able to join the talent pool? RECOMMENDATION: yes.
-5. Retention is now enforced by the job runner, and the consent copy was narrowed to match it. Is the new copy (process evidence per hackathon, kept for hires) the promise we want? RECOMMENDATION: yes, then lawyer review (section 4.3).
+4. Is the new retention and consent copy right? It now promises exactly what `npm run jobs` deletes. A lawyer should see it before a real cohort.
 
 ## 6. What to build next
 
 1. Admin approval for new companies (gap 1).
-2. Reminder emails on the job runner (gaps 4 and 6 are handled by `npm run jobs`).
+2. A small job runner for held feedback, retention deletes and reminder emails (gaps 4, 6).
 3. Interview cancel, reschedule and request handling (gap 3).
 4. Real GitHub OAuth app and email provider, once the founders set up those accounts.
 5. Masking names in transcripts and check-ins for blind review (gap 5).
