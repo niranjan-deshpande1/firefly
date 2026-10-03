@@ -30,9 +30,12 @@ const cohort = {
 const cohortDates = { defenseWindowStart: at(17), defenseWindowEnd: at(21), resultsAt: at(25) };
 
 describe("buildDay", () => {
-  it("counts the start day as day 1 and states the total", () => {
-    expect(buildDay(start, at(14), at(0.5))).toEqual({ day: 1, total: 14 });
-    expect(buildDay(start, at(14), at(8.2))).toEqual({ day: 9, total: 14 });
+  it("counts the start day as day 1 and states the total in calendar days", () => {
+    // 1 oct 09:00 to 15 oct 09:00 in Los Angeles spans 15 calendar dates.
+    expect(buildDay(start, at(14), at(0.5))).toEqual({ day: 1, total: 15 });
+    expect(buildDay(start, at(14), at(8.2))).toEqual({ day: 9, total: 15 });
+    // A deadline at midnight ends the day before.
+    expect(buildDay(new Date("2026-10-01T07:00:00Z"), new Date("2026-10-15T07:00:00Z"), at(1))).toEqual({ day: 2, total: 14 });
   });
 
   it("is null before the start and after the deadline", () => {
@@ -44,7 +47,7 @@ describe("buildDay", () => {
 describe("currentBeat and cohortStateLine", () => {
   it("names each beat of a hiring cohort in order", () => {
     expect(currentBeat(cohort, cohortDates, at(-2))).toMatch(/^kickoff on /);
-    expect(cohortStateLine(cohort, cohortDates, at(8.2))).toBe("day 9 of 14, building");
+    expect(cohortStateLine(cohort, cohortDates, at(8.2))).toBe("day 9 of 15, building");
     expect(currentBeat(cohort, cohortDates, at(15))).toBe("reviews");
     expect(currentBeat(cohort, cohortDates, at(18))).toBe("defense interviews");
     expect(currentBeat(cohort, cohortDates, at(23))).toMatch(/^results on /);

@@ -1,6 +1,6 @@
 // Pure participation rules: no database access, so every rule is unit tested.
 import { z } from "zod";
-import { formatDate } from "@/lib/format/date";
+import { DEFAULT_TIME_ZONE, formatDate } from "@/lib/format/date";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
@@ -20,11 +20,21 @@ type CohortDates = { defenseWindowStart: Date; defenseWindowEnd: Date; resultsAt
 
 // ---------- calendar as text (manual 12.2: facts, never a meter) ----------
 
-/** "day 9 of 14" while the build runs, otherwise null. Day 1 is the start day. */
-export function buildDay(startsAt: Date, deadline: Date, now: Date): { day: number; total: number } | null {
+/** Days since 1970-01-01 for the calendar date `date` falls on in `timeZone`. */
+function calendarDay(date: Date, timeZone: string): number {
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return Date.parse(ymd) / DAY_MS;
+}
+
+/**
+ * "day 9 of 14" while the build runs, otherwise null. Days are calendar days in the hackathon's zone: day 1 is the
+ * start date, the next date is day 2 however late the start was. A deadline at midnight ends the day before.
+ */
+export function buildDay(startsAt: Date, deadline: Date, now: Date, timeZone = DEFAULT_TIME_ZONE): { day: number; total: number } | null {
   if (now < startsAt || now > deadline) return null;
-  const total = Math.max(1, Math.ceil((deadline.getTime() - startsAt.getTime()) / DAY_MS));
-  const day = Math.min(total, Math.floor((now.getTime() - startsAt.getTime()) / DAY_MS) + 1);
+  const first = calendarDay(startsAt, timeZone);
+  const total = Math.max(1, calendarDay(new Date(deadline.getTime() - 1), timeZone) - first + 1);
+  const day = Math.min(total, calendarDay(now, timeZone) - first + 1);
   return { day, total };
 }
 
@@ -47,7 +57,7 @@ export function currentBeat(h: Timeline, cohort: CohortDates, now: Date): string
 /** One line for the dashboard: "day 9 of 14, building" or just the beat. */
 export function cohortStateLine(h: Timeline, cohort: CohortDates, now: Date): string {
   const beat = currentBeat(h, cohort, now);
-  const day = buildDay(h.startsAt, h.submissionDeadline, now);
+  const day = buildDay(h.startsAt, h.submissionDeadline, now, h.timeZone);
   return day ? `day ${day.day} of ${day.total}, ${beat}` : beat;
 }
 

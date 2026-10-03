@@ -13,11 +13,13 @@ export const SETTING_DEFAULTS = {
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
 export type Settings = { [K in SettingKey]: number };
 
+const TOO_HIGH = "that value is too high, enter a smaller number.";
+
 export const settingsSchema = z.object({
-  flatFeeCents: z.coerce.number().int().min(0).max(10_000_000),
-  hireFeeBps: z.coerce.number().int().min(0).max(5_000),
-  attributionWindowMonths: z.coerce.number().int().min(1).max(60),
-  retentionMonths: z.coerce.number().int().min(1).max(120),
+  flatFeeCents: z.coerce.number().int().min(100, "the cohort fee is below $1, enter 1 or more.").max(10_000_000, TOO_HIGH),
+  hireFeeBps: z.coerce.number().int().min(1, "the hire fee is 0%, enter a percent above 0, like 5.").max(5_000, TOO_HIGH),
+  attributionWindowMonths: z.coerce.number().int().min(1, "the window is under a month, enter 1 or more.").max(60, TOO_HIGH),
+  retentionMonths: z.coerce.number().int().min(1, "retention is under a month, enter 1 or more.").max(120, TOO_HIGH),
 });
 
 export async function getSettings(): Promise<Settings> {

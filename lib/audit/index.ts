@@ -24,8 +24,14 @@ export async function audit(input: AuditInput): Promise<void> {
   });
 }
 
+// ponytail: a 10-minute window. Reloading the scoring workspace or locker re-renders every transcript; one row per
+// person, resource and window keeps the log readable. Report views and identity reveals are always written.
+export const ACCESS_DEDUPE_MS = 10 * 60 * 1000;
+const DEDUPED: readonly AuditAction[] = ["EVIDENCE_VIEW", "TRANSCRIPT_VIEW"];
+
 /**
  * Logs a view of a candidate's report, evidence locker or transcript by anyone other than that candidate.
+ * Evidence and transcript views skip the write when the same actor viewed the same resource in the last 10 minutes.
  * Returns true when an entry was written.
  */
 export async function auditAccess(
@@ -35,6 +41,19 @@ export async function auditAccess(
   resource: { type: string; id: string; metadata?: Record<string, unknown> },
 ): Promise<boolean> {
   if (!needsAccessAudit(actor, subjectUserId)) return false;
+  if (DEDUPED.includes(action)) {
+    const recent = await prisma.auditLog.findFirst({
+      where: {
+        actorId: actor!.id,
+        action,
+        resourceType: resource.type,
+        resourceId: resource.id,
+        createdAt: { gte: new Date(Date.now() - ACCESS_DEDUPE_MS) },
+      },
+      select: { id: true },
+    });
+    if (recent) return false;
+  }
   await audit({
     actorId: actor!.id,
     action,

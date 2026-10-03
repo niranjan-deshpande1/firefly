@@ -118,11 +118,11 @@ export const profileSchema = nameSchema.extend({
 export type ProfileInput = z.input<typeof profileSchema>;
 
 export const EXPERIENCE_LABEL: Record<(typeof EXPERIENCE_LEVELS)[number], string> = {
-  STUDENT: "student",
+  STUDENT: "in school",
   NEW_GRAD: "new grad",
   JUNIOR: "junior",
   MID: "mid-level",
   SENIOR: "senior",
 };
 
-export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
+export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string; /** The form field at fault, for aria-invalid. */ field?: string };

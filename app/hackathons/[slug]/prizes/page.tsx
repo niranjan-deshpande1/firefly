@@ -44,7 +44,7 @@ export default async function HackathonPrizesPage({ params }: PageProps<"/hackat
                 <ul className="flex flex-col gap-2 pt-2" aria-label={`awarded ${p.name}`}>
                   {p.winners.map((w) => (
                     <li key={w.id} className="flex flex-wrap items-center gap-3">
-                      <TextLink href={`/projects/${w.project.id}`} className="type-body">
+                      <TextLink href={`/projects/${w.project.id}`} className="min-h-11 inline-flex items-center type-body">
                         {w.project.title}
                       </TextLink>
                       <StatusPill>awarded: {p.name}</StatusPill>

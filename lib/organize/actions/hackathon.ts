@@ -14,6 +14,7 @@ import {
   formObject,
   invalid,
   rulesSchema,
+  statusDateBlocker,
   statusSchema,
   type ActionResult,
 } from "../schemas";
@@ -105,6 +106,8 @@ export async function saveStatus(_prev: ActionResult, form: FormData): Promise<A
   if (!parsed.success) return invalid(parsed.error);
   return guarded(async () => {
     const { user, hackathon } = await managedForAction(form);
+    const blocker = hackathon.status === parsed.data.status ? null : statusDateBlocker(parsed.data.status, hackathon);
+    if (blocker) return { ok: false, error: blocker, fieldErrors: { status: blocker } };
     await prisma.hackathon.update({ where: { id: hackathon.id }, data: { status: parsed.data.status } });
     if (hackathon.status !== parsed.data.status) {
       await auditHackathon(user.id, "HACKATHON_STATUS_CHANGED", hackathon.id, { from: hackathon.status, to: parsed.data.status });

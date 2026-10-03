@@ -1,7 +1,7 @@
 // Display labels for company surfaces. Pure, unit tested.
 
 export const LEVEL_LABEL: Record<string, string> = {
-  STUDENT: "student",
+  STUDENT: "in school",
   NEW_GRAD: "new grad",
   JUNIOR: "junior",
   MID: "mid-level",

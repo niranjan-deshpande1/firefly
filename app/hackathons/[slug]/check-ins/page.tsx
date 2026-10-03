@@ -97,7 +97,7 @@ export default async function CheckInsPage({ params }: PageProps<"/hackathons/[s
         <h2 id="history-title" className="type-display-4">
           your check-ins
         </h2>
-        <CheckInHistory checkIns={checkIns} />
+        <CheckInHistory checkIns={checkIns} empty="you haven't posted a check-in yet. each week's check-in opens above when it's due." />
       </section>
     </div>
   );

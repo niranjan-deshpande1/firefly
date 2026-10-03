@@ -51,7 +51,7 @@ export function ProjectForm(props: ProjectFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pending, start] = useTransition();
-  const [intentInFlight, setIntent] = useState<"draft" | "post" | null>(null);
+  const [intentInFlight, setIntent] = useState<"draft" | "post" | "continue" | null>(null);
   const posted = props.status === "SUBMITTED";
   const name = STEPS[step];
 
@@ -84,10 +84,11 @@ export function ProjectForm(props: ProjectFormProps) {
     return res.data!.projectId;
   }
 
-  function run(intent: "draft" | "post") {
+  /** "continue" saves like "save draft" (a posted project stays posted), then moves to the next step. */
+  function run(intent: "draft" | "post" | "continue") {
     setIntent(intent);
     start(async () => {
-      const id = await save(intent);
+      const id = await save(intent === "post" ? "post" : "draft");
       setIntent(null);
       if (!id) return;
       if (intent === "post" && !posted) {
@@ -96,7 +97,9 @@ export function ProjectForm(props: ProjectFormProps) {
         return;
       }
       toast(posted ? "changes saved" : "draft saved");
-      if (!props.projectId) router.replace(`/projects/${id}/edit?step=${step}`, { scroll: false });
+      const nextStep = intent === "continue" ? step + 1 : step;
+      if (intent === "continue") setStep(nextStep);
+      if (!props.projectId) router.replace(`/projects/${id}/edit?step=${nextStep}`, { scroll: false });
       else router.refresh();
     });
   }
@@ -146,8 +149,7 @@ export function ProjectForm(props: ProjectFormProps) {
         className="flex flex-col gap-6 measure"
         onSubmit={(e) => {
           e.preventDefault();
-          if (isLast) run("post");
-          else setStep(step + 1);
+          run(isLast ? "post" : "continue");
         }}
         aria-labelledby="step-heading"
       >
@@ -169,7 +171,13 @@ export function ProjectForm(props: ProjectFormProps) {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" variant="primary" loading={pending && intentInFlight === "post"} loadingLabel="posting project" disabled={pending && intentInFlight !== "post"}>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={pending && intentInFlight !== "draft"}
+            loadingLabel={isLast ? (posted ? "saving changes" : "posting project") : "saving draft"}
+            disabled={pending && intentInFlight === "draft"}
+          >
             {isLast ? (posted ? "save changes" : "post project") : `continue to ${STEPS[step + 1]}`}
           </Button>
           {!(isLast && posted) ? (

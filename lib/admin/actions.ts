@@ -126,7 +126,7 @@ export async function saveSettingsAction(_prev: ActionResult | null, formData: F
     if (error instanceof z.ZodError) {
       const byStoredKey = fieldErrors(error);
       const rename: Record<string, string> = { flatFeeCents: "flatFee", hireFeeBps: "hireFeePercent" };
-      const errors = Object.fromEntries(Object.keys(byStoredKey).map((k) => [rename[k] ?? k, "that value is out of range, enter a smaller number."]));
+      const errors = Object.fromEntries(Object.entries(byStoredKey).map(([k, message]) => [rename[k] ?? k, message]));
       return { ok: false, error: "some settings are out of range, see the fields below.", fieldErrors: errors };
     }
     return failure(error, "the settings were not saved, try again.");

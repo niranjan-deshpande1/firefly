@@ -56,9 +56,7 @@ export default async function HackathonParticipantsPage({ params }: PageProps<"/
             const name = p.name ?? p.username ?? "builder";
             return (
               <li key={p.id} className="card flex items-start gap-4">
-                <span aria-hidden="true">
-                  <Avatar name={name} src={p.image} />
-                </span>
+                <Avatar name={name} src={p.image} />
                 <div className="flex min-w-0 flex-col gap-2">
                   {p.username ? (
                     <TextLink href={`/u/${p.username}`} className="type-display-4">

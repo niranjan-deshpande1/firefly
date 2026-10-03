@@ -142,6 +142,7 @@ test("5. Priya runs the defense interview and the project becomes verified", asy
   await main(page).getByRole("radio", { name: /^defense passed/ }).click();
   await main(page).getByRole("textbox", { name: "outcome notes (required)" }).fill("Walked through the code, fixed the planted bug and explained the tradeoffs.");
   await main(page).getByRole("button", { name: "complete interview" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "complete interview" }).click();
   await expect(main(page).getByText(/verified/i).first()).toBeVisible();
   await expect(main(page).getByRole("button", { name: "complete interview" })).toHaveCount(0);
 });

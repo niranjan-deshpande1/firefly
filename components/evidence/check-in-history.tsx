@@ -11,9 +11,16 @@ function Line({ label, children }: { label: string; children: string }) {
 }
 
 /** Weekly check-ins, oldest first (stream). Progress is builder Markdown, rendered sanitized. */
-export function CheckInHistory({ checkIns }: { checkIns: CheckInItem[] }) {
+export function CheckInHistory({
+  checkIns,
+  empty = "no check-ins posted yet. read the commit timeline above for how the work moved.",
+}: {
+  checkIns: CheckInItem[];
+  /** Empty-state line; the default points at the commit timeline shown above it on evidence pages. */
+  empty?: string;
+}) {
   if (checkIns.length === 0) {
-    return <p className="type-body text-secondary measure">no check-ins posted yet. read the commit timeline above for how the work moved.</p>;
+    return <p className="type-body text-secondary measure">{empty}</p>;
   }
   const sorted = [...checkIns].sort((a, b) => a.week - b.week || a.submittedAt.getTime() - b.submittedAt.getTime());
   return (
