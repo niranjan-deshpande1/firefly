@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { completionError, formatElapsed, interviewerError, isValidTimeZone, missingSections, scoringError, zonedTimeToUtc } from "@/lib/interviews/rules";
+import {
+  completionError,
+  formatElapsed,
+  interviewerError,
+  isValidTimeZone,
+  manageError,
+  missingSections,
+  parseTimer,
+  placeError,
+  scoringError,
+  utcToZonedLocal,
+  zonedTimeToUtc,
+} from "@/lib/interviews/rules";
 import { SCRIPT } from "@/lib/interviews/script";
 import { INTERVIEW_SECTIONS } from "@/lib/db/enums";
 
@@ -58,6 +70,38 @@ describe("time helpers", () => {
     expect(isValidTimeZone("PST")).toBe(false);
     expect(isValidTimeZone("Mars/Base")).toBe(false);
     expect(zonedTimeToUtc("tomorrow", "UTC")).toBeNull();
+  });
+});
+
+describe("manage rules", () => {
+  it("refuses cancel and reschedule once closed", () => {
+    expect(manageError("SCHEDULED", "cancel")).toBeNull();
+    expect(manageError("IN_PROGRESS", "reschedule")).toBeNull();
+    expect(manageError("COMPLETED", "cancel")).toMatch(/can't be cancelled/);
+    expect(manageError("COMPLETED", "reschedule")).toMatch(/can't be rescheduled/);
+    expect(manageError("CANCELLED", "cancel")).toMatch(/already cancelled/);
+    expect(manageError("CANCELLED", "reschedule")).toMatch(/schedule a new interview/);
+  });
+  it("checks the place against the mode", () => {
+    expect(placeError({ mode: "IN_PERSON", location: "room 4" })).toBeNull();
+    expect(placeError({ mode: "IN_PERSON" })?.path).toBe("location");
+    expect(placeError({ mode: "VIDEO", videoLink: "http://x" })?.path).toBe("videoLink");
+    expect(placeError({ mode: "VIDEO", videoLink: "https://meet.example.com/abc" })).toBeNull();
+  });
+  it("round-trips wall time in a zone", () => {
+    for (const zone of ["America/Los_Angeles", "Asia/Kolkata", "UTC"]) {
+      expect(utcToZonedLocal(zonedTimeToUtc("2026-12-14T10:30", zone)!, zone)).toBe("2026-12-14T10:30");
+    }
+  });
+});
+
+describe("timer storage", () => {
+  it("reads a saved timer and treats junk as a fresh one", () => {
+    expect(parseTimer('{"elapsed":5000,"runningSince":123}')).toEqual({ elapsed: 5000, runningSince: 123 });
+    expect(parseTimer('{"elapsed":5000,"runningSince":null}')).toEqual({ elapsed: 5000, runningSince: null });
+    expect(parseTimer(null)).toEqual({ elapsed: 0, runningSince: null });
+    expect(parseTimer("{not json")).toEqual({ elapsed: 0, runningSince: null });
+    expect(parseTimer('{"elapsed":"x"}')).toEqual({ elapsed: 0, runningSince: null });
   });
 });
 

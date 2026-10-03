@@ -48,6 +48,7 @@ export const ACTIONS = [
   "feedback.read",
   "interview.schedule",
   "interview.run",
+  "interview.manage",
   "company.manage",
   "role.manage",
   "cohort.enroll",
@@ -98,6 +99,8 @@ const RULES: Record<Action, Rule> = {
   "interview.schedule": (a, f) => (is(a, "ORGANIZER") && !!f.isHackathonOrganizer) || (is(a, "REVIEWER") && !!f.isAssignedReviewer),
   // Company members sit on joint and company-run panels.
   "interview.run": (a, f) => !!f.isAssignedInterviewer,
+  // Cancel, reschedule and handle company interview requests: the hackathon's own organizer (and admins).
+  "interview.manage": (a, f) => is(a, "ORGANIZER") && !!f.isHackathonOrganizer,
   "company.manage": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,
   "role.manage": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,
   "cohort.enroll": (a, f) => is(a, "COMPANY") && !!f.isCompanyMember,

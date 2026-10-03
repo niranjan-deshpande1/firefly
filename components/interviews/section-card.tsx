@@ -1,12 +1,42 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { Button, Field, ScoreInput, StatusPill, Textarea, useToast } from "@/components/ui";
 import { saveSectionScore } from "@/lib/interviews/actions";
-import { formatElapsed } from "@/lib/interviews/rules";
+import { formatElapsed, parseTimer, type TimerState } from "@/lib/interviews/rules";
 import type { ScriptSection } from "@/lib/interviews/script";
 
 const TICK = 1000;
+
+// Timer state lives in localStorage per interview and section, so a reload resumes it.
+// ponytail: per browser; a second interviewer's device keeps its own timer.
+// `memory` keeps the timer working when storage is blocked (it just won't survive a reload).
+const memory = new Map<string, string>();
+const listeners = new Set<() => void>();
+
+function readRaw(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key) ?? memory.get(key) ?? null;
+  } catch {
+    return memory.get(key) ?? null;
+  }
+}
+
+function writeTimer(key: string, state: TimerState) {
+  const raw = JSON.stringify(state);
+  memory.set(key, raw);
+  try {
+    window.localStorage.setItem(key, raw);
+  } catch {
+    // storage blocked or full: memory still holds it
+  }
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
 type SectionCardProps = {
   interviewId: string;
@@ -23,9 +53,11 @@ export function SectionCard({ interviewId, index, script, locked, saved }: Secti
   const [notes, setNotes] = useState(saved?.notes ?? "");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
-  const [elapsed, setElapsed] = useState(0);
-  const [runningSince, setRunningSince] = useState<number | null>(null);
   const [now, setNow] = useState(0);
+  const storageKey = `firefly:interview-timer:${interviewId}:${script.section}`;
+  // The server snapshot is null, so the first render matches the server (00:00), then storage takes over.
+  const raw = useSyncExternalStore(subscribe, () => readRaw(storageKey), () => null);
+  const { elapsed, runningSince } = parseTimer(raw);
 
   useEffect(() => {
     if (runningSince === null) return;
@@ -37,11 +69,10 @@ export function SectionCard({ interviewId, index, script, locked, saved }: Secti
   const toggleTimer = () => {
     if (runningSince === null) {
       const t = Date.now();
-      setRunningSince(t);
       setNow(t);
+      writeTimer(storageKey, { elapsed, runningSince: t });
     } else {
-      setElapsed(shown);
-      setRunningSince(null);
+      writeTimer(storageKey, { elapsed: shown, runningSince: null });
     }
   };
 

@@ -33,6 +33,9 @@ const ACTION_LABELS: Record<string, string> = {
   REVIEWER_REMOVED: "reviewer removed",
   WINNER_AWARDED: "winner awarded",
   WINNER_REMOVED: "award removed",
+  INTERVIEW_CANCELLED: "interview cancelled",
+  INTERVIEW_RESCHEDULED: "interview rescheduled",
+  INTERVIEW_REQUEST_DECLINED: "interview request declined",
 };
 
 export function actionLabel(action: string): string {

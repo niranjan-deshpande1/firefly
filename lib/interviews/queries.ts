@@ -24,7 +24,7 @@ export async function listInterviews(user: CurrentUser) {
       timeZone: true,
       durationMin: true,
       candidate: { select: { name: true, candidateProfile: { select: { blindCode: true } } } },
-      project: { select: { id: true, title: true } },
+      project: { select: { id: true, title: true, hackathon: { select: { organizerId: true } } } },
       role: { select: { title: true, company: { select: { name: true } } } },
       interviewers: { select: { userId: true } },
     },
@@ -132,3 +132,55 @@ export async function getSchedulingOptions(user: CurrentUser) {
 }
 
 export type SchedulingOptions = Awaited<ReturnType<typeof getSchedulingOptions>>;
+
+/** Company interview requests: admins see all, organizers those for candidates with a project in a hackathon they run. Pending first. */
+export async function listInterviewRequests(user: CurrentUser) {
+  const mine = user.role === "ADMIN" ? {} : { hackathon: { organizerId: user.id } };
+  const requests = await prisma.interviewRequest.findMany({
+    where: user.role === "ADMIN" ? {} : { candidate: { projects: { some: mine } } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      message: true,
+      status: true,
+      createdAt: true,
+      company: { select: { name: true } },
+      role: { select: { id: true, title: true } },
+      candidate: {
+        select: {
+          name: true,
+          candidateProfile: { select: { blindCode: true } },
+          projects: { where: mine, orderBy: { createdAt: "desc" }, take: 1, select: { id: true, title: true } },
+        },
+      },
+    },
+  });
+  return requests
+    .map(({ candidate: { projects, ...candidate }, ...r }) => ({ ...r, candidate, project: projects[0] ?? null }))
+    .sort((a, b) => Number(b.status === "PENDING") - Number(a.status === "PENDING"));
+}
+
+export type InterviewRequestItem = Awaited<ReturnType<typeof listInterviewRequests>>[number];
+
+/** What the manage page shows. The page authorizes with `interview.manage`. */
+export async function getManageInterview(id: string) {
+  return prisma.interview.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      projectId: true,
+      status: true,
+      scheduledAt: true,
+      timeZone: true,
+      durationMin: true,
+      mode: true,
+      location: true,
+      videoLink: true,
+      notes: true,
+      candidate: { select: { name: true } },
+      project: { select: { title: true, hackathon: { select: { title: true } } } },
+      role: { select: { title: true, company: { select: { name: true } } } },
+      interviewers: { select: { user: { select: { name: true } } } },
+    },
+  });
+}

@@ -89,5 +89,8 @@ export const AUDIT_ACTIONS = [
   "REVIEWER_REMOVED",
   "WINNER_AWARDED",
   "WINNER_REMOVED",
+  "INTERVIEW_CANCELLED",
+  "INTERVIEW_RESCHEDULED",
+  "INTERVIEW_REQUEST_DECLINED",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
